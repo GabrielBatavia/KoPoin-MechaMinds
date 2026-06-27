@@ -167,9 +167,9 @@ Kopoin dirancang untuk membantu koperasi:
 
 | Foto | Nama | Peran |
 |------|------|-------|
-| <img src="https://github.com/GabrielBatavia.png" width="60"> | [Gabriel](https://github.com/GabrielBatavia) | Ketua Tim |
-| <img src="https://github.com/ckckckcz.png" width="60"> | [Riovaldo](https://github.com/ckckckcz) | Anggota |
-| <img src="https://github.com/Raudhil.png" width="60"> | [Raul](https://github.com/Raudhil) | Anggota |
+| <img src="https://github.com/GabrielBatavia.png" width="60"> | [Gabriel](https://github.com/GabrielBatavia) | Project Manager & Fullstack Developer |
+| <img src="https://github.com/ckckckcz.png" width="60"> | [Riovaldo](https://github.com/ckckckcz) | Fullstack Developer |
+| <img src="https://github.com/Raudhil.png" width="60"> | [Raul](https://github.com/Raudhil) | Fullstack Developer  |
 
 ---
 
