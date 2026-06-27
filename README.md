@@ -1,172 +1,178 @@
 # Kopoin
 
-**Mesin Misi dan Loyalitas Anggota Muda untuk SIMKOPDES**
+> **Mesin Misi dan Loyalitas Anggota Muda untuk SIMKOPDES**
 
-Kopoin adalah lapisan aktivasi anggota muda untuk koperasi: mengubah misi, transaksi produk lokal, referral aktif, voting, progres tim, dan reward menjadi pengalaman sosial yang mudah dipahami dan layak dibagikan.
+Kopoin adalah platform aktivasi anggota muda yang dirancang untuk meningkatkan partisipasi, loyalitas, dan keterlibatan komunitas dalam ekosistem SIMKOPDES melalui misi, reward, gamifikasi, serta kolaborasi sosial.
 
-Pilar: **Literasi Gen Z & Gen Alpha**  
-Tim: **MechaMinds**
+**Pilar:** Literasi Gen Z & Gen Alpha
+**Tim:** MechaMinds
+
+---
 
 ## Tentang Kopoin
 
-SIMKOPDES telah menyediakan fondasi digital koperasi, mulai dari keanggotaan, data kelembagaan, pembelajaran, perdagangan, sampai layanan pendukung. Tantangan berikutnya adalah membuat generasi muda tidak hanya terdaftar, tetapi rutin memakai koperasi, mendukung produk lokal, dan merasa menjadi bagian dari komunitasnya.
+Digitalisasi koperasi telah membuka akses terhadap berbagai layanan seperti keanggotaan, perdagangan, pembelajaran, dan pengelolaan kelembagaan. Namun, digitalisasi saja belum cukup untuk membuat generasi muda aktif berpartisipasi secara berkelanjutan.
 
-Kopoin dirancang untuk menjawab sisi aktivasi tersebut. Produk ini membuat kegiatan koperasi terasa lebih dekat dengan kebiasaan Gen Z: ada tim, misi, progres, reward, voting, achievement, dan hasil yang bisa dibagikan.
+Kopoin hadir sebagai lapisan aktivasi yang melengkapi SIMKOPDES dengan menghadirkan pengalaman yang lebih dekat dengan kebiasaan Gen Z dan Gen Alpha. Setiap aktivitas anggota, mulai dari membeli produk lokal, mengikuti pembelajaran, menyelesaikan misi, hingga mengajak anggota baru, diubah menjadi pengalaman yang memberikan progres, penghargaan, dan dampak nyata bagi komunitas.
 
-## Masalah yang Kami Lihat
+---
 
-Digitalisasi koperasi belum otomatis menghasilkan keterlibatan anggota muda. Banyak anak muda sudah terbiasa dengan pengalaman digital yang cepat, sosial, dan memberi progres yang terlihat, sementara koperasi sering masih dipersepsikan sebagai layanan administratif atau tempat transaksi sesekali.
+## Mengapa Bernama Kopoin?
 
-Kesenjangannya bukan hanya pada aplikasi, tetapi pada alasan untuk kembali. Anggota muda perlu melihat manfaat langsung, merasa kontribusinya berarti bagi tim atau desa, dan memiliki ruang untuk ikut menentukan kampanye yang relevan dengan komunitasnya.
+Nama **Kopoin** merupakan gabungan dari kata **Koperasi** dan **Poin**. Nama ini mencerminkan bagaimana setiap kontribusi anggota diubah menjadi nilai yang dapat dilihat, dirasakan, dan dibagikan kepada komunitas.
 
-## Solusi yang Kami Tawarkan
+---
 
-Kopoin mengubah interaksi koperasi menjadi alur partisipasi berbasis komunitas. Anggota bergabung dalam tim, memilih atau menjalankan misi, memindai QR transaksi atau menyelesaikan aktivitas yang diverifikasi, lalu mendapat Kopoin, streak, achievement, atau reward yang memperkuat progres pribadi dan tim.
+## Permasalahan
 
-Contohnya, Gabriel bergabung dengan Tim Pemuda Sukamaju. Ia membeli produk lokal di Koperasi Merah Putih Sukamaju dan memindai QR transaksi. Gabriel mendapat Kopoin, progres tim bertambah, target produk lokal semakin dekat tercapai, dan seluruh tim berpeluang membuka kupon atau manfaat bersama.
+Walaupun koperasi telah memiliki sistem digital, keterlibatan anggota muda masih menjadi tantangan.
+
+Beberapa penyebab utamanya antara lain:
+
+* Anggota belum memiliki alasan untuk kembali menggunakan layanan koperasi secara rutin.
+* Aktivitas koperasi masih dipersepsikan sebatas administrasi dan transaksi.
+* Kontribusi anggota belum terlihat secara nyata bagi diri sendiri maupun komunitas.
+* Belum tersedia pengalaman digital yang menarik, interaktif, dan bersifat sosial seperti yang telah terbiasa digunakan oleh generasi muda.
+
+---
+
+## Solusi
+
+Kopoin mengubah aktivitas koperasi menjadi pengalaman yang lebih menarik melalui pendekatan gamifikasi dan komunitas.
+
+Setiap anggota dapat:
+
+* Bergabung dengan tim komunitas.
+* Menyelesaikan berbagai misi.
+* Melakukan transaksi produk lokal.
+* Mengumpulkan Kopoin.
+* Membuka achievement.
+* Menjaga streak aktivitas.
+* Mengikuti voting komunitas.
+* Mendapatkan reward bersama.
+* Membagikan pencapaian kepada teman.
+
+Dengan pendekatan tersebut, koperasi tidak hanya menjadi tempat bertransaksi, tetapi juga menjadi ruang kolaborasi dan pertumbuhan komunitas.
+
+---
+
+## Target Pengguna
+
+* Anggota muda koperasi
+* Pengurus koperasi
+* Komunitas desa
+* UMKM lokal
+* SIMKOPDES sebagai ekosistem digital koperasi
+
+---
 
 ## Cara Kerja
 
 ```mermaid
 flowchart LR
-    A[Bergabung dengan tim] --> B[Memilih dan menjalankan misi]
-    B --> C[Kontribusi diverifikasi]
-    C --> D[Progres pribadi dan tim bertambah]
-    D --> E[Reward atau manfaat bersama terbuka]
-    E --> F[Dampak dilihat dan dibagikan]
+    A[Bergabung dengan Tim]
+    --> B[Menjalankan Misi]
+
+    B --> C[Transaksi atau Aktivitas Terverifikasi]
+
+    C --> D[Mendapat Kopoin dan Progress]
+
+    D --> E[Reward & Achievement]
+
+    E --> F[Bagikan Dampak ke Komunitas]
 ```
 
-Alur ini menjaga Kopoin tetap sederhana: anggota tahu apa yang perlu dilakukan, koperasi tahu kontribusi apa yang terjadi, dan komunitas melihat progres bersama.
+---
 
-## Fitur Utama MVP
+## Fitur Utama
 
-Bagian ini merangkum cakupan MVP berdasarkan blueprint produk. Karena repository saat ini belum berisi source code aplikasi, status implementasi teknisnya belum dapat diverifikasi dari repo.
+| Fitur               | Manfaat                                        |
+| ------------------- | ---------------------------------------------- |
+| 🎯 Mission System   | Memberikan tujuan yang jelas kepada anggota.   |
+| 👥 Team Community   | Mendorong kolaborasi antaranggota.             |
+| 📈 Leaderboard      | Memunculkan kompetisi yang sehat.              |
+| 🔥 Streak           | Membentuk kebiasaan menggunakan koperasi.      |
+| 🏆 Achievement      | Mengapresiasi kontribusi anggota.              |
+| 🪙 Kopoin           | Reward atas setiap aktivitas yang dilakukan.   |
+| 🎁 Voucher & Reward | Memberikan manfaat nyata bagi anggota.         |
+| 🗳 Community Voting | Anggota ikut menentukan kampanye komunitas.    |
+| 🤝 Referral         | Mengembangkan komunitas secara organik.        |
+| 📊 Campaign Console | Membantu pengurus mengelola kampanye koperasi. |
+| 📸 Impact Receipt   | Menampilkan dampak setiap kontribusi anggota.  |
+| 🌟 Team Wrap        | Ringkasan pencapaian yang dapat dibagikan.     |
 
-| Fungsi | Mekanisme | Nilai bagi anggota muda | Status di repo |
-| --- | --- | --- | --- |
-| Aktivasi anggota | Kartu anggota digital, misi, dan scan QR transaksi | Membuat anggota memahami aksi pertama yang harus dilakukan | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Progres personal | Kopoin, kupon, catatan hemat, streak, dan achievement | Memberi manfaat langsung dan alasan untuk kembali | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Progres tim | Tim komunitas, leaderboard, dan community unlock | Membuat partisipasi terasa kolektif, bukan sekadar transaksi pribadi | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Pertumbuhan komunitas | Referral berbasis anggota aktif | Menghindari akun kosong karena reward muncul setelah pengguna baru benar-benar aktif | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Partisipasi | Voting misi, produk, UMKM, atau reward | Memberi ruang bagi anggota muda untuk ikut menentukan arah kampanye | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Dampak dan sharing | Impact receipt, shareable achievement, dan Team Wrap | Menunjukkan hubungan antara transaksi, produk lokal, dan progres tim | Dirancang di blueprint, belum ditemukan implementasi source code |
-| Operasional campaign | Campaign Console dan dashboard hasil | Membantu koperasi melihat performa kampanye dan perilaku anggota | Dirancang di blueprint, belum ditemukan implementasi source code |
-
-## Mengapa Mekanisme Ini Relevan untuk Gen Z
-
-**Tim dan misi bersama** membangun identitas komunitas. Anggota tidak hanya mengejar poin pribadi, tetapi membantu kelompoknya mencapai target yang terlihat.
-
-**Leaderboard** memberi umpan balik cepat dan kompetisi sehat. Penilaian tidak hanya bertumpu pada nominal belanja, tetapi juga konsistensi, penyelesaian misi, pembelajaran, voting, dan dukungan pada produk lokal.
-
-**Streak** membantu membentuk kebiasaan. Kontribusi mingguan membuat anggota punya alasan untuk kembali memakai layanan koperasi.
-
-**Achievement** mengubah kontribusi menjadi pencapaian yang dapat dikoleksi dan dibagikan. Ini membuat dukungan terhadap koperasi terasa lebih personal dan sosial.
-
-**Voting** memberi rasa berpengaruh. Anggota muda dapat ikut memilih misi, produk yang dipromosikan, UMKM yang didukung, atau reward bersama, tanpa menggantikan proses formal koperasi seperti RAT.
-
-**Reward dan sharing** memberi manfaat yang mudah dipahami. Kopoin, kupon, impact receipt, dan Team Wrap membantu anggota melihat penghematan, progres, serta dampak produk lokal yang mereka dukung.
+---
 
 ## Dukungan terhadap SIMKOPDES
 
-Kopoin dirancang sebagai lapisan aktivasi anggota muda yang melengkapi ekosistem SIMKOPDES, bukan menggantikan sistem inti yang sudah ada.
+Kopoin tidak menggantikan SIMKOPDES, melainkan melengkapinya sebagai lapisan aktivasi anggota muda.
 
-Pada tahap MVP, integrasi SIMKOPDES disimulasikan melalui mock data atau mock API. Arsitektur Kopoin disiapkan agar dapat terhubung dengan data anggota, produk, pembelajaran, dan transaksi ketika akses integrasi resmi tersedia.
+| SIMKOPDES        | Kopoin             |
+| ---------------- | ------------------ |
+| Data Keanggotaan | Aktivasi Anggota   |
+| Produk Koperasi  | Misi Produk Lokal  |
+| Transaksi        | Reward & Kopoin    |
+| Pembelajaran     | Learning Mission   |
+| Dashboard        | Campaign Analytics |
 
-| SIMKOPDES | Kopoin |
-| --- | --- |
-| Identitas dan keanggotaan | Misi dan keterlibatan anggota muda |
-| Data koperasi dan produk | Tim, leaderboard, streak, dan achievement |
-| Transaksi dan layanan koperasi | Reward, kupon, dan catatan dampak |
-| Dashboard kelembagaan | Analitik campaign dan perilaku anggota |
-| Pembelajaran | Misi belajar yang terhubung dengan progres |
+Pada tahap hackathon, integrasi ditunjukkan menggunakan **mock API** dan **mock data**, sehingga arsitektur telah siap untuk dihubungkan dengan layanan SIMKOPDES ketika akses resmi tersedia.
 
-## Arsitektur atau Alur Sistem
+---
 
-```mermaid
-flowchart TB
-    U[Anggota muda] --> A[Aplikasi Kopoin]
-    K[Pengurus koperasi] --> C[Campaign Console]
-    C --> M[Mesin misi dan campaign]
-    A --> M
-    M --> P[Poin, streak, achievement, voting, reward]
-    M --> T[Tim, leaderboard, community unlock]
-    A --> S[Shareable achievement dan Team Wrap]
-    M --> R[Mock API SIMKOPDES]
-    R --> D[Data simulasi anggota, koperasi, produk, transaksi, pembelajaran]
-    M --> H[Dashboard hasil campaign]
-```
+## Dampak yang Diharapkan
 
-Prinsip kepatuhan dari blueprint: Kopoin tidak menyimpan dana pengguna. Pembayaran dilakukan melalui kanal koperasi atau mitra resmi. Untuk hackathon, integrasi SIMKOPDES ditunjukkan melalui mock API dan data simulasi.
+Kopoin dirancang untuk membantu koperasi:
 
-## Teknologi yang Digunakan
+* meningkatkan keterlibatan anggota muda,
+* meningkatkan pembelian produk lokal,
+* memperkuat rasa memiliki terhadap koperasi,
+* meningkatkan partisipasi dalam kegiatan komunitas,
+* mendorong pertumbuhan anggota melalui referral,
+* menyediakan data perilaku anggota sebagai dasar pengambilan keputusan kampanye.
 
-Berdasarkan pemeriksaan repository saat README ini dibuat, belum ditemukan source code aplikasi, `package.json`, `requirements.txt`, `docker-compose.yml`, `.env.example`, atau konfigurasi framework lain di root repository.
+---
 
-Teknologi yang dapat disebut secara aman saat ini:
+## Teknologi
 
-| Area | Status |
-| --- | --- |
-| Dokumentasi | Markdown melalui `README.md` |
-| Integrasi SIMKOPDES | Dirancang sebagai mock API atau mock data pada tahap MVP, sesuai blueprint |
-| Frontend, backend, database, dan package manager | Belum terdeteksi di repository |
+* React Native
+* Expo
+* TypeScript
+* Tailwind CSS
+* MySQL
+* Mock API SIMKOPDES
 
-## Status MVP
-
-| Kategori | Status |
-| --- | --- |
-| Sudah dibuat di repository | README proyek sebagai dokumentasi utama |
-| Masih berupa simulasi atau rancangan blueprint | Core loop tim - misi - verifikasi - progres - reward - share, mock API SIMKOPDES, QR simulasi, leaderboard, voting, kupon, impact receipt, dan Campaign Console |
-| Direncanakan tahap berikutnya | Pilot koperasi atau komunitas, integrasi resmi SIMKOPDES, campaign builder lanjutan, analitik perilaku anggota, dan API terkontrol |
-
-## Menjalankan Proyek
-
-Saat ini belum ada aplikasi yang dapat dijalankan dari repository ini karena belum tersedia source code, package manager, atau konfigurasi environment.
-
-Jika source code MVP sudah ditambahkan, bagian ini perlu diperbarui berdasarkan file yang benar-benar tersedia, misalnya:
-
-1. Prasyarat runtime yang digunakan.
-2. Cara memasang dependensi sesuai package manager.
-3. Konfigurasi `.env` atau koneksi mock API.
-4. Perintah menjalankan development server.
-5. Perintah build, test, atau lint bila tersedia.
-
-Tidak ada command instalasi atau run yang dicantumkan agar README tidak mengarang teknologi yang belum ada.
-
-## Struktur Repository
-
-Struktur saat ini masih minimal.
-
-```text
-.
-└── README.md
-```
-
-## Demo dan Dokumentasi
-
-- [Demo Aplikasi](TAMBAHKAN_LINK_DEMO)
-- [Video Demo](TAMBAHKAN_LINK_VIDEO)
-- [Blueprint Produk](TAMBAHKAN_LINK_PDF)
-
-Tambahkan tautan resmi setelah demo, video, dan file blueprint tersedia secara publik.
+---
 
 ## Roadmap
 
-| Tahap | Fokus |
-| --- | --- |
-| MVP hackathon | Membuktikan core loop: tim, misi, QR simulasi, verifikasi, progres, reward, dan share |
-| Pilot awal | Menguji satu koperasi atau komunitas muda, satu kampanye produk lokal, dan satu community unlock |
-| Integrasi SIMKOPDES | Menghubungkan data anggota, produk, pembelajaran, dan transaksi setelah akses resmi tersedia |
-| Campaign dan analitik | Mengembangkan Campaign Console, dashboard perilaku anggota, evaluasi retensi, referral aktif, dan redemption reward |
-| Replikasi | Menyiapkan pola campaign yang dapat digunakan ulang oleh koperasi lain dengan tata kelola dan privasi data yang jelas |
+| Tahap                  | Fokus                                                  |
+| ---------------------- | ------------------------------------------------------ |
+| 🚀 Hackathon MVP       | Mission, Team, QR Verification, Reward, Share          |
+| 🧪 Pilot               | Implementasi pada koperasi atau komunitas terpilih     |
+| 🔗 Integrasi SIMKOPDES | Sinkronisasi data anggota, transaksi, dan pembelajaran |
+| 📊 Analytics           | Campaign Console dan analitik perilaku anggota         |
+| 🌍 Scale Up            | Replikasi ke koperasi lain di berbagai daerah          |
+
+---
+
+## Demo
+
+* 🌐 Demo Aplikasi: `TAMBAHKAN_LINK`
+* 🎥 Video Demo: `TAMBAHKAN_LINK`
+* 📄 Blueprint Produk: `TAMBAHKAN_LINK`
+
+---
 
 ## Tim MechaMinds
 
-| Nama | Peran | Profil |
-| --- | --- | --- |
-| Gabriel Batavia | Ketua Tim | GitHub: `TAMBAHKAN_LINK_GITHUB_GABRIEL` - Foto: `TAMBAHKAN_FOTO_GABRIEL` |
-| Rio Valdo | Anggota | GitHub: `TAMBAHKAN_LINK_GITHUB_RIO` - Foto: `TAMBAHKAN_FOTO_RIO` |
-| Raul | Anggota | GitHub: `TAMBAHKAN_LINK_GITHUB_RAUL` - Foto: `TAMBAHKAN_FOTO_RAUL` |
+| Foto | Nama | Peran |
+|------|------|-------|
+| <img src="https://github.com/GabrielBatavia.png" width="60"> | [Gabriel](https://github.com/GabrielBatavia) | Ketua Tim |
+| <img src="https://github.com/ckckckcz.png" width="60"> | [Riovaldo](https://github.com/ckckckcz) | Anggota |
+| <img src="https://github.com/Raudhil.png" width="60"> | [Raul](https://github.com/Raudhil) | Anggota |
+
+---
 
 ## Lisensi
 
-Lisensi belum ditentukan karena file lisensi belum tersedia di repository ini.
+Proyek ini dikembangkan sebagai bagian dari kompetisi **Hackathon SIMKOPDES** oleh Tim **MechaMinds**.
