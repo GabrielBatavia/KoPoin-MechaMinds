@@ -256,19 +256,23 @@ Kopoin dirancang untuk membantu koperasi:
 
 <div align="center">
 
-<img alt="React Native" src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
-<img alt="Expo" src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white">
-<img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
+<img alt="Next JS" src="https://img.shields.io/badge/Next.js-16262E?style=for-the-badge&logo=next.js&logoColor=white">
+<img alt="Nest JS" src="https://img.shields.io/badge/NestJS-E02347?style=for-the-badge&logo=nestjs&logoColor=white">
 <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
-<img alt="MySQL" src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
+<img alt="Flutter" src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
+<img alt="Dart" src="https://img.shields.io/badge/Dart-0358D9?style=for-the-badge&logo=dart&logoColor=white">
+<img alt="Supabase" src="https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=white">
+<img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-466B9F?style=for-the-badge&logo=postgresql&logoColor=white">
 
 </div>
 
 | Lapisan | Teknologi |
 |---|---|
-| Mobile application | React Native, Expo, TypeScript |
+| Mobile application | Flutter, Dart |
+| Web application | Next.js, TypeScript |
+| Backend API | NestJS, TypeScript |
 | Styling | Tailwind CSS |
-| Database | MySQL |
+| Database & Backend Service | Supabase, PostgreSQL |
 | Integrasi MVP | Mock API SIMKOPDES |
 
 ---
