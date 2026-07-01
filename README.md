@@ -293,16 +293,6 @@ flowchart LR
 
 ---
 
-## Demo dan Dokumentasi
-
-| Materi | Tautan |
-|---|---|
-| 🌐 Demo aplikasi | `TAMBAHKAN_LINK_DEMO` |
-| 🎥 Video demo | `TAMBAHKAN_LINK_VIDEO` |
-| 📄 Blueprint produk | `TAMBAHKAN_LINK_BLUEPRINT` |
-
-> [!TIP]
-> Ganti placeholder di atas sebelum repository dipublikasikan atau dinilai.
 
 ### Aset visual README
 
