@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 
 import type { Campaign, CompletionSummary, Mission, Team, User, VerificationLog } from "../data/kopoinSeed";
 import { colors, radii, shadows, spacing } from "../theme";
@@ -58,9 +58,8 @@ export function MissionHubScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.logo}>kopoin</Text>
-          <Text style={styles.headerMeta}>Misi & Reward</Text>
+        <View style={{ alignItems: "flex-start" }}>
+          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
         </View>
         <View style={styles.headerBadge}>
           <Text style={styles.headerBadgeText}>{team.name}</Text>
@@ -244,10 +243,10 @@ const styles = StyleSheet.create({
     gap: spacing.md
   },
   logo: {
-    fontFamily: "Geist_900Black",
-    color: colors.teal,
-    fontSize: 32,
-    letterSpacing: -1.4
+    width: 90,
+    height: 30,
+    marginBottom: 10,
+    alignItems: "center"
   },
   headerMeta: {
     color: colors.muted,

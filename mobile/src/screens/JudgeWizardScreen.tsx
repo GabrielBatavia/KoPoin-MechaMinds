@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
-  Animated
+  Animated,
+  Image
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -100,11 +101,7 @@ export function JudgeWizardScreen({ onFinish, onSkip }: JudgeWizardScreenProps) 
           >
             {/* Brand Logo & Name */}
             <View style={styles.brandRow}>
-              <View style={styles.logoMarkContainer}>
-                <View style={styles.logoBar1} />
-                <View style={styles.logoBar2} />
-              </View>
-              <Text style={styles.brandText}>Kopoin</Text>
+              <Image source={require("../assets/images/logo.png")} style={styles.wizardLogo} resizeMode="contain" />
             </View>
 
             {/* Slide Title */}
@@ -180,6 +177,7 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
     marginBottom: 8,
   },
   logoMarkContainer: {
@@ -292,5 +290,11 @@ const styles = StyleSheet.create({
   skipPlaceholder: {
     height: 48,
     marginTop: 6,
+  },
+  wizardLogo: {
+    width: 140,
+    height: 45,
+    marginBottom: 24,
+    alignSelf: "flex-start"
   }
 });

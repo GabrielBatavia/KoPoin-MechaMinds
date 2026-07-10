@@ -11,7 +11,8 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  ImageBackground
+  ImageBackground,
+  Image
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Path, Circle, Line } from "react-native-svg";
@@ -128,6 +129,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
 
         {/* Top Header Section */}
         <View style={styles.headerSection}>
+          <Image source={require("../assets/images/logo.png")} style={styles.authLogo} resizeMode="contain" />
           <Text style={styles.headerTitle}>Go ahead and set up{"\n"}your account</Text>
           <Text style={styles.headerSubtitle}>
             Sign {activeTab === "login" ? "in" : "up"} to enjoy the best managing experience at Koperasi Desa Merah Putih
@@ -495,7 +497,8 @@ const styles = StyleSheet.create({
   headerSection: {
     paddingHorizontal: spacing.lg,
     paddingTop: SCREEN_HEIGHT * 0.12,
-    paddingBottom: spacing.lg
+    paddingBottom: spacing.lg,
+    alignItems: "flex-start"
   },
   headerTitle: {
     color: colors.white,
@@ -773,5 +776,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
     letterSpacing: 0.5
+  },
+  authLogo: {
+    width: 140,
+    height: 45,
+    marginBottom: 24,
+    alignSelf: "flex-start"
   }
 });

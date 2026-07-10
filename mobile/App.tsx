@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal } from "react-native";
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Platform, StatusBar as RNStatusBar } from "react-native";
 import { useFonts, Geist_900Black } from "@expo-google-fonts/geist";
 
 import { DemoState, mainMissionId } from "./src/data/kopoinSeed";
@@ -416,7 +416,8 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
+    paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight : 0
   },
   page: {
     padding: spacing.md,

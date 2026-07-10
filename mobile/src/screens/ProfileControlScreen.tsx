@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 
 import type { CompletionSummary, Cooperative, Team, User, UserVote } from "../data/kopoinSeed";
 import { colors, radii, shadows, spacing } from "../theme";
@@ -34,9 +34,8 @@ export function ProfileControlScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.logo}>kopoin</Text>
-          <Text style={styles.headerMeta}>Profil</Text>
+        <View style={{ alignItems: "flex-start" }}>
+          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
         </View>
         <View style={styles.memberBadge}>
           <Text style={styles.memberBadgeText}>{user.status}</Text>
@@ -215,10 +214,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   logo: {
-    fontFamily: "Geist_900Black",
-    color: colors.teal,
-    fontSize: 32,
-    letterSpacing: -1.4
+    width: 90,
+    height: 30,
+    marginBottom: 10,
+    alignSelf: "flex-start"
   },
   headerMeta: {
     color: colors.muted,

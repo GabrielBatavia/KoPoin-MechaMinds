@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 
 import type { Campaign, CompletionSummary, LeaderboardEntry, Team, UserVote, VotePoll } from "../data/kopoinSeed";
 import type { TeamWrapData } from "../services/teamWrap";
@@ -54,8 +54,8 @@ export function CommunityHubScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.logo}>kopoin</Text>
+        <View style={{ alignItems: "flex-start" }}>
+          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
           <Text style={styles.headerMeta}>Komunitas</Text>
         </View>
         <View style={styles.rankBadge}>
@@ -316,10 +316,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   logo: {
-    fontFamily: "Geist_900Black",
-    color: colors.teal,
-    fontSize: 32,
-    letterSpacing: -1.4
+    width: 90,
+    height: 30,
+    marginBottom: 10,
+    alignSelf: "flex-start"
   },
   headerMeta: {
     color: colors.muted,

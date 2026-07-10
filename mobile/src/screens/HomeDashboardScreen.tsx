@@ -6,7 +6,9 @@ import {
   View,
   TextInput,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Image,
+  Modal
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -26,7 +28,11 @@ import {
   MoreHorizontal,
   ChevronRight,
   ArrowRight,
-  Zap
+  Zap,
+  Scan,
+  ChevronDown,
+  Circle,
+  X
 } from "lucide-react-native";
 
 type IconName =
@@ -109,6 +115,28 @@ import type { Campaign, CompletionSummary, Cooperative, Team, User, UserVote } f
 import { colors, radii, shadows, spacing } from "../theme";
 import { formatKopoin, formatRupiah } from "../utils/formatters";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const OUTLETS = [
+  {
+    name: "Raffles Square Juanda Jakarta",
+    address: "Raffles Square Juanda Jakarta, Jalan Veteran 2A 8 1, RT.2/RW.2, Gambir, Jakarta Pusat"
+  },
+  {
+    name: "Koperasi Desa Sukamaju",
+    address: "Jalan Veteran RT 01/RW 02, Desa Sukamaju, Kec. Kenangan"
+  },
+  {
+    name: "Koperasi Unit Desa Merah Putih",
+    address: "Jalan Raya Sukamaju No. 45, Desa Sukamaju, Kec. Kenangan"
+  }
+];
+
+const promoImages = [
+  require("../assets/images/promo/image1.png"),
+  require("../assets/images/promo/image2.png")
+];
+
 type HomeDashboardScreenProps = {
   campaign: Campaign;
   completionSummary: CompletionSummary | null;
@@ -142,6 +170,9 @@ export function HomeDashboardScreen({
 }: HomeDashboardScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [seconds, setSeconds] = useState(24 * 60 + 8); // 24 minutes, 8 seconds
+  const [selectedOutlet, setSelectedOutlet] = useState<{ name: string; address: string }>(OUTLETS[0]!);
+  const [showOutletModal, setShowOutletModal] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   // Live ticking countdown for Flash Vote banner
   useEffect(() => {
@@ -257,8 +288,8 @@ export function HomeDashboardScreen({
       >
         {/* Brand row with Logo Text and Level Badge */}
         <View style={styles.brandRow}>
-          <View>
-            <Text style={styles.logoText}>kopoin</Text>
+          <View style={{ alignItems: "flex-start" }}>
+            <Image source={require("../assets/images/white-logo.png")} style={styles.dashboardLogo} resizeMode="contain" />
             <Text style={styles.headerMeta}>Selamat datang, {user.name}</Text>
           </View>
           <View style={styles.headerBadge}>
@@ -266,46 +297,84 @@ export function HomeDashboardScreen({
           </View>
         </View>
 
-        {/* Search row with circular Profile Avatar */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchContainer}>
-            <CustomIcon name="search" size={20} color={colors.muted} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Cari kopi, misi, UMKM..."
-              placeholderTextColor="#A0B0AF"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-          <TouchableOpacity style={styles.avatarButton} onPress={onOpenProfile} activeOpacity={0.8}>
-            <LinearGradient
-              colors={["#FFE082", "#FFB300"]}
-              style={styles.avatarGradient}
+        {/* Outlet Selector & Scanner Search Card */}
+        <View style={styles.outletSearchCard}>
+          <View style={styles.outletRow}>
+            {/* Left section: Outlet selection */}
+            <TouchableOpacity
+              style={styles.outletSelectArea}
+              onPress={() => setShowOutletModal(true)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.avatarText}>{initial}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.outletNameText} numberOfLines={1}>
+                    {selectedOutlet.name}
+                  </Text>
+                  <Text style={styles.outletAddressText} numberOfLines={1}>
+                    {selectedOutlet.address}
+                  </Text>
+                </View>
+                <View style={styles.chevronOutlineCircle}>
+                  <ChevronDown size={10} color="#5E7A6B" strokeWidth={4.5} />
+                </View>
+              </View>
+            </TouchableOpacity>
 
-        {/* Hero Promo Banner (Starbucks style) */}
-        <View style={styles.heroPromoCard}>
-          <View style={styles.heroPromoLeft}>
-            <View style={styles.promoBadge}>
-              <Text style={styles.promoBadgeText}>COFFEE DAY SPECIAL</Text>
-            </View>
-            <Text style={styles.promoTitle}>Discount up to 60%*</Text>
-            <Text style={styles.promoSub}>Beli Kopi Sukamaju dapat cashback Kopoin & bantu tim naik peringkat.</Text>
-            <TouchableOpacity style={styles.promoLink} onPress={onOpenMission}>
-              <Text style={styles.promoLinkText}>Ikut Misi Sekarang</Text>
-              <CustomIcon name="arrow-right" size={14} color={colors.white} style={{ marginLeft: 4 }} />
+            {/* Vertical Divider */}
+            <View style={styles.verticalDivider} />
+
+            {/* Right section: Profile Photo */}
+            <TouchableOpacity
+              style={styles.avatarButton}
+              onPress={onOpenProfile}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={["#FFE082", "#FFB300"]}
+                style={styles.avatarGradient}
+              >
+                <Text style={styles.avatarText}>{initial}</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-          <View style={styles.heroPromoRight}>
-            <CustomIcon name="coffee" size={70} color="#F8F1DE" style={styles.coffeeIconBack} />
-            <View style={styles.coffeeCupFloating}>
-              <CustomIcon name="cafe" size={32} color={colors.gold} />
-            </View>
+        </View>
+
+        {/* Full-width Image Promo Slider */}
+        <View style={styles.sliderContainer}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(event) => {
+              const slide = Math.round(
+                event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width
+              );
+              if (slide !== activeSlide) {
+                setActiveSlide(slide);
+              }
+            }}
+            scrollEventThrottle={16}
+            style={styles.sliderScrollView}
+          >
+            {promoImages.map((img, idx) => (
+              <TouchableOpacity key={idx} activeOpacity={0.9} style={styles.slideTouch} onPress={onOpenMission}>
+                <Image source={img} style={styles.slideImage} resizeMode="cover" />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Dot Indicators */}
+          <View style={styles.dotsContainer}>
+            {promoImages.map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.dot,
+                  activeSlide === idx ? styles.activeDot : styles.inactiveDot
+                ]}
+              />
+            ))}
           </View>
         </View>
       </LinearGradient>
@@ -520,6 +589,43 @@ export function HomeDashboardScreen({
           </View>
         </View>
       </TouchableOpacity>
+
+      {/* Outlet Selection Bottom Sheet Modal */}
+      <Modal visible={showOutletModal} transparent animationType="slide" onRequestClose={() => setShowOutletModal(false)}>
+        <View style={styles.outletSheetOverlay}>
+          <View style={styles.outletSheetContent}>
+            {/* Header */}
+            <View style={styles.outletSheetHeader}>
+              <Text style={styles.outletSheetTitle}>Pilih Outlet Koperasi</Text>
+              <TouchableOpacity onPress={() => setShowOutletModal(false)}>
+                <X size={22} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* List */}
+            <ScrollView style={styles.outletSheetScroll} showsVerticalScrollIndicator={false}>
+              {OUTLETS.map((outlet, idx) => {
+                const isSelected = selectedOutlet.name === outlet.name;
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[styles.outletItem, isSelected && styles.outletItemActive]}
+                    onPress={() => {
+                      setSelectedOutlet(outlet);
+                      setShowOutletModal(false);
+                    }}
+                  >
+                    <Text style={[styles.outletItemName, isSelected && styles.outletItemNameActive]}>
+                      {outlet.name}
+                    </Text>
+                    <Text style={styles.outletItemAddress}>{outlet.address}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -545,11 +651,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: 4
   },
-  logoText: {
-    fontFamily: "Geist_900Black",
-    color: colors.white,
-    fontSize: 28,
-    letterSpacing: -1.2
+  dashboardLogo: {
+    width: 90,
+    height: 30,
+    marginBottom: 8,
+    alignSelf: "flex-start"
   },
   headerMeta: {
     color: "#EAFBF7",
@@ -1065,5 +1171,196 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8BBD0",
     alignItems: "center",
     justifyContent: "center"
+  },
+  outletSearchCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 12,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3
+  },
+  outletRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  outletSelectArea: {
+    flex: 1
+  },
+  outletTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  outletNameText: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: colors.text,
+    maxWidth: "85%"
+  },
+  chevronOutlineCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#5E7A6B",
+    backgroundColor: "#5e7a6b3d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  outletAddressText: {
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 2,
+    fontWeight: "600"
+  },
+  verticalDivider: {
+    width: 1,
+    height: 38,
+    backgroundColor: colors.line,
+    marginHorizontal: 8
+  },
+  scannerButton: {
+    padding: 2
+  },
+  scannerIconBg: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#FDF0F0",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  horizontalSeparator: {
+    height: 1,
+    backgroundColor: colors.line,
+    marginVertical: 10
+  },
+  melayaniRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4
+  },
+  melayaniLabel: {
+    fontSize: 11,
+    color: colors.muted,
+    fontWeight: "800",
+    marginRight: 6
+  },
+  servicePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginRight: 10
+  },
+  serviceText: {
+    fontSize: 11,
+    color: colors.slate,
+    fontWeight: "800"
+  },
+  sliderContainer: {
+    marginTop: 16,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: colors.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+    position: "relative"
+  },
+  sliderScrollView: {
+    width: "100%",
+    height: 180
+  },
+  slideTouch: {
+    width: SCREEN_WIDTH - 32, // matching padding spacing.md * 2
+    height: 180
+  },
+  slideImage: {
+    width: "100%",
+    height: "100%"
+  },
+  dotsContainer: {
+    position: "absolute",
+    bottom: 12,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3
+  },
+  activeDot: {
+    width: 18,
+    backgroundColor: colors.white
+  },
+  inactiveDot: {
+    width: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.5)"
+  },
+  outletSheetOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end"
+  },
+  outletSheetContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.md,
+    paddingTop: 20,
+    paddingBottom: 36,
+    maxHeight: "60%"
+  },
+  outletSheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderColor: colors.line
+  },
+  outletSheetTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text
+  },
+  outletSheetScroll: {
+    marginVertical: 10
+  },
+  outletItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderColor: colors.line
+  },
+  outletItemActive: {
+    backgroundColor: "#EAFBF7",
+    borderRadius: 8,
+    paddingHorizontal: 8
+  },
+  outletItemName: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: colors.text
+  },
+  outletItemNameActive: {
+    color: colors.teal
+  },
+  outletItemAddress: {
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 4,
+    fontWeight: "600"
   }
 });
