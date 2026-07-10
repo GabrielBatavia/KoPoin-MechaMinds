@@ -8,6 +8,19 @@ const teamId = "team_pemuda_sukamaju";
 const mainMissionId = "mis_beli_kopi_sukamaju";
 
 type ActionResponse = Response<any, Record<string, any>>;
+type CheckoutItem = {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+const fallbackCheckoutItems: CheckoutItem[] = [
+  { name: "Roti sobek koperasi", quantity: 1, unitPrice: 12000 },
+  { name: "Susu kedelai dingin", quantity: 2, unitPrice: 6500 },
+  { name: "Keripik pisang UMKM", quantity: 1, unitPrice: 15000 },
+  { name: "Air mineral desa", quantity: 1, unitPrice: 4000 },
+  { name: "Kue lapis pasar", quantity: 2, unitPrice: 5000 },
+];
 
 function resolveUserId(req: Request): string {
   return String(req.query.userId || req.body?.userId || defaultUserId);
@@ -23,6 +36,26 @@ function formatDateTime(value: string | null | undefined): string {
     minute: "2-digit",
     timeZone: "Asia/Jakarta",
   }).format(new Date(value));
+}
+
+function normalizeCheckoutItems(items: unknown): CheckoutItem[] {
+  if (!Array.isArray(items)) {
+    return fallbackCheckoutItems.slice(0, 3);
+  }
+
+  const normalized = items
+    .map((item: any) => ({
+      name: String(item?.name || "").trim(),
+      quantity: Math.max(1, Math.min(99, Number(item?.quantity || 1))),
+      unitPrice: Math.max(0, Math.round(Number(item?.unitPrice || 0))),
+    }))
+    .filter((item) => item.name.length > 0 && item.unitPrice > 0);
+
+  return normalized.length ? normalized : fallbackCheckoutItems.slice(0, 3);
+}
+
+function createReceiptNo() {
+  return `KPD-${Date.now().toString(36).toUpperCase()}`;
 }
 
 function buildLeaderboard(hasCompletedMission: boolean) {
@@ -464,6 +497,68 @@ router.post("/missions/submit", async (req: Request, res: Response) => {
     }
 
     await sendState(res, userId, completed ? `Misi selesai. +${mission.points} Poin masuk.` : "Progress misi bertambah.");
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+router.post("/member-checkout", async (req: Request, res: Response) => {
+  try {
+    const userId = resolveUserId(req);
+    const items = normalizeCheckoutItems(req.body?.items);
+    const paymentMethod = String(req.body?.paymentMethod || "QR Member").trim() || "QR Member";
+    const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const pointsEarned = Math.max(1, Math.floor(totalAmount / 1000));
+    const receiptNo = createReceiptNo();
+
+    const { data: user, error: userError } = await supabase
+      .from("auth")
+      .select("id, points_balance")
+      .eq("id", userId)
+      .maybeSingle();
+    if (userError) throw userError;
+    if (!user) {
+      res.status(404).json({ success: false, error: { message: "Member tidak ditemukan." } });
+      return;
+    }
+
+    const balanceAfter = Number(user.points_balance || 0) + pointsEarned;
+    const { error: authError } = await supabase
+      .from("auth")
+      .update({ points_balance: balanceAfter })
+      .eq("id", userId);
+    if (authError) throw authError;
+
+    const itemLabel =
+      items.length > 1
+        ? `${items[0]?.name || "Belanja Kopdes"} +${items.length - 1} item`
+        : items[0]?.name || "Belanja Kopdes";
+
+    const { error: transactionError } = await supabase.from("kopoin_transactions").insert({
+      id: `tx_${userId}_member_checkout_${Date.now()}`,
+      user_id: userId,
+      title: itemLabel,
+      subtitle: `${receiptNo} - ${paymentMethod}`,
+      transaction_type: "grocery",
+      cash_amount: -totalAmount,
+      points_amount: pointsEarned,
+      icon_name: "grocery",
+    });
+    if (transactionError) throw transactionError;
+
+    const state = await buildState(userId);
+    res.json({
+      success: true,
+      message: `Transaksi berhasil. +${pointsEarned} Poin masuk.`,
+      data: state,
+      checkout: {
+        receiptNo,
+        totalAmount,
+        pointsEarned,
+        balanceAfter,
+        items,
+      },
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: { message: error.message } });
   }

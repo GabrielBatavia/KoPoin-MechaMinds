@@ -19,9 +19,11 @@ import {
   joinTeamRemote,
   leaveCommunityRemote,
   redeemCouponRemote,
+  submitMemberCheckoutRemote,
   submitMissionRemote,
   submitVoteRemote
 } from "./src/services/mobileApi";
+import type { MemberCheckoutRequest, MemberCheckoutResult } from "./src/services/mobileApi";
 import { CommunityHubScreen } from "./src/screens/CommunityHubScreen";
 import { HomeDashboardScreen } from "./src/screens/HomeDashboardScreen";
 import { JudgeWizardScreen } from "./src/screens/JudgeWizardScreen";
@@ -270,6 +272,61 @@ export default function App() {
     }
   }
 
+  async function handleMemberCheckout(checkout: MemberCheckoutRequest): Promise<{ message?: string; checkout: MemberCheckoutResult }> {
+    try {
+      const result = await submitMemberCheckoutRemote(getCurrentUserId(), checkout);
+      setDemoState(result.state);
+      return { message: result.message, checkout: result.checkout };
+    } catch (error: any) {
+      const totalAmount = checkout.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const pointsEarned = Math.max(1, Math.floor(totalAmount / 1000));
+      const balanceAfter = demoState.user.kopoinBalance + pointsEarned;
+      const receiptNo = `LOCAL-${Date.now().toString(36).toUpperCase()}`;
+      const itemLabel =
+        checkout.items.length > 1
+          ? `${checkout.items[0]?.name || "Belanja Kopdes"} +${checkout.items.length - 1} item`
+          : checkout.items[0]?.name || "Belanja Kopdes";
+
+      setDemoState((currentState) => ({
+        ...currentState,
+        user: {
+          ...currentState.user,
+          kopoinBalance: currentState.user.kopoinBalance + pointsEarned
+        },
+        transactions: [
+          {
+            id: `tx_local_member_checkout_${Date.now()}`,
+            title: itemLabel,
+            subtitle: `${receiptNo} - ${checkout.paymentMethod}`,
+            date: new Date().toLocaleString("id-ID", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            }),
+            type: "grocery",
+            amountText: `-Rp${totalAmount.toLocaleString("id-ID")}`,
+            pointsBadge: `+${pointsEarned} Poin`,
+            iconName: "grocery"
+          },
+          ...(currentState.transactions || [])
+        ]
+      }));
+
+      return {
+        message: error?.message || "Backend belum tersinkron. Transaksi tersimpan lokal untuk demo.",
+        checkout: {
+          receiptNo,
+          totalAmount,
+          pointsEarned,
+          balanceAfter,
+          items: checkout.items
+        }
+      };
+    }
+  }
+
   async function handleSubmitVote(optionId: string) {
     try {
       const result = await submitVoteRemote(getCurrentUserId(), optionId);
@@ -341,6 +398,7 @@ export default function App() {
           user={demoState.user}
           onClose={() => setActiveTab("home")}
           onOpenReferral={() => setActiveTab("referral")}
+          onSubmitMemberCheckout={handleMemberCheckout}
         />
       );
     }
@@ -481,6 +539,7 @@ export default function App() {
             user={demoState.user}
             onClose={() => setActiveTab("home")}
             onOpenReferral={() => setActiveTab("referral")}
+            onSubmitMemberCheckout={handleMemberCheckout}
           />
         </View>
         {renderBottomNav()}

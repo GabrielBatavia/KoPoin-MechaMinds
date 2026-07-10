@@ -11,9 +11,29 @@ type ApiPayload = {
   success: boolean;
   message?: string;
   data?: DemoState;
+  checkout?: MemberCheckoutResult;
   error?: {
     message?: string;
   };
+};
+
+export type MemberCheckoutItem = {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export type MemberCheckoutRequest = {
+  items: MemberCheckoutItem[];
+  paymentMethod: string;
+};
+
+export type MemberCheckoutResult = {
+  receiptNo: string;
+  totalAmount: number;
+  pointsEarned: number;
+  balanceAfter: number;
+  items: MemberCheckoutItem[];
 };
 
 async function requestState(path: string, body?: Record<string, unknown>): Promise<ApiPayload> {
@@ -70,4 +90,16 @@ export async function redeemCouponRemote(userId: string, couponId: string): Prom
 export async function submitVoteRemote(userId: string, optionId: string): Promise<{ state: DemoState; message?: string }> {
   const payload = await requestState("/vote", { userId, optionId });
   return { state: payload.data!, message: payload.message };
+}
+
+export async function submitMemberCheckoutRemote(
+  userId: string,
+  checkout: MemberCheckoutRequest,
+): Promise<{ state: DemoState; message?: string; checkout: MemberCheckoutResult }> {
+  const payload = await requestState("/member-checkout", { userId, ...checkout });
+  if (!payload.checkout) {
+    throw new Error("Response checkout kosong.");
+  }
+
+  return { state: payload.data!, message: payload.message, checkout: payload.checkout };
 }

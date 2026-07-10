@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   ScrollView,
-  Dimensions,
   Modal,
   Switch,
   StatusBar
@@ -18,18 +18,59 @@ import {
   ChevronRight
 } from "lucide-react-native";
 import { colors, radii, spacing } from "../theme";
-import { formatNumber } from "../utils/formatters";
+import { formatNumber, formatRupiah } from "../utils/formatters";
 import type { User } from "../data/kopoinSeed";
+import type { MemberCheckoutItem, MemberCheckoutRequest, MemberCheckoutResult } from "../services/mobileApi";
 
 type QRCodeMemberScreenProps = {
   user: User;
   onClose: () => void;
   onOpenReferral: () => void;
+  onSubmitMemberCheckout: (
+    checkout: MemberCheckoutRequest,
+  ) => Promise<{ message?: string; checkout: MemberCheckoutResult }>;
 };
 
-export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemberScreenProps) {
+const snackCatalog: MemberCheckoutItem[] = [
+  { name: "Roti sobek koperasi", quantity: 1, unitPrice: 12000 },
+  { name: "Susu kedelai dingin", quantity: 2, unitPrice: 6500 },
+  { name: "Keripik pisang UMKM", quantity: 1, unitPrice: 15000 },
+  { name: "Air mineral desa", quantity: 1, unitPrice: 4000 },
+  { name: "Kue lapis pasar", quantity: 2, unitPrice: 5000 },
+  { name: "Permen jahe lokal", quantity: 3, unitPrice: 2500 }
+];
+
+function createRandomCheckoutItems(): MemberCheckoutItem[] {
+  return [...snackCatalog].sort(() => Math.random() - 0.5).slice(0, 3);
+}
+
+function getPaymentMethod({
+  gopayActive,
+  binadigitalActive,
+  isakuLinked,
+  ovoLinked
+}: {
+  gopayActive: boolean;
+  binadigitalActive: boolean;
+  isakuLinked: boolean;
+  ovoLinked: boolean;
+}) {
+  if (gopayActive) return "Gopay";
+  if (binadigitalActive) return "Binadigital";
+  if (isakuLinked) return "i.saku";
+  if (ovoLinked) return "OVO";
+  return "QR Member";
+}
+
+export function QRCodeMemberScreen({ user, onClose, onOpenReferral, onSubmitMemberCheckout }: QRCodeMemberScreenProps) {
   const [poinCashActive, setPoinCashActive] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
+  const [checkoutStage, setCheckoutStage] = useState<"qr" | "checkout">("qr");
+  const [checkoutItems] = useState<MemberCheckoutItem[]>(() => createRandomCheckoutItems());
+  const [checkoutResult, setCheckoutResult] = useState<MemberCheckoutResult | null>(null);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
+  const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
   
   // Payment methods states
   const [isakuLinked, setIsakuLinked] = useState(false);
@@ -41,10 +82,34 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemb
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
   const canPay = gopayActive || binadigitalActive || isakuLinked || ovoLinked;
+  const checkoutTotal = checkoutItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const pointsPreview = Math.max(1, Math.floor(checkoutTotal / 1000));
+  const paymentMethod = getPaymentMethod({ gopayActive, binadigitalActive, isakuLinked, ovoLinked });
 
-  const handlePay = () => {
-    if (!canPay) return;
-    setShowPaymentSuccess(true);
+  const handlePay = async () => {
+    if (checkoutStage === "qr") {
+      setCheckoutStage("checkout");
+      setCheckoutError("");
+      return;
+    }
+
+    if (!canPay || isSubmittingCheckout || checkoutResult) return;
+
+    try {
+      setIsSubmittingCheckout(true);
+      setCheckoutError("");
+      const result = await onSubmitMemberCheckout({
+        items: checkoutItems,
+        paymentMethod
+      });
+      setCheckoutResult(result.checkout);
+      setCheckoutMessage(result.message || "Transaksi member berhasil dan poin sudah masuk ke akun.");
+      setShowPaymentSuccess(true);
+    } catch (error: any) {
+      setCheckoutError(error?.message || "Transaksi gagal diproses.");
+    } finally {
+      setIsSubmittingCheckout(false);
+    }
   };
 
   return (
@@ -52,6 +117,9 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemb
       {/* 1. Header (Premium flat matching the design) */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>QR Code Member</Text>
+        <TouchableOpacity onPress={onClose} style={styles.headerCloseBtn}>
+          <Text style={styles.headerCloseText}>Tutup</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -71,6 +139,47 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemb
             Tunjukkan QR Code ke kasir sebelum transaksi untuk mendapatkan semua promo khusus member Koperasi.
           </Text>
         </View>
+
+        {checkoutStage === "checkout" && (
+          <View style={styles.checkoutCard}>
+            <View style={styles.checkoutHeader}>
+              <View>
+                <Text style={styles.checkoutEyebrow}>QR member discan kasir</Text>
+                <Text style={styles.checkoutTitle}>Checkout Jajan Kopdes</Text>
+              </View>
+              <View style={styles.pointsPreviewBadge}>
+                <Text style={styles.pointsPreviewText}>+{pointsPreview} Poin</Text>
+              </View>
+            </View>
+
+            <View style={styles.checkoutList}>
+              {checkoutItems.map((item) => (
+                <View key={item.name} style={styles.checkoutItemRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.checkoutItemName}>{item.name}</Text>
+                    <Text style={styles.checkoutItemMeta}>
+                      {item.quantity} x {formatRupiah(item.unitPrice)}
+                    </Text>
+                  </View>
+                  <Text style={styles.checkoutItemTotal}>
+                    {formatRupiah(item.quantity * item.unitPrice)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.checkoutTotalRow}>
+              <Text style={styles.checkoutTotalLabel}>Total belanja</Text>
+              <Text style={styles.checkoutTotalValue}>{formatRupiah(checkoutTotal)}</Text>
+            </View>
+
+            <Text style={styles.checkoutNote}>
+              Poin dihitung otomatis dari transaksi member dan akan masuk setelah pembayaran berhasil.
+            </Text>
+
+            {checkoutError ? <Text style={styles.checkoutError}>{checkoutError}</Text> : null}
+          </View>
+        )}
 
         {/* NEW: Ajak Teman CTA Banner (Polished Gradient Promo Card) */}
         <TouchableOpacity
@@ -229,14 +338,25 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemb
       {/* 5. Footer (Edge-to-edge blue pay button) */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.payBtn, canPay ? styles.payBtnActive : styles.payBtnDisabled]}
-          disabled={!canPay}
+          style={[styles.payBtn, canPay || checkoutStage === "qr" ? styles.payBtnActive : styles.payBtnDisabled]}
+          disabled={(checkoutStage === "checkout" && (!canPay || Boolean(checkoutResult))) || isSubmittingCheckout}
           onPress={handlePay}
         >
-          <Text style={[styles.payBtnText, canPay ? styles.payBtnTextActive : styles.payBtnTextDisabled]}>
-            BAYAR
-          </Text>
+          {isSubmittingCheckout ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={[styles.payBtnText, canPay || checkoutStage === "qr" ? styles.payBtnTextActive : styles.payBtnTextDisabled]}>
+              {checkoutStage === "qr"
+                ? "SIMULASIKAN KASIR SCAN QR"
+                : checkoutResult
+                  ? "TRANSAKSI SELESAI"
+                  : `BAYAR ${formatRupiah(checkoutTotal)}`}
+            </Text>
+          )}
         </TouchableOpacity>
+        {checkoutStage === "checkout" && !canPay ? (
+          <Text style={styles.footerHint}>Aktifkan atau hubungkan salah satu metode pembayaran.</Text>
+        ) : null}
       </View>
 
       {/* 6. Success Payment Modal */}
@@ -248,26 +368,31 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral }: QRCodeMemb
             </View>
             <Text style={styles.successTitle}>Pembayaran Berhasil!</Text>
             <Text style={styles.successBody}>
-              Transaksi member Anda berhasil diproses oleh kasir.
+              {checkoutMessage || "Transaksi member Anda berhasil diproses oleh kasir dan poin sudah masuk ke akun."}
             </Text>
             <View style={styles.successDetailBox}>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={styles.successDetailTitle}>Metode Pembayaran</Text>
-                <Text style={styles.successDetailSub}>
-                  {gopayActive && "Gopay"}
-                  {!gopayActive && binadigitalActive && "Binadigital"}
-                  {!gopayActive && !binadigitalActive && isakuLinked && "i.saku"}
-                  {!gopayActive && !binadigitalActive && !isakuLinked && ovoLinked && "OVO"}
+                <Text style={styles.successDetailTitle}>Receipt</Text>
+                <Text style={styles.successDetailSub}>{checkoutResult?.receiptNo || "Kopdes Checkout"}</Text>
+              </View>
+              <View style={{ alignItems: "flex-end", gap: 4 }}>
+                <Text style={styles.successDetailTitle}>Poin Masuk</Text>
+                <Text style={[styles.successDetailSub, { color: colors.teal, fontWeight: "900" }]}>
+                  +{formatNumber(checkoutResult?.pointsEarned || pointsPreview)} Poin
                 </Text>
               </View>
-              {poinCashActive && (
-                <View style={{ alignItems: "flex-end", gap: 4 }}>
-                  <Text style={styles.successDetailTitle}>Poin Cash Terpakai</Text>
-                  <Text style={[styles.successDetailSub, { color: colors.teal, fontWeight: "900" }]}>
-                    -{formatNumber(user.kopoinBalance)} Poin
-                  </Text>
-                </View>
-              )}
+            </View>
+            <View style={styles.successDetailBox}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={styles.successDetailTitle}>Metode</Text>
+                <Text style={styles.successDetailSub}>{paymentMethod}</Text>
+              </View>
+              <View style={{ alignItems: "flex-end", gap: 4 }}>
+                <Text style={styles.successDetailTitle}>Total</Text>
+                <Text style={styles.successDetailSub}>
+                  {formatRupiah(checkoutResult?.totalAmount || checkoutTotal)}
+                </Text>
+              </View>
             </View>
             <TouchableOpacity style={styles.successCloseBtn} onPress={() => setShowPaymentSuccess(false)}>
               <Text style={styles.successCloseText}>Kembali</Text>
@@ -287,6 +412,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 36,
     paddingBottom: 16,
@@ -299,6 +425,17 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: colors.text,
     marginLeft: 4
+  },
+  headerCloseBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radii.sm,
+    backgroundColor: "#F2F4F3"
+  },
+  headerCloseText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: colors.teal
   },
   scrollContent: {
     paddingBottom: 110
@@ -332,6 +469,104 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "700",
     paddingHorizontal: 28
+  },
+  checkoutCard: {
+    marginHorizontal: spacing.md,
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: colors.white,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.line
+  },
+  checkoutHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 12
+  },
+  checkoutEyebrow: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: colors.teal,
+    textTransform: "uppercase"
+  },
+  checkoutTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text,
+    marginTop: 2
+  },
+  pointsPreviewBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "#EAFBF7"
+  },
+  pointsPreviewText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: colors.teal
+  },
+  checkoutList: {
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.line
+  },
+  checkoutItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: colors.line
+  },
+  checkoutItemName: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.text
+  },
+  checkoutItemMeta: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.muted,
+    marginTop: 2
+  },
+  checkoutItemTotal: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.text
+  },
+  checkoutTotalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 12
+  },
+  checkoutTotalLabel: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.muted
+  },
+  checkoutTotalValue: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text
+  },
+  checkoutNote: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.muted,
+    lineHeight: 16,
+    marginTop: 8
+  },
+  checkoutError: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.danger,
+    marginTop: 8
   },
   referralCtaBanner: {
     flexDirection: "row",
@@ -540,6 +775,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderColor: colors.line
+  },
+  footerHint: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.muted,
+    textAlign: "center",
+    marginTop: 8
   },
   payBtn: {
     width: "100%",
