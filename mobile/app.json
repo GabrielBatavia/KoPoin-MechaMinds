@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Kopoin",
+    "slug": "kopoin-mvp",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Kopoin memakai kamera untuk memindai QR transaksi demo produk koperasi.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Kopoin memakai kamera untuk memindai QR transaksi demo produk koperasi."
+      }
+    },
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "CAMERA",
+        "android.permission.CAMERA"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#F8F1DE"
+      },
+      "package": "com.anonymous.kopoinmvp"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
