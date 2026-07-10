@@ -149,7 +149,7 @@ Loop ini membuat koperasi hadir bukan hanya saat anggota membutuhkan layanan, te
 
 | Fitur | Mengapa penting |
 |---|---|
-| **📈 Leaderboard Komunitas** | Menampilkan progres dan kebanggaan tim berdasarkan konsistensi, partisipasi, referral, serta dukungan produk lokal, bukan hanya nominal belanja. |
+| **📈 Leaderboard Komunitas** | Menampilkan progres dan kebanggaan tim berdasarkan konsistensi, partisipasi, referral, serta dukungan produk lokal—bukan hanya nominal belanja. |
 | **🔥 Streak** | Menjaga konsistensi tanpa harus selalu bertransaksi. Streak dapat diperoleh melalui misi, voting, pembelajaran, dan aktivitas komunitas. |
 | **🏆 Achievement** | Mengubah kontribusi menjadi identitas digital yang dapat dikoleksi dan dibagikan. |
 
@@ -256,6 +256,9 @@ Kopoin dirancang untuk membantu koperasi:
 
 <div align="center">
 
+<img alt="React Native" src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
+<img alt="Expo" src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white">
+<img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
 <img alt="Next JS" src="https://img.shields.io/badge/Next.js-16262E?style=for-the-badge&logo=next.js&logoColor=white">
 <img alt="Nest JS" src="https://img.shields.io/badge/NestJS-E02347?style=for-the-badge&logo=nestjs&logoColor=white">
 <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
@@ -266,14 +269,93 @@ Kopoin dirancang untuk membantu koperasi:
 
 </div>
 
-| Lapisan | Teknologi |
-|---|---|
-| Mobile application | Flutter, Dart |
-| Web application | Next.js, TypeScript |
-| Backend API | NestJS, TypeScript |
-| Styling | Tailwind CSS |
-| Database & Backend Service | Supabase, PostgreSQL |
-| Integrasi MVP | Mock API SIMKOPDES |
+| Lapisan | MVP (Hackathon) | Pilot / Produksi |
+|---|---|---|
+| Mobile application | React Native, Expo, TypeScript | Flutter, Dart |
+| Web application | — | Next.js, TypeScript |
+| Backend API | — | NestJS, TypeScript |
+| Frontend styling | React Native StyleSheet | Tailwind CSS |
+| Database & service | Local mock state + AsyncStorage | Supabase, PostgreSQL |
+| Integrasi | Mock/local SIMKOPDES | SIMKOPDES API produksi |
+
+---
+
+## Demo dan Dokumentasi
+
+MVP hackathon saat ini berada di folder [`apps/mobile`](apps/mobile). Aplikasi memakai Expo, React Native, TypeScript, real camera QR path melalui Expo Camera, fallback kode manual, dan mock/local state yang disimpan di perangkat melalui AsyncStorage. Integrasi SIMKOPDES pada tahap ini belum terhubung ke layanan produksi; data anggota, koperasi, campaign, QR, poin, leaderboard, voting, Team Wrap, dan Campaign Console disimulasikan lewat local mock service untuk kebutuhan demo.
+
+Saat pertama dibuka, app menampilkan **wizard untuk juri** yang menjelaskan masalah, arah solusi, dampak untuk koperasi, dan cara mencoba MVP. Setelah itu juri masuk ke app dengan bottom navigation: `Beranda`, `Misi`, `Komunitas`, `Console`, dan `Profil`.
+
+### Menjalankan MVP
+
+Prasyarat:
+
+- Node.js dan npm tersedia di mesin lokal.
+- Expo dapat dijalankan melalui npm script.
+
+Perintah utama:
+
+```bash
+cd apps/mobile
+npm install
+npm run typecheck
+npm run rehearse -- 1
+npm start
+```
+
+Jalur utama untuk penjurian:
+
+1. Jalankan `npm start`.
+2. Scan QR terminal memakai Expo Go di perangkat juri.
+3. Ikuti wizard pembuka.
+4. Dari `Beranda`, tekan `Gabung Tim Pemuda Sukamaju` lalu `Mulai Misi Produk Lokal`.
+5. Di tab `Misi`, izinkan kamera untuk scan QR sungguhan jika tersedia, atau tekan `Scan Kode Demo`.
+6. Lihat perubahan di `Komunitas` dan `Console`.
+7. Gunakan `Profil` -> `Reset Demo` untuk mengulang flow.
+
+Alternatif run:
+
+```bash
+npm run android
+npm run ios
+npm start
+```
+
+### Alur Demo 3-5 Menit
+
+1. Buka aplikasi Kopoin.
+2. Tampilkan kartu anggota Gabriel dan Koperasi Merah Putih Sukamaju.
+3. Tekan `Gabung Tim Pemuda Sukamaju`.
+4. Tunjukkan misi `Beli Produk Lokal` pada campaign `7 Hari Dukung Produk Koperasi Sukamaju`.
+5. Pada tab `Misi`, gunakan kamera QR jika tersedia atau tekan `Scan Kode Demo` untuk kode valid `KOPI-SUKAMAJU-001`.
+6. Tunjukkan success feedback: `+120 Kopoin`, saldo `1.730 -> 1.850`, progress `73/100 -> 74/100`, achievement, dan rank `#3 -> #2`.
+7. Tunjukkan duplicate guard dengan submit kode yang sama lagi jika perlu.
+8. Buka tab `Komunitas` untuk melihat leaderboard Tim Pemuda Sukamaju naik peringkat.
+9. Pilih voting reward komunitas berikutnya.
+10. Tunjukkan Team Wrap screenshot-ready.
+11. Buka tab `Console` untuk melihat KPI, ledger, verification log, team performance, dan voting dari state yang sama.
+12. Buka tab `Profil` lalu tekan `Reset Demo` untuk rehearsal ulang.
+
+### Data Demo Penting
+
+| Item | Nilai |
+|---|---:|
+| Kode QR valid utama | `KOPI-SUKAMAJU-001` |
+| Kode QR valid alias | `KOPI-SUKAMAJU-QR-001` |
+| Poin scan | `+120 Kopoin` |
+| Saldo Gabriel | `1.730 -> 1.850` |
+| Progress campaign | `73/100 -> 74/100` |
+| Rank Tim Pemuda Sukamaju | `#3 -> #2` |
+| Achievement | `Anak Lokal, Selera Global` |
+| Reward unlock | `26 aksi lagi` |
+
+### Dokumen Demo
+
+- [`docs/demo/Kopoin_QR_Sample_Sheet.md`](docs/demo/Kopoin_QR_Sample_Sheet.md) - kode QR/manual valid, invalid, duplicate, dan expected result.
+- [`docs/demo/Kopoin_Manual_Run_Checklist.md`](docs/demo/Kopoin_Manual_Run_Checklist.md) - checklist rehearsal manual sebelum rekam demo.
+- [`docs/demo/Kopoin_Rehearsal_Log.md`](docs/demo/Kopoin_Rehearsal_Log.md) - hasil rehearsal otomatis dan build check terakhir.
+- [`docs/audit/WORK_LOG.md`](docs/audit/WORK_LOG.md) - audit pengerjaan per prompt.
+- [`docs/audit/DEMO_STATE_LOG.md`](docs/audit/DEMO_STATE_LOG.md) - state demo yang harus konsisten.
 
 ---
 
@@ -294,6 +376,20 @@ flowchart LR
 | **🔗 Integrasi SIMKOPDES** | Sinkronisasi anggota, produk, transaksi, dan pembelajaran |
 | **📊 Analytics** | Campaign Console dan analitik keterlibatan anggota |
 | **🌍 Scale Up** | Replikasi ke koperasi lain di berbagai daerah |
+
+---
+
+
+### Aset visual README
+
+Seluruh visual README disimpan pada folder [`assets/`](assets/):
+
+- `kopoin-hero.png` — banner utama;
+- `kopoin-loop.gif` — animasi core loop;
+- `kopoin-feature-strip.png` — ringkasan tiga mekanisme utama;
+- `kopoin-leaderboard.png` — contoh eksplorasi UI aplikasi;
+- `profile-hero.png` — foto utama Tim MechaMinds.
+
 
 ---
 
@@ -334,7 +430,7 @@ memotong ruang lingkup tanpa merusak nilai utama, lalu membawa ide hingga menjad
 </td>
 <td width="33%" valign="top">
 <h3>02 — Riovaldo</h3>
-<sub><b>SOFTWARE ENGINEER · SYSTEM EXECUTION</b></sub>
+<sub><b>FULL-STACK ENGINEER · SYSTEM EXECUTION</b></sub>
 <p>Mengubah rancangan menjadi alur aplikasi yang stabil, menghubungkan antarmuka dengan logika sistem, dan memastikan produk tidak berhenti sebagai mockup.</p>
 <p><b>Fokus:</b> frontend, backend, database, integration.</p>
 <p><a href="https://github.com/ckckckcz">GitHub ↗</a></p>
@@ -418,21 +514,48 @@ Finalis kompetisi desain produk dan pengalaman pengguna.</p>
 
 ### **Podium bukan dekorasi. Ia adalah bukti bahwa ide kami pernah diuji di bawah tekanan.**
 
-<sub>Rekam jejak berikut menampilkan pencapaian Gabriel Batavia sebagai Ketua Tim, Riovaldo Alfiyan Fahmi Rahman sebagai anggota, dan Raudhil Firdaus Naufal sebagai anggota dari MechaMinds. Beberapa kompetisi dijalani melalui proyek dan susunan tim yang berbeda.</sub>
+<sub>Rekam jejak berikut menampilkan pencapaian Gabriel Batavia sebagai Ketua Tim MechaMinds. Beberapa kompetisi dijalani melalui proyek dan susunan tim yang berbeda.</sub>
 
 </div>
 
-| Tahun | Kompetisi | Penyelenggara | Pencapaian | Proyek / Kontribusi |
-|:----:|---|---|:---:|---|
-| **2024** | COMPFEST 16 – AI Innovation Challenge | Universitas Indonesia | 🥈 **2nd Runner-up and Audience Favorite** | Sistem edukasi berbasis LLM untuk membantu mahasiswa memahami kebutuhan industri dan persiapan karier. |
-| **2024** | UI/UX Competition | YOters Indonesia | 🎖️ **Finalist** | Merancang pengalaman pengguna berbasis riset dan kebutuhan pengguna. |
-| **2025** | Electro Weeks National Competition | Politeknik Negeri Malang | 🥈 **2nd Place** | Sistem IoT untuk deteksi dan pencegahan kebakaran lahan gambut. |
-| **2025** | Hackathon Compsphere | President University | 🏆 **Best Innovation Award** | Prototipe permainan berbasis AI untuk PT Kereta Api Indonesia. |
-| **2025** | Hackathon The Sandbox | Institut Teknologi Bandung | ⭐ **Favorite Challenge Award** | **GrowPlus**, aplikasi web SNP yang menyediakan rekomendasi menu bergizi sesuai kondisi ekonomi, lokasi, dan kebutuhan gizi keluarga. |
-| **2025** | KMIPN – Cipta Inovasi | Politeknik Negeri Padang | 🥈 **2nd Place** | **LLMForAutism**, solusi LLM untuk membantu anak dengan autisme verbal melalui pendekatan berbasis AI. |
-| **2025** | Internal Competition | Politeknik Negeri Malang | 🥉 **3nd Place** | **GrowPlus**, aplikasi web SNP yang menyediakan rekomendasi menu bergizi sesuai kondisi ekonomi, lokasi, dan kebutuhan gizi keluarga. |
-| **2026** | REFACTORY Hackathon | Universitas Gadjah Mada | 🥉 **3nd Place with innovation star** | **Legacyver**, platform dokumentasi berbasis AI yang menganalisis codebase dan menghasilkan dokumentasi teknis secara otomatis. |
-| **2026** | Digital Cooperatives Expo | Koperasi Point × MechaMinds | 🚀 **Team Leader** | Mengembangkan **Koperasi Point**, mesin aktivasi dan loyalitas anggota muda untuk ekosistem SIMKOPDES. |
+<table>
+<tr>
+<td width="13%" align="center"><b>2024</b></td>
+<td width="29%"><b>COMPFEST 16 — AI Innovation Challenge</b><br><sub>Universitas Indonesia</sub></td>
+<td width="22%"><b>2ND RUNNER-UP<br>+ AUDIENCE FAVORITE</b></td>
+<td>Mengembangkan sistem edukasi berbasis LLM untuk membantu mahasiswa Indonesia memahami kebutuhan industri dan persiapan karier.</td>
+</tr>
+<tr>
+<td align="center"><b>2024</b></td>
+<td><b>UI/UX Competition</b><br><sub>YOters Indonesia</sub></td>
+<td><b>FINALIST</b></td>
+<td>Mengasah kemampuan mengubah hasil riset, kebutuhan pengguna, dan identitas produk menjadi pengalaman digital yang terstruktur.</td>
+</tr>
+<tr>
+<td align="center"><b>2025</b></td>
+<td><b>Electro Weeks National Competition</b><br><sub>Politeknik Negeri Malang</sub></td>
+<td><b>2ND PLACE</b></td>
+<td>Membangun sistem IoT untuk mendeteksi dan mencegah risiko kebakaran pada kawasan lahan gambut.</td>
+</tr>
+<tr>
+<td align="center"><b>2025</b></td>
+<td><b>Hackathon Compsphere</b><br><sub>President University</sub></td>
+<td><b>BEST INNOVATION AWARD</b></td>
+<td>Menciptakan prototipe permainan berbasis AI untuk PT Kereta Api Indonesia dan memperoleh pengakuan atas kreativitas serta kualitas eksekusi.</td>
+</tr>
+<tr>
+<td align="center"><b>2025</b></td>
+<td><b>KMIPN — Cipta Inovasi</b><br><sub>Politeknik Negeri Padang · LLMForAutism</sub></td>
+<td><b>2ND PLACE</b></td>
+<td>Mengembangkan solusi LLM bersama Malang Autism Center untuk membantu anak dengan autisme verbal melalui pendekatan teknologi yang berorientasi dampak sosial.</td>
+</tr>
+<tr>
+<td align="center"><b>2026</b></td>
+<td><b>Digital Cooperatives Expo</b><br><sub>Kopoin · MechaMinds</sub></td>
+<td><b>CURRENT CHALLENGE<br>TEAM LEADER</b></td>
+<td>Membawa pengalaman kompetisi, AI, dan product engineering untuk membangun mesin aktivasi serta loyalitas anggota muda bagi ekosistem SIMKOPDES.</td>
+</tr>
+</table>
 
 > **Kami tidak membawa daftar lomba untuk terlihat sibuk.**  
 > Kami membawanya sebagai bukti bahwa tim ini telah berulang kali menghadapi validasi, batas waktu, kritik juri, dan tuntutan untuk menghasilkan solusi yang benar-benar dapat dijelaskan.
@@ -442,6 +565,8 @@ Finalis kompetisi desain produk dan pengalaman pengguna.</p>
 ## Catatan Proyek
 
 Proyek ini dikembangkan oleh **Tim MechaMinds** untuk kompetisi Hackathon Digital Cooperatives Expo 2026 pada pilar **Literasi Gen Z & Gen Alpha dalam Berkoperasi**.
+
+Lisensi proyek belum ditetapkan. Silakan tambahkan berkas `LICENSE` sebelum distribusi publik atau penggunaan di luar kebutuhan kompetisi.
 
 ---
 
