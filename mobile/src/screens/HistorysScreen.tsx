@@ -12,7 +12,7 @@ import {
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
 import { formatRupiah } from "../utils/formatters";
-import type { Campaign, CompletionSummary, User, UserVote } from "../data/kopoinSeed";
+import type { Campaign, CompletionSummary, Transaction, User, UserVote } from "../data/kopoinSeed";
 
 type HistorysScreenProps = {
   campaign: Campaign;
@@ -24,29 +24,25 @@ type HistorysScreenProps = {
   onOpenProfile: () => void;
   rank: number;
   scanCompleted: boolean;
+  transactions?: Transaction[];
   user: User;
   userVote: UserVote | null;
 };
 
-type Transaction = {
-  id: string;
-  title: string;
-  date: string;
-  type: "grocery" | "points_redemption" | "points_earn";
-  amountText: string;
-  amountColor: string;
-  pointsBadge?: string;
-  iconName: "grocery" | "points" | "rewards";
-  subtitle: string;
-};
+function getTransactionAmountColor(type: Transaction["type"]) {
+  if (type === "points_earn") return "#10B981";
+  if (type === "points_redemption") return "#EF4444";
+  return colors.text;
+}
 
 export function HistorysScreen({
   user,
-  scanCompleted
+  scanCompleted,
+  transactions: remoteTransactions
 }: HistorysScreenProps) {
   
   // Real-time dynamic mock transactions that integrate scanning state!
-  const transactions: Transaction[] = [
+  const fallbackTransactions: Transaction[] = [
     ...(scanCompleted ? [
       {
         id: "scan_completed_reward",
@@ -55,7 +51,6 @@ export function HistorysScreen({
         date: "Hari ini, 14:30 WIB",
         type: "points_earn" as const,
         amountText: "+120 Poin",
-        amountColor: "#10B981",
         iconName: "rewards" as const
       }
     ] : []),
@@ -66,7 +61,6 @@ export function HistorysScreen({
       date: "10 Jul 2026, 17:42 WIB",
       type: "grocery",
       amountText: "-Rp32.000",
-      amountColor: colors.text,
       pointsBadge: "+32 Poin",
       iconName: "grocery"
     },
@@ -77,7 +71,6 @@ export function HistorysScreen({
       date: "09 Jul 2026, 11:20 WIB",
       type: "grocery",
       amountText: "-Rp15.000",
-      amountColor: colors.text,
       pointsBadge: "+15 Poin",
       iconName: "grocery"
     },
@@ -88,7 +81,6 @@ export function HistorysScreen({
       date: "08 Jul 2026, 09:15 WIB",
       type: "points_redemption",
       amountText: "-30 Poin",
-      amountColor: "#EF4444",
       iconName: "points"
     },
     {
@@ -98,15 +90,18 @@ export function HistorysScreen({
       date: "07 Jul 2026, 08:00 WIB",
       type: "points_earn",
       amountText: "+120 Poin",
-      amountColor: "#10B981",
       iconName: "rewards"
     }
   ];
+  const transactions = remoteTransactions?.length ? remoteTransactions : fallbackTransactions;
 
   // Calculations
-  const totalCashSpent = 47000;
-  const totalPointsRedeemed = 30;
-  const totalPointsEarned = scanCompleted ? 287 : 167; // initial points check
+  const totalCashSpent = transactions
+    .filter((tx) => tx.type === "grocery")
+    .reduce((sum, tx) => sum + Number(tx.amountText.replace(/[^0-9]/g, "")), 0);
+  const totalPointsRedeemed = transactions
+    .filter((tx) => tx.type === "points_redemption")
+    .reduce((sum, tx) => sum + Number(tx.amountText.replace(/[^0-9]/g, "")), 0);
 
   return (
     <View style={styles.screen}>
@@ -172,7 +167,7 @@ export function HistorysScreen({
                 <View style={styles.amountBadgeRow}>
                   {tx.type === "points_redemption" && <Coins size={14} color="#EF4444" style={{ marginRight: 3 }} />}
                   {tx.type === "points_earn" && <Coins size={14} color="#10B981" style={{ marginRight: 3 }} />}
-                  <Text style={[styles.amountText, { color: tx.amountColor }]}>
+                  <Text style={[styles.amountText, { color: getTransactionAmountColor(tx.type) }]}>
                     {tx.amountText}
                   </Text>
                 </View>

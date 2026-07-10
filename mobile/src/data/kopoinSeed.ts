@@ -47,6 +47,33 @@ export type Mission = {
   deadlineLabel: string;
   productName?: string;
   priority: "P0" | "P1";
+  current?: number;
+  target?: number;
+  completed?: boolean;
+};
+
+export type Community = {
+  id: string;
+  name: string;
+  formedDate: string;
+  formedTime: string;
+  membersCount: number;
+  about: string;
+  locationName: string;
+  locationAddress: string;
+  avatarUris: string[];
+  tag: string;
+};
+
+export type Transaction = {
+  id: string;
+  title: string;
+  date: string;
+  type: "grocery" | "points_redemption" | "points_earn";
+  amountText: string;
+  pointsBadge?: string;
+  iconName: "grocery" | "points" | "rewards";
+  subtitle: string;
 };
 
 export type LeaderboardEntry = {
@@ -143,6 +170,8 @@ export type DemoState = {
   votePoll: VotePoll;
   redeemedCoupons?: string[];
   hasJoinedCommunity?: boolean;
+  communities?: Community[];
+  transactions?: Transaction[];
 };
 
 export const acceptedQrCodes = ["KOPI-SUKAMAJU-001", "KOPI-SUKAMAJU-QR-001"];

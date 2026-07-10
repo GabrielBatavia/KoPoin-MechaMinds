@@ -55,6 +55,8 @@ export function MissionHubScreen({
   const remainingActions = campaign.targetValue - campaign.currentValue;
   const learningMission = missions.find((item) => item.actionType === "learning");
   const voteMission = missions.find((item) => item.actionType === "vote");
+  const inviteMission = missions.find((item) => item.id === "comm_mission_1");
+  const checkinMission = missions.find((item) => item.id === "comm_mission_2");
 
   return (
     <View style={styles.screen}>
@@ -180,17 +182,17 @@ export function MissionHubScreen({
         <Text style={styles.cardKicker}>Tugas misi</Text>
         <Text style={styles.cardTitle}>Banyak cara berkontribusi</Text>
         <MissionTask
-          current={scanCompleted ? 9 : 8}
+          current={mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)}
           description={mission?.description ?? "Beli Kopi Sukamaju dan validasi kode transaksi."}
           points={mission?.points ?? 120}
-          target={10}
-          title="Beli produk lokal"
+          target={mission?.target ?? 1}
+          title={mission?.title ?? "Beli produk lokal"}
           tone="live"
         />
-        <MissionTask current={3} description="Undang teman sampai aktif, bukan sekadar daftar." points={80} target={5} title="Ajak anggota aktif" tone="soft" />
-        <MissionTask current={5} description="Check-in mingguan di koperasi atau booth desa." points={60} target={7} title="Check-in koperasi" tone="soft" />
-        <MissionTask current={2} description={learningMission?.description ?? "Tuntaskan modul edukasi ringan."} points={learningMission?.points ?? 60} target={4} title="Belajar koperasi 5 menit" tone="soft" />
-        <MissionTask current={user.achievementUnlocked ? 1 : 0} description={voteMission?.description ?? "Ikut voting reward komunitas."} points={voteMission?.points ?? 30} target={1} title="Pilih reward berikutnya" tone="soft" />
+        <MissionTask current={inviteMission?.current ?? 0} description={inviteMission?.description ?? "Undang teman sampai aktif, bukan sekadar daftar."} points={inviteMission?.points ?? 80} target={inviteMission?.target ?? 5} title={inviteMission?.title ?? "Ajak anggota aktif"} tone="soft" />
+        <MissionTask current={checkinMission?.current ?? 0} description={checkinMission?.description ?? "Check-in mingguan di koperasi atau booth desa."} points={checkinMission?.points ?? 60} target={checkinMission?.target ?? 1} title={checkinMission?.title ?? "Check-in koperasi"} tone="soft" />
+        <MissionTask current={learningMission?.completed ? learningMission.target ?? 1 : learningMission?.current ?? 0} description={learningMission?.description ?? "Tuntaskan modul edukasi ringan."} points={learningMission?.points ?? 60} target={learningMission?.target ?? 1} title={learningMission?.title ?? "Belajar koperasi 5 menit"} tone="soft" />
+        <MissionTask current={voteMission?.completed || user.achievementUnlocked ? 1 : voteMission?.current ?? 0} description={voteMission?.description ?? "Ikut voting reward komunitas."} points={voteMission?.points ?? 30} target={voteMission?.target ?? 1} title={voteMission?.title ?? "Pilih reward berikutnya"} tone="soft" />
       </View>
 
       {!hasJoinedTeam ? (

@@ -13,6 +13,15 @@ import {
   submitVote,
   submitProductMission
 } from "./src/services/demoState";
+import {
+  fetchMobileState,
+  joinCommunityRemote,
+  joinTeamRemote,
+  leaveCommunityRemote,
+  redeemCouponRemote,
+  submitMissionRemote,
+  submitVoteRemote
+} from "./src/services/mobileApi";
 import { CommunityHubScreen } from "./src/screens/CommunityHubScreen";
 import { HomeDashboardScreen } from "./src/screens/HomeDashboardScreen";
 import { JudgeWizardScreen } from "./src/screens/JudgeWizardScreen";
@@ -33,6 +42,8 @@ type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "r
 const demoStateStorageKey = "kopoin-demo-state-v2";
 const wizardSeenStorageKey = "kopoin-wizard-seen-v2";
 const validDemoCode = "KOPI-SUKAMAJU-001";
+const defaultDemoUserId = "00000000-0000-4000-8000-000000000001";
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "home", label: "Beranda" },
@@ -59,6 +70,10 @@ export default function App() {
   const mainMission = demoState.missions.find((mission) => mission.id === mainMissionId);
   const pemudaRank = demoState.leaderboard.find((entry) => entry.teamId === demoState.team.id)?.rank ?? 3;
   const teamWrap = createTeamWrap(demoState);
+
+  function getCurrentUserId() {
+    return uuidPattern.test(demoState.user.id) ? demoState.user.id : defaultDemoUserId;
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -89,6 +104,15 @@ export default function App() {
             name: dbUser.name,
             memberNo: dbUser.nik ? `NIK-${dbUser.nik.substring(0, 6)}` : parsedState.user.memberNo
           };
+        }
+
+        const remoteUserId = uuidPattern.test(parsedState.user.id) ? parsedState.user.id : defaultDemoUserId;
+
+        try {
+          const remoteState = await fetchMobileState(remoteUserId);
+          parsedState = remoteState;
+        } catch {
+          // Keep local demo state when backend is not ready.
         }
 
         setDemoState(parsedState);
@@ -146,26 +170,38 @@ export default function App() {
     AsyncStorage.getItem("kopoin-user-data").then((data) => {
       if (data) {
         const dbUser = JSON.parse(data);
-        setDemoState((prev) => ({
-          ...prev,
-          user: {
-            ...prev.user,
-            id: dbUser.id,
-            name: dbUser.name,
-            memberNo: dbUser.nik ? `NIK-${dbUser.nik.substring(0, 6)}` : prev.user.memberNo
-          }
-        }));
+        fetchMobileState(dbUser.id)
+          .then((remoteState) => setDemoState(remoteState))
+          .catch(() => {
+            setDemoState((prev) => ({
+              ...prev,
+              user: {
+                ...prev.user,
+                id: dbUser.id,
+                name: dbUser.name,
+                memberNo: dbUser.nik ? `NIK-${dbUser.nik.substring(0, 6)}` : prev.user.memberNo
+              }
+            }));
+          });
       }
     }).catch(() => undefined);
 
     setActiveTab("home");
   }
 
-  function handleJoinTeam() {
-    setDemoState((currentState) => joinPemudaSukamajuTeam(currentState));
-    setFeedback("Gabriel sudah bergabung. Sekarang scan kode demo untuk menyelesaikan misi.");
-    setFeedbackTone("success");
-    setActiveTab("mission");
+  async function handleJoinTeam() {
+    try {
+      const remoteState = await joinTeamRemote(getCurrentUserId());
+      setDemoState(remoteState);
+      setFeedback("Kamu sudah bergabung. Sekarang scan kode demo untuk menyelesaikan misi.");
+      setFeedbackTone("success");
+    } catch {
+      setDemoState((currentState) => joinPemudaSukamajuTeam(currentState));
+      setFeedback("Kamu sudah bergabung secara lokal. Backend belum tersinkron.");
+      setFeedbackTone("warning");
+    } finally {
+      setActiveTab("mission");
+    }
   }
 
   function handleSubmitMission() {
@@ -182,14 +218,22 @@ export default function App() {
     submitMissionCode(code);
   }
 
-  function submitMissionCode(code: string) {
-    const result = submitProductMission(demoState, code);
-    setDemoState(result.state);
-    setFeedback(result.message);
-    setFeedbackTone(result.status === "success" ? "success" : result.status === "duplicate" ? "warning" : "error");
-
-    if (result.status === "success") {
+  async function submitMissionCode(code: string) {
+    try {
+      const result = await submitMissionRemote(getCurrentUserId(), code);
+      setDemoState(result.state);
+      setFeedback(result.message || "Misi berhasil disinkronkan.");
+      setFeedbackTone("success");
       setActiveTab("mission");
+    } catch (error: any) {
+      const result = submitProductMission(demoState, code);
+      setDemoState(result.state);
+      setFeedback(error?.message || result.message);
+      setFeedbackTone(result.status === "success" ? "success" : result.status === "duplicate" ? "warning" : "error");
+
+      if (result.status === "success") {
+        setActiveTab("mission");
+      }
     }
   }
 
@@ -207,24 +251,35 @@ export default function App() {
     setActiveTab("home");
   }
 
-  function handleRedeemCoupon(couponId: string, points: number) {
-    setDemoState((currentState) => {
-      const currentRedeemed = currentState.redeemedCoupons || [];
-      return {
-        ...currentState,
-        user: {
-          ...currentState.user,
-          kopoinBalance: Math.max(0, currentState.user.kopoinBalance - points)
-        },
-        redeemedCoupons: [...currentRedeemed, couponId]
-      };
-    });
+  async function handleRedeemCoupon(couponId: string, points: number) {
+    try {
+      const remoteState = await redeemCouponRemote(getCurrentUserId(), couponId);
+      setDemoState(remoteState);
+    } catch {
+      setDemoState((currentState) => {
+        const currentRedeemed = currentState.redeemedCoupons || [];
+        return {
+          ...currentState,
+          user: {
+            ...currentState.user,
+            kopoinBalance: Math.max(0, currentState.user.kopoinBalance - points)
+          },
+          redeemedCoupons: [...currentRedeemed, couponId]
+        };
+      });
+    }
   }
 
-  function handleSubmitVote(optionId: string) {
-    const result = submitVote(demoState, optionId);
-    setDemoState(result.state);
-    setVoteFeedback(result.message);
+  async function handleSubmitVote(optionId: string) {
+    try {
+      const result = await submitVoteRemote(getCurrentUserId(), optionId);
+      setDemoState(result.state);
+      setVoteFeedback(result.message || "Voting tersimpan.");
+    } catch {
+      const result = submitVote(demoState, optionId);
+      setDemoState(result.state);
+      setVoteFeedback(result.message);
+    }
   }
 
   function renderActiveScreen() {
@@ -302,6 +357,7 @@ export default function App() {
           onOpenProfile={() => setActiveTab("profile")}
           rank={pemudaRank}
           scanCompleted={demoState.scanCompleted}
+          transactions={demoState.transactions}
           user={demoState.user}
           userVote={demoState.userVote}
         />
@@ -451,57 +507,22 @@ export default function App() {
           user={demoState.user}
           onClose={() => setActiveTab("home")}
           hasJoinedCommunity={demoState.hasJoinedCommunity}
-          onJoinCommunitySuccess={() => {
-            setDemoState((prev) => ({
-              ...prev,
-              hasJoinedCommunity: true,
-              missions: [
-                ...prev.missions,
-                {
-                  id: "comm_mission_1",
-                  title: "Penghijauan Dusun Sukamaju",
-                  description: "Tanam minimal 5 bibit pohon rindang bersama anggota komunitas.",
-                  points: 150,
-                  target: 5,
-                  current: 0,
-                  actionType: "qr_scan",
-                  pointsEarned: 0,
-                  completed: false,
-                  campaignId: prev.campaign.id,
-                  deadlineLabel: prev.campaign.deadlineLabel,
-                  priority: "P1"
-                },
-                {
-                  id: "comm_mission_2",
-                  title: "Kerja Bakti Booth Koperasi",
-                  description: "Gotong royong membersihkan dan mendekorasi booth koperasi desa.",
-                  points: 100,
-                  target: 1,
-                  current: 0,
-                  actionType: "qr_scan",
-                  pointsEarned: 0,
-                  completed: false,
-                  campaignId: prev.campaign.id,
-                  deadlineLabel: prev.campaign.deadlineLabel,
-                  priority: "P1"
-                },
-                {
-                  id: "comm_mission_3",
-                  title: "Pelatihan UMKM Koperasi",
-                  description: "Ikuti kelas pelatihan kerajinan bambu lokal Desa Merah Putih.",
-                  points: 120,
-                  target: 1,
-                  current: 0,
-                  actionType: "qr_scan",
-                  pointsEarned: 0,
-                  completed: false,
-                  campaignId: prev.campaign.id,
-                  deadlineLabel: prev.campaign.deadlineLabel,
-                  priority: "P1"
-                }
-              ]
-            }));
-            setActiveTab("mission");
+          communities={demoState.communities}
+          onLeaveCommunity={(communityId) => {
+            leaveCommunityRemote(getCurrentUserId(), communityId)
+              .then((remoteState) => setDemoState(remoteState))
+              .catch(() => setDemoState((prev) => ({ ...prev, hasJoinedCommunity: false })));
+          }}
+          onJoinCommunitySuccess={(communityId, reason) => {
+            joinCommunityRemote(getCurrentUserId(), communityId, reason)
+              .then((remoteState) => setDemoState(remoteState))
+              .catch(() => {
+                setDemoState((prev) => ({
+                  ...prev,
+                  hasJoinedCommunity: true
+                }));
+              })
+              .finally(() => setActiveTab("mission"));
           }}
         />
       </SafeAreaView>

@@ -25,20 +25,7 @@ import {
   Plus
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
-import { formatNumber } from "../utils/formatters";
-
-type Community = {
-  id: string;
-  name: string;
-  formedDate: string;
-  formedTime: string;
-  membersCount: number;
-  about: string;
-  locationName: string;
-  locationAddress: string;
-  avatarUris: string[];
-  tag: string;
-};
+import type { Community } from "../data/kopoinSeed";
 
 const COMMUNITIES: Community[] = [
   {
@@ -94,24 +81,29 @@ const COMMUNITIES: Community[] = [
 type CommunityHubScreenProps = {
   user: any;
   onClose: () => void;
-  onJoinCommunitySuccess: () => void;
+  onJoinCommunitySuccess: (communityId: string, reason: string) => void;
+  onLeaveCommunity: (communityId: string) => void;
   hasJoinedCommunity?: boolean;
+  communities?: Community[];
 };
 
 export function CommunityHubScreen({
   user,
   onClose,
   onJoinCommunitySuccess,
-  hasJoinedCommunity = false
+  onLeaveCommunity,
+  hasJoinedCommunity = false,
+  communities
 }: CommunityHubScreenProps) {
+  const communityList = communities?.length ? communities : COMMUNITIES;
   const [viewState, setViewState] = useState<"list" | "detail">("list");
-  const [selectedComm, setSelectedComm] = useState<Community>(COMMUNITIES[0] as Community);
+  const [selectedComm, setSelectedComm] = useState<Community>(communityList[0] as Community);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinReason, setJoinReason] = useState("");
   const [joinStatus, setJoinStatus] = useState<"idle" | "submitting" | "approved">("idle");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredCommunities = COMMUNITIES.filter(comm =>
+  const filteredCommunities = communityList.filter(comm =>
     comm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     comm.tag.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -126,8 +118,10 @@ export function CommunityHubScreen({
   const handleFinishJoin = () => {
     setShowJoinModal(false);
     setJoinStatus("idle");
+    const selectedCommunityId = selectedComm.id;
+    const selectedReason = joinReason;
     setJoinReason("");
-    onJoinCommunitySuccess(); // triggers parent state to update and inject community missions!
+    onJoinCommunitySuccess(selectedCommunityId, selectedReason); // triggers parent state to update and inject community missions!
   };
 
   if (viewState === "detail") {
@@ -177,10 +171,10 @@ export function CommunityHubScreen({
             </View>
 
             {hasJoinedCommunity ? (
-              <View style={styles.joinedBadge}>
+              <TouchableOpacity style={styles.joinedBadge} onPress={() => onLeaveCommunity(selectedComm.id)} activeOpacity={0.8}>
                 <CheckCircle size={14} color="#10B981" />
-                <Text style={styles.joinedBadgeText}>Joined</Text>
-              </View>
+                <Text style={styles.joinedBadgeText}>Keluar</Text>
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={styles.joinBtnBlue}
