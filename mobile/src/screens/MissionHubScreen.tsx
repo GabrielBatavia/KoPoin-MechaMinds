@@ -224,9 +224,9 @@ const styles = StyleSheet.create({
     gap: spacing.md
   },
   logo: {
+    fontFamily: "Geist_900Black",
     color: colors.teal,
     fontSize: 32,
-    fontWeight: "900",
     letterSpacing: -1.4
   },
   headerMeta: {

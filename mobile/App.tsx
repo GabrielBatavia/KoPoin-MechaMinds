@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useFonts, Geist_900Black } from "@expo-google-fonts/geist";
 
 import { DemoState, mainMissionId } from "./src/data/kopoinSeed";
 import { createTeamWrap } from "./src/services/teamWrap";
@@ -19,6 +20,7 @@ import { MissionHubScreen } from "./src/screens/MissionHubScreen";
 import { NotificationsScreen } from "./src/screens/NotificationsScreen";
 import { ProductionQRFeedbackTone } from "./src/screens/ProductionQRScreen";
 import { ProfileControlScreen } from "./src/screens/ProfileControlScreen";
+import { AuthScreen } from "./src/screens/AuthScreen";
 import { colors, spacing } from "./src/theme";
 
 type TabId = "home" | "mission" | "community" | "notifications" | "profile";
@@ -36,6 +38,9 @@ const tabs: { id: TabId; label: string }[] = [
 ];
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Geist_900Black
+  });
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [demoState, setDemoState] = useState<DemoState>(() => getInitialDemoState());
   const [feedback, setFeedback] = useState("Gabung tim, lalu scan QR atau pakai kode demo untuk menyelesaikan misi.");
@@ -43,6 +48,7 @@ export default function App() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [manualCode, setManualCode] = useState(validDemoCode);
   const [showWizard, setShowWizard] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
   const [voteFeedback, setVoteFeedback] = useState("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
 
   const mainMission = demoState.missions.find((mission) => mission.id === mainMissionId);
@@ -54,9 +60,10 @@ export default function App() {
 
     async function hydrate() {
       try {
-        const [storedState, wizardSeen] = await Promise.all([
+        const [storedState, wizardSeen, loggedIn] = await Promise.all([
           AsyncStorage.getItem(demoStateStorageKey),
-          AsyncStorage.getItem(wizardSeenStorageKey)
+          AsyncStorage.getItem(wizardSeenStorageKey),
+          AsyncStorage.getItem("kopoin-logged-in-v2")
         ]);
 
         if (!isMounted) {
@@ -67,11 +74,16 @@ export default function App() {
           setDemoState(JSON.parse(storedState) as DemoState);
         }
 
-        setShowWizard(wizardSeen !== "true");
+        const hasSeenWizard = wizardSeen === "true";
+        const hasLoggedIn = loggedIn === "true";
+
+        setShowWizard(!hasSeenWizard);
+        setShowAuth(!hasLoggedIn);
       } catch {
         if (isMounted) {
           setDemoState(getInitialDemoState());
           setShowWizard(true);
+          setShowAuth(true);
         }
       } finally {
         if (isMounted) {
@@ -105,6 +117,12 @@ export default function App() {
 
   function handleFinishWizard() {
     setShowWizard(false);
+    setShowAuth(true);
+  }
+
+  function handleAuthSuccess() {
+    setShowAuth(false);
+    AsyncStorage.setItem("kopoin-logged-in-v2", "true").catch(() => undefined);
     setActiveTab("home");
   }
 
@@ -146,6 +164,8 @@ export default function App() {
     setFeedback("State demo kembali ke awal: progress 73/100, saldo 1.730, rank 3.");
     setFeedbackTone("info");
     setVoteFeedback("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
+    AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
+    setShowAuth(true);
     setActiveTab("home");
   }
 
@@ -246,7 +266,11 @@ export default function App() {
         completionSummary={demoState.latestCompletion}
         cooperative={demoState.cooperative}
         hasJoinedTeam={demoState.hasJoinedTeam}
-        onReplayWizard={() => setShowWizard(true)}
+        onReplayWizard={() => {
+          AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
+          setShowAuth(true);
+          setShowWizard(true);
+        }}
         onResetDemo={handleResetDemo}
         persisted={isHydrated}
         scanCompleted={demoState.scanCompleted}
@@ -269,6 +293,10 @@ export default function App() {
 
   if (showWizard) {
     return <JudgeWizardScreen onFinish={handleFinishWizard} onSkip={handleFinishWizard} />;
+  }
+
+  if (showAuth) {
+    return <AuthScreen onSuccess={handleAuthSuccess} />;
   }
 
   return (

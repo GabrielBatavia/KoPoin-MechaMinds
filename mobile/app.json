@@ -13,7 +13,9 @@
           "cameraPermission": "Kopoin memakai kamera untuk memindai QR transaksi demo produk koperasi.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-font"
     ],
     "assetBundlePatterns": [
       "**/*"

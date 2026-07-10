@@ -1,271 +1,296 @@
-import { useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState, useEffect } from "react";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+  Animated
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { colors, radii, spacing } from "../theme";
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type JudgeWizardScreenProps = {
   onFinish: () => void;
   onSkip: () => void;
 };
 
-const wizardSteps = [
+const onboardingSlides = [
   {
-    eyebrow: "Konteks masalah",
-    title: "SIMKOPDES sudah digital. Tantangannya adalah adopsi muda.",
-    body:
-      "Kopoin tidak membangun ulang koperasi, marketplace, atau pembayaran. Kopoin menjadi lapisan aktivasi agar anggota muda punya alasan untuk datang, aktif, dan kembali.",
-    proof: ["Status anggota terlihat", "Manfaat langsung terbaca", "Tidak mengklaim integrasi produksi"]
+    title: "Simpan Pinjam Lebih Praktis",
+    description: "Nikmati kemudahan mengakses seluruh layanan Koperasi Merah Putih (Kopdes) kapan saja dan di mana saja secara aman dan terpercaya.",
+    buttonLabel: "Lanjut"
   },
   {
-    eyebrow: "Arah solusi",
-    title: "Misi tim membuat kontribusi kecil terasa berdampak.",
-    body:
-      "Juri bisa mencoba sendiri: Gabriel gabung Tim Pemuda Sukamaju, menyelesaikan misi produk lokal, lalu progress tim, saldo, achievement, dan leaderboard berubah.",
-    proof: ["Team-based loyalty", "QR verification", "Reward bersama"]
+    title: "Dukung Produk Lokal Desa",
+    description: "Selesaikan misi seru dengan berbelanja produk koperasi desa. Kumpulkan koin dan bantu naikkan peringkat tim pemudamu!",
+    buttonLabel: "Lanjut"
   },
   {
-    eyebrow: "Dampak koperasi",
-    title: "Pengurus mendapat data aktivitas, bukan sekadar tampilan poin.",
-    body:
-      "Setiap aksi terverifikasi masuk ke ledger dan Campaign Console. Pengurus bisa melihat progress campaign, tim aktif, voting, dan bukti bahwa anggota muda ikut bergerak.",
-    proof: ["Activity ledger", "Guard duplikasi", "KPI campaign"]
-  },
-  {
-    eyebrow: "Cara mencoba MVP",
-    title: "Ikuti CTA utama, atau eksplor tab seperti app sungguhan.",
-    body:
-      "Gunakan tombol Mulai Misi dari Beranda. Jika kamera QR tidak tersedia, tekan Scan Kode Demo atau pakai input manual KOPI-SUKAMAJU-001.",
-    proof: ["Expo Go ready", "Fallback aman", "State tersimpan lokal"]
+    title: "Transparansi & Suaramu Didengar",
+    description: "Pantau semua aktivitas transaksi lewat ledger terbuka dan salurkan aspirasimu dalam voting program reward koperasi.",
+    buttonLabel: "Mulai Sekarang"
   }
 ] as const;
 
 export function JudgeWizardScreen({ onFinish, onSkip }: JudgeWizardScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const step = wizardSteps[stepIndex] ?? wizardSteps[0];
-  const isLastStep = stepIndex === wizardSteps.length - 1;
+  const slide = onboardingSlides[stepIndex] ?? onboardingSlides[0];
+  const isLastStep = stepIndex === onboardingSlides.length - 1;
 
-  if (!step) {
-    return null;
-  }
+  // Animation values for smooth text transitions
+  const fadeAnim = useState(() => new Animated.Value(1))[0];
+  const translateYAnim = useState(() => new Animated.Value(0))[0];
+
+  useEffect(() => {
+    // Reset animation values for slide transition
+    fadeAnim.setValue(0);
+    translateYAnim.setValue(10);
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, [stepIndex]);
 
   function handlePrimaryAction() {
     if (isLastStep) {
       onFinish();
       return;
     }
-
     setStepIndex((current) => current + 1);
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
-        <View style={styles.topBar}>
-          <Text style={styles.logo}>kopoin</Text>
-          <TouchableOpacity onPress={onSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Lewati</Text>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      
+      {/* Immersive linear gradient background */}
+      <LinearGradient
+        colors={["#C3DAFF", "#2A6BE6", "#0B1C3F", "#040817"]}
+        locations={[0.0, 0.4, 0.75, 1.0]}
+        start={{ x: 0.9, y: 0.05 }}
+        end={{ x: 0.1, y: 0.95 }}
+        style={styles.backgroundContainer}
+      />
 
-        <View style={styles.heroCard}>
-          <View style={styles.orbOne} />
-          <View style={styles.orbTwo} />
-          <Text style={styles.eyebrow}>{step.eyebrow}</Text>
-          <Text style={styles.title}>{step.title}</Text>
-          <Text style={styles.body}>{step.body}</Text>
-
-          <View style={styles.proofGrid}>
-            {step.proof.map((item, index) => (
-              <View key={item} style={styles.proofCard}>
-                <Text style={styles.proofNumber}>0{index + 1}</Text>
-                <Text style={styles.proofText}>{item}</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.contentContainer}>
+          
+          {/* Animated Text Content */}
+          <Animated.View 
+            style={[
+              styles.textWrapper, 
+              { 
+                opacity: fadeAnim,
+                transform: [{ translateY: translateYAnim }]
+              }
+            ]}
+          >
+            {/* Brand Logo & Name */}
+            <View style={styles.brandRow}>
+              <View style={styles.logoMarkContainer}>
+                <View style={styles.logoBar1} />
+                <View style={styles.logoBar2} />
               </View>
+              <Text style={styles.brandText}>Kopoin</Text>
+            </View>
+
+            {/* Slide Title */}
+            <Text style={styles.slideTitle}>{slide.title}</Text>
+
+            {/* Slide Description */}
+            <Text style={styles.slideDescription}>{slide.description}</Text>
+          </Animated.View>
+
+          {/* Indicators */}
+          <View style={styles.indicatorRow}>
+            {onboardingSlides.map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.indicatorDot,
+                  idx === stepIndex ? styles.indicatorDotActive : null
+                ]}
+              />
             ))}
           </View>
-        </View>
 
-        <View style={styles.impactCard}>
-          <Text style={styles.impactLabel}>Narasi utama untuk juri</Text>
-          <Text style={styles.impactCopy}>
-            Datang karena manfaat. Kembali karena tim. Bertahan karena merasa memiliki.
-          </Text>
-        </View>
+          {/* Actions */}
+          <View style={styles.actionContainer}>
+            <TouchableOpacity
+              onPress={handlePrimaryAction}
+              activeOpacity={0.8}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>{slide.buttonLabel}</Text>
+            </TouchableOpacity>
 
-        <View style={styles.footerRow}>
-          <View style={styles.dots}>
-            {wizardSteps.map((item, index) => (
-              <View key={item.eyebrow} style={index === stepIndex ? styles.dotActive : styles.dot} />
-            ))}
+            {stepIndex < onboardingSlides.length - 1 ? (
+              <TouchableOpacity
+                onPress={onSkip}
+                activeOpacity={0.7}
+                style={styles.skipButton}
+              >
+                <Text style={styles.skipButtonText}>Lewati</Text>
+              </TouchableOpacity>
+            ) : (
+              // Empty space placeholder to maintain layout consistency on last slide
+              <View style={styles.skipPlaceholder} />
+            )}
           </View>
-          <TouchableOpacity onPress={handlePrimaryAction} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>{isLastStep ? "Masuk ke MVP" : "Lanjut"}</Text>
-          </TouchableOpacity>
+
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#030712",
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.ink
   },
-  page: {
-    flexGrow: 1,
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-    justifyContent: "space-between"
+  contentContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: 28,
+    paddingBottom: 20,
   },
-  topBar: {
+  textWrapper: {
+    width: "100%",
+  },
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg
+    marginBottom: 8,
   },
-  logo: {
-    color: colors.white,
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: -1.5
+  logoMarkContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 8,
   },
-  skipButton: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.glass,
+  logoBar1: {
+    width: 5,
+    height: 18,
+    borderRadius: 2.5,
+    backgroundColor: "#3B82F6",
+    marginRight: 3,
+  },
+  logoBar2: {
+    width: 5,
+    height: 12,
+    borderRadius: 2.5,
+    backgroundColor: "#10B981",
+    marginTop: 6,
+  },
+  brandText: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  badgeContainer: {
+    marginLeft: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
     borderWidth: 1,
-    borderColor: colors.glassStrong
+    borderColor: "rgba(16, 185, 129, 0.3)",
   },
-  skipText: {
-    color: "#D6F7EE",
-    fontSize: 13,
-    fontWeight: "900"
-  },
-  heroCard: {
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: 34,
-    padding: spacing.lg,
-    minHeight: 520,
-    backgroundColor: colors.inkSoft,
-    borderWidth: 1,
-    borderColor: "rgba(25,168,142,0.38)"
-  },
-  orbOne: {
-    position: "absolute",
-    top: -64,
-    right: -72,
-    width: 220,
-    height: 220,
-    borderRadius: 140,
-    backgroundColor: colors.turquoise,
-    opacity: 0.24
-  },
-  orbTwo: {
-    position: "absolute",
-    bottom: -90,
-    left: -90,
-    width: 220,
-    height: 220,
-    borderRadius: 140,
-    backgroundColor: colors.gold,
-    opacity: 0.18
-  },
-  eyebrow: {
-    color: colors.mint,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.3,
-    textTransform: "uppercase"
-  },
-  title: {
-    color: colors.white,
-    fontSize: 34,
-    lineHeight: 39,
-    fontWeight: "900",
-    marginTop: spacing.md
-  },
-  body: {
-    color: "#D6F7EE",
-    fontSize: 16,
-    lineHeight: 25,
+  badgeText: {
+    color: "#10B981",
+    fontSize: 10,
     fontWeight: "700",
-    marginTop: spacing.md
+    textTransform: "uppercase",
   },
-  proofGrid: {
-    gap: spacing.sm,
-    marginTop: spacing.lg
+  slideTitle: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    lineHeight: 42,
+    fontWeight: "800",
+    marginTop: 12,
+    letterSpacing: -0.5,
   },
-  proofCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)"
-  },
-  proofNumber: {
-    color: colors.gold,
-    fontSize: 12,
-    fontWeight: "900"
-  },
-  proofText: {
-    color: colors.white,
-    fontSize: 16,
+  slideDescription: {
+    color: "rgba(255, 255, 255, 0.90)",
+    fontSize: 15,
     lineHeight: 22,
-    fontWeight: "900",
-    marginTop: 3
+    fontWeight: "400",
+    marginTop: 12,
   },
-  impactCard: {
-    marginTop: spacing.md,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: colors.white
-  },
-  impactLabel: {
-    color: colors.teal,
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase"
-  },
-  impactCopy: {
-    color: colors.slate,
-    fontSize: 18,
-    lineHeight: 25,
-    fontWeight: "900",
-    marginTop: spacing.xs
-  },
-  footerRow: {
+  indicatorRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: spacing.lg
+    marginTop: 28,
+    marginBottom: 32,
+    gap: 6,
   },
-  dots: {
-    flexDirection: "row",
-    gap: spacing.xs
+  indicatorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
-  dot: {
-    width: 9,
-    height: 9,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.24)"
+  indicatorDotActive: {
+    width: 24,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2563EB", // Active blue indicator
   },
-  dotActive: {
-    width: 30,
-    height: 9,
-    borderRadius: 999,
-    backgroundColor: colors.turquoise
+  actionContainer: {
+    width: "100%",
   },
   primaryButton: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    backgroundColor: colors.turquoise
+    width: "100%",
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   primaryButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "900"
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  skipButton: {
+    width: "100%",
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+  skipButtonText: {
+    color: "rgba(255, 255, 255, 0.55)",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  skipPlaceholder: {
+    height: 48,
+    marginTop: 6,
   }
 });

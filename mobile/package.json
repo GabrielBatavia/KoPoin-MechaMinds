@@ -2,7 +2,7 @@
   "name": "kopoin-mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "expo/AppEntry.js",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -12,14 +12,20 @@
     "rehearse": "npx --yes tsx scripts/rehearsal-check.ts"
   },
   "dependencies": {
+    "@expo-google-fonts/geist": "^0.4.2",
     "@expo/metro-runtime": "~5.0.4",
     "@react-native-async-storage/async-storage": "2.1.2",
     "expo": "~53.0.0",
+    "expo-asset": "~11.1.7",
     "expo-camera": "~16.1.11",
+    "expo-font": "~13.3.2",
+    "expo-font-loader": "^1.1.0",
+    "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
+    "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0"
   },
   "devDependencies": {
