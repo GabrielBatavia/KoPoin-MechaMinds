@@ -18,6 +18,7 @@ type MissionHubScreenProps = {
   onJoinTeam: () => void;
   onManualCodeChange: (value: string) => void;
   onOpenCommunity: () => void;
+  onOpenRedeem: () => void;
   onScanCode: (code: string) => void;
   onSubmitMission: () => void;
   scanCompleted: boolean;
@@ -40,6 +41,7 @@ export function MissionHubScreen({
   onJoinTeam,
   onManualCodeChange,
   onOpenCommunity,
+  onOpenRedeem,
   onScanCode,
   onSubmitMission,
   scanCompleted,
@@ -82,6 +84,24 @@ export function MissionHubScreen({
         </View>
         <Text style={styles.progressCopy}>{progressPercent}% selesai. {campaign.deadlineLabel.replace("Berakhir ", "")} jadi batas campaign demo.</Text>
       </View>
+
+      <TouchableOpacity style={styles.redeemBanner} onPress={onOpenRedeem} activeOpacity={0.8}>
+        <View style={styles.redeemBannerLeft}>
+          <View style={styles.redeemIconCircle}>
+            <Text style={styles.redeemGiftIcon}>🎁</Text>
+          </View>
+          <View style={styles.flexOne}>
+            <Text style={styles.redeemKicker}>Poin Loyalty Kamu</Text>
+            <Text style={styles.redeemTitle}>{formatNumber(user.kopoinBalance)} Poin</Text>
+            <Text style={styles.redeemSubtitle}>Tukar dengan kupon diskon makan & belanja</Text>
+          </View>
+        </View>
+        <View style={styles.redeemBannerRight}>
+          <View style={styles.redeemArrowCircle}>
+            <Text style={styles.redeemArrowText}>→</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.milestoneCard}>
         <View style={styles.sectionTopline}>
@@ -583,6 +603,69 @@ const styles = StyleSheet.create({
   },
   flexOne: {
     flex: 1
+  },
+  redeemBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    ...shadows.card
+  },
+  redeemBannerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    flex: 1
+  },
+  redeemIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.sm,
+    backgroundColor: "#FFF6DA",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  redeemGiftIcon: {
+    fontSize: 22
+  },
+  redeemKicker: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  redeemTitle: {
+    color: colors.teal,
+    fontSize: 20,
+    fontWeight: "900",
+    marginTop: 1
+  },
+  redeemSubtitle: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 2
+  },
+  redeemBannerRight: {
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  redeemArrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMint,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  redeemArrowText: {
+    color: colors.teal,
+    fontSize: 15,
+    fontWeight: "900"
   }
 });
 

@@ -8,8 +8,26 @@ import {
   ScrollView,
   Dimensions
 } from "react-native";
-import Svg, { Path, Circle, Rect } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  Search,
+  Wallet,
+  PlusCircle,
+  ArrowUp,
+  FileText,
+  Grid,
+  Coffee,
+  Book,
+  CheckSquare,
+  Users,
+  Tag,
+  Trophy,
+  UserPlus,
+  MoreHorizontal,
+  ChevronRight,
+  ArrowRight,
+  Zap
+} from "lucide-react-native";
 
 type IconName =
   | "search"
@@ -31,8 +49,8 @@ type IconName =
   | "ellipsis-horizontal-outline"
   | "chevron-right"
   | "arrow-right"
-  | "coffee"
-  | "flash";
+  | "flash"
+  | "coffee";
 
 type CustomIconProps = {
   name: IconName;
@@ -45,134 +63,43 @@ function CustomIcon({ name, size = 24, color, style }: CustomIconProps) {
   const containerStyle = style ? style : {};
   switch (name) {
     case "search":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth={2} />
-          <Path d="M21 21l-4.3-4.3" stroke={color} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      );
+      return <Search size={size} color={color} style={containerStyle} />;
     case "wallet":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Rect x="2" y="4" width="20" height="16" rx="3" stroke={color} strokeWidth={2} />
-          <Path d="M12 11h6v2h-6z" stroke={color} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      );
+      return <Wallet size={size} color={color} style={containerStyle} />;
     case "add-circle":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={2} />
-          <Path d="M12 8v8M8 12h8" stroke={color} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      );
+      return <PlusCircle size={size} color={color} style={containerStyle} />;
     case "arrow-up":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M12 19V5M5 12l7-7 7 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <ArrowUp size={size} color={color} style={containerStyle} />;
     case "document-text":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Rect x="3" y="3" width="18" height="18" rx="2" stroke={color} strokeWidth={2} />
-          <Path d="M7 8h10M7 12h10M7 16h6" stroke={color} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      );
+      return <FileText size={size} color={color} style={containerStyle} />;
     case "grid":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Rect x="3" y="3" width="7" height="7" rx="1.5" stroke={color} strokeWidth={2} />
-          <Rect x="14" y="3" width="7" height="7" rx="1.5" stroke={color} strokeWidth={2} />
-          <Rect x="14" y="14" width="7" height="7" rx="1.5" stroke={color} strokeWidth={2} />
-          <Rect x="3" y="14" width="7" height="7" rx="1.5" stroke={color} strokeWidth={2} />
-        </Svg>
-      );
+      return <Grid size={size} color={color} style={containerStyle} />;
     case "cafe":
     case "cafe-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M17 8h1a3 3 0 013 3v2a3 3 0 01-3 3h-1M3 8h14v5a4 4 0 01-4 4H7a4 4 0 01-4-4V8z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          <Path d="M1 21h20" stroke={color} strokeWidth={2} strokeLinecap="round" />
-          <Path d="M6 3v2M10 3v2M14 3v2" stroke={color} strokeWidth={1.5} strokeLinecap="round" />
-        </Svg>
-      );
+    case "coffee":
+      return <Coffee size={size} color={color} style={containerStyle} />;
     case "book":
     case "book-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <Book size={size} color={color} style={containerStyle} />;
     case "checkbox":
     case "checkbox-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Rect x="3" y="3" width="18" height="18" rx="2" stroke={color} strokeWidth={2} />
-          <Path d="M9 11l2 2 4-4" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <CheckSquare size={size} color={color} style={containerStyle} />;
     case "people-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Circle cx="9" cy="7" r="4" stroke={color} strokeWidth={2} />
-          <Path d="M2 21a7 7 0 0114 0" stroke={color} strokeWidth={2} strokeLinecap="round" />
-          <Path d="M16 3.13a4 4 0 010 7.75M22 21a7 7 0 00-6-7" stroke={color} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      );
+      return <Users size={size} color={color} style={containerStyle} />;
     case "pricetag-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          <Circle cx="7" cy="7" r="1.5" fill={color} />
-        </Svg>
-      );
+      return <Tag size={size} color={color} style={containerStyle} />;
     case "trophy-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          <Path d="M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v4h16v-4h-5c-.55 0-1-.45-1-1v-2.34M12 2a6 6 0 00-6 6v3a6 6 0 0012 0V8a6 6 0 00-6-6z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <Trophy size={size} color={color} style={containerStyle} />;
     case "person-add-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Circle cx="9" cy="7" r="4" stroke={color} strokeWidth={2} />
-          <Path d="M2 21a7 7 0 0110.5 0M16 11h6M19 8v6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <UserPlus size={size} color={color} style={containerStyle} />;
     case "ellipsis-horizontal-outline":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Circle cx="12" cy="12" r="2" fill={color} />
-          <Circle cx="5" cy="12" r="2" fill={color} />
-          <Circle cx="19" cy="12" r="2" fill={color} />
-        </Svg>
-      );
+      return <MoreHorizontal size={size} color={color} style={containerStyle} />;
     case "chevron-right":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M9 18l6-6-6-6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <ChevronRight size={size} color={color} style={containerStyle} />;
     case "arrow-right":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M5 12h14M12 5l7 7-7 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
+      return <ArrowRight size={size} color={color} style={containerStyle} />;
     case "flash":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      );
-    case "coffee":
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={containerStyle}>
-          <Path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          <Path d="M6 2v2M10 2v2M14 2v2" stroke={color} strokeWidth={1.5} strokeLinecap="round" />
-        </Svg>
-      );
+      return <Zap size={size} color={color} style={containerStyle} />;
     default:
       return null;
   }

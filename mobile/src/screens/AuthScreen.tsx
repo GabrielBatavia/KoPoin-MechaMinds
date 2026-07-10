@@ -14,7 +14,22 @@ import {
   ImageBackground
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import Svg, { Path, Rect, Circle } from "react-native-svg";
+import Svg, { Path, Circle, Line } from "react-native-svg";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  IdCard,
+  Briefcase,
+  Users,
+  Building,
+  Tag,
+  MapPin,
+  Paperclip,
+  Check
+} from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -26,6 +41,7 @@ type AuthScreenProps = {
 export function AuthScreen({ onSuccess }: AuthScreenProps) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [registerStep, setRegisterStep] = useState(1);
+  const [isRegistered, setIsRegistered] = useState(false);
   
   // Login States
   const [email, setEmail] = useState("micahmad@potarastudio.com");
@@ -48,9 +64,56 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
     setRegisterStep(1);
   }
 
-  function handleAuthSubmit() {
-    // For demo/MVP, clicking the primary button simply logs the user in successfully
-    onSuccess();
+  if (isRegistered) {
+    return (
+      <SafeAreaView style={styles.successScreen}>
+        <StatusBar style="dark" />
+        <View style={styles.successContent}>
+          {/* Confetti Party Horn Svg */}
+          <Svg width={180} height={180} viewBox="0 0 200 200" style={styles.successSvg}>
+            {/* Confetti curls */}
+            <Path d="M 115 105 C 130 95, 140 100, 138 78 C 136 60, 150 55, 156 68" stroke="#F4B400" strokeWidth={3} strokeLinecap="round" fill="none" />
+            <Path d="M 125 115 C 145 120, 155 110, 148 95 C 142 80, 158 75, 163 85" stroke="#F4B400" strokeWidth={3} strokeLinecap="round" fill="none" />
+            
+            {/* Sparkles / Stars */}
+            {/* Yellow star left */}
+            <Path d="M 68 85 l 2 3 l 3 2 l -3 2 l -2 3 l -2 -3 l -3 -2 l 3 -2 z" fill="#F4B400" />
+            <Circle cx="82" cy="88" r="2.5" fill="#F4B400" />
+            {/* Red star right */}
+            <Path d="M 175 145 l 2 3 l 3 2 l -3 2 l -2 3 l -2 -3 l -3 -2 l 3 -2 z" fill="#BA3B34" />
+            <Circle cx="162" cy="155" r="2.5" fill="#BA3B34" />
+            {/* Small yellow dot bottom */}
+            <Circle cx="132" cy="172" r="2" fill="#F4B400" />
+            
+            {/* Red lines popping out */}
+            <Line x1="108" y1="78" x2="120" y2="92" stroke="#BA3B34" strokeWidth={3.5} strokeLinecap="round" />
+            <Line x1="122" y1="126" x2="142" y2="122" stroke="#BA3B34" strokeWidth={3.5} strokeLinecap="round" />
+            <Circle cx="87" cy="112" r="2.5" fill="#BA3B34" />
+            
+            {/* Blue Party Horn Cone */}
+            <Path
+              d="M 68 160 C 80 145, 100 120, 122 108 C 122 108, 134 122, 110 148 C 92 168, 75 170, 68 160 Z"
+              fill="#0C66E4" 
+            />
+            {/* Cone opening mouth ellipse */}
+            <Path
+              d="M 122 108 C 128 102, 120 94, 110 102 C 100 110, 106 120, 110 122 C 116 122, 122 108, 122 108 Z"
+              fill="#0049B0"
+            />
+            {/* Stripe details */}
+            <Path d="M 85 148 C 92 138, 102 128, 114 120" stroke="rgba(255,255,255,0.18)" strokeWidth={2.5} strokeLinecap="round" fill="none" />
+            <Path d="M 95 138 C 102 128, 108 120, 118 114" stroke="rgba(255,255,255,0.18)" strokeWidth={2.5} strokeLinecap="round" fill="none" />
+          </Svg>
+
+          <Text style={styles.successTitle}>Registrasi Selesai</Text>
+          <Text style={styles.successSubtitle}>Selamat menikmati layanan Kopoin</Text>
+        </View>
+
+        <TouchableOpacity style={styles.successBtn} onPress={onSuccess} activeOpacity={0.8}>
+          <Text style={styles.successBtnText}>SELESAI</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -138,22 +201,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 {/* Email Address Input */}
                 <View style={styles.inputOuterContainer}>
                   <View style={styles.iconContainer}>
-                    <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <Path
-                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                        stroke="#5E7A6B"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <Path
-                        d="m22 6-10 7L2 6"
-                        stroke="#5E7A6B"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </Svg>
+                    <Mail size={22} color="#5E7A6B" />
                   </View>
                   <View style={styles.inputInnerContainer}>
                     <Text style={styles.inputLabel}>Email Address</Text>
@@ -173,27 +221,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 {/* Password Input */}
                 <View style={styles.inputOuterContainer}>
                   <View style={styles.iconContainer}>
-                    <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <Rect
-                        x="3"
-                        y="11"
-                        width="18"
-                        height="11"
-                        rx="2"
-                        ry="2"
-                        stroke="#5E7A6B"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <Path
-                        d="M7 11V7a5 5 0 0 1 10 0v4"
-                        stroke="#5E7A6B"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </Svg>
+                    <Lock size={22} color="#5E7A6B" />
                   </View>
                   <View style={styles.inputInnerContainer}>
                     <Text style={styles.inputLabel}>Password</Text>
@@ -214,41 +242,9 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     activeOpacity={0.7}
                   >
                     {showPassword ? (
-                      <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <Path
-                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                          stroke="#9CA3AF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <Circle
-                          cx="12"
-                          cy="12"
-                          r="3"
-                          stroke="#9CA3AF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </Svg>
+                      <Eye size={22} color="#9CA3AF" />
                     ) : (
-                      <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <Path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                          stroke="#9CA3AF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <Path
-                          d="M1 1l22 22"
-                          stroke="#9CA3AF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </Svg>
+                      <EyeOff size={22} color="#9CA3AF" />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -260,10 +256,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Nama */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <Circle cx="12" cy="7" r="4" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Svg>
+                        <User size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Nama Lengkap</Text>
@@ -281,10 +274,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* NIK */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Rect x="3" y="4" width="18" height="16" rx="2" stroke="#5E7A6B" strokeWidth="2" />
-                          <Path d="M7 8h4M7 12h4M15 8h2m-2 4h2M7 16h10" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" />
-                        </Svg>
+                        <IdCard size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>NIK</Text>
@@ -307,10 +297,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Pekerjaan */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke="#5E7A6B" strokeWidth="2" />
-                          <Path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="#5E7A6B" strokeWidth="2" />
-                        </Svg>
+                        <Briefcase size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Pekerjaan</Text>
@@ -328,10 +315,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Jenis Kelamin */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Circle cx="12" cy="10" r="6" stroke="#5E7A6B" strokeWidth="2"/>
-                          <Path d="m12 16v6M9 19h6" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Svg>
+                        <Users size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Jenis Kelamin</Text>
@@ -353,9 +337,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Koperasi Ref */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 21v-4a3 3 0 0 1 6 0v4M12 2v4M9 4h6" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Svg>
+                        <Building size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Koperasi Ref</Text>
@@ -373,10 +355,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Anggota Ref */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <Path d="m7 7 .01-.01" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Svg>
+                        <Tag size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Anggota Ref</Text>
@@ -398,10 +377,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* Kode Wilayah */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <Circle cx="12" cy="10" r="3" stroke="#5E7A6B" strokeWidth="2"/>
-                        </Svg>
+                        <MapPin size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>Kode Wilayah</Text>
@@ -419,9 +395,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     {/* File KTP */}
                     <View style={styles.inputOuterContainer}>
                       <View style={styles.iconContainer}>
-                        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <Path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="#5E7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Svg>
+                        <Paperclip size={22} color="#5E7A6B" />
                       </View>
                       <View style={styles.inputInnerContainer}>
                         <Text style={styles.inputLabel}>File KTP</Text>
@@ -450,15 +424,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 >
                   <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
                     {rememberMe && (
-                      <Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <Path
-                          d="M20 6L9 17l-5-5"
-                          stroke="#FFFFFF"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </Svg>
+                      <Check size={12} color="#FFFFFF" strokeWidth={3} />
                     )}
                   </View>
                   <Text style={styles.rememberMeText}>Remember me</Text>
@@ -474,7 +440,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
             {activeTab === "login" ? (
               <TouchableOpacity
                 style={styles.submitButton}
-                onPress={handleAuthSubmit}
+                onPress={onSuccess}
                 activeOpacity={0.8}
               >
                 <Text style={styles.submitButtonText}>Login</Text>
@@ -499,7 +465,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                     if (registerStep < 4) {
                       setRegisterStep(registerStep + 1);
                     } else {
-                      handleAuthSubmit();
+                      setIsRegistered(true);
                     }
                   }}
                   activeOpacity={0.8}
@@ -762,5 +728,50 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 15,
     fontWeight: "900"
+  },
+  successScreen: {
+    flex: 1,
+    backgroundColor: colors.white,
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingTop: 80,
+    paddingBottom: 40
+  },
+  successContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -40
+  },
+  successSvg: {
+    marginBottom: 40
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: colors.text,
+    textAlign: "center"
+  },
+  successSubtitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.muted,
+    textAlign: "center",
+    marginTop: 12,
+    maxWidth: 260,
+    lineHeight: 20
+  },
+  successBtn: {
+    backgroundColor: "#0C66E4",
+    borderRadius: radii.sm,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  successBtnText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0.5
   }
 });

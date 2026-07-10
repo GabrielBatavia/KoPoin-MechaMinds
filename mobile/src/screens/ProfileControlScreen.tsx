@@ -15,6 +15,7 @@ type ProfileControlScreenProps = {
   team: Team;
   user: User;
   userVote: UserVote | null;
+  redeemedCoupons: string[];
 };
 
 export function ProfileControlScreen({
@@ -27,7 +28,8 @@ export function ProfileControlScreen({
   scanCompleted,
   team,
   user,
-  userVote
+  userVote,
+  redeemedCoupons
 }: ProfileControlScreenProps) {
   return (
     <View style={styles.screen}>
@@ -63,6 +65,23 @@ export function ProfileControlScreen({
           <Text style={styles.cardCopy}>2 hari lagi. Estimasi hemat Rp12.000.</Text>
         </View>
       </View>
+
+      {redeemedCoupons.map((couponId, index) => {
+        const coupon = COUPON_DETAILS[couponId];
+        if (!coupon) return null;
+        return (
+          <View key={`${couponId}-${index}`} style={styles.couponCard}>
+            <View style={styles.couponIconCircle}>
+              <Text style={styles.couponIconEmoji}>{coupon.emoji}</Text>
+            </View>
+            <View style={styles.flexOne}>
+              <Text style={styles.cardKicker}>Kupon Aktif (Loyalty)</Text>
+              <Text style={styles.cardTitle}>{coupon.title}</Text>
+              <Text style={styles.cardCopy}>Berhasil ditukar! Tunjukkan ke kasir Eat & Go.</Text>
+            </View>
+          </View>
+        );
+      })}
 
       <View style={styles.savingsGrid}>
         <BenefitStat label="Hemat bulan ini" value={formatRupiah(user.monthlySaving)} />
@@ -156,9 +175,39 @@ function RewardRow({ state, title, tone }: { state: string; title: string; tone:
   );
 }
 
+const COUPON_DETAILS: Record<string, { title: string; emoji: string }> = {
+  coupon_happy_a_idm: {
+    title: "Tebus Murah Paket Happy A - Eat And Go IDM",
+    emoji: "🍱"
+  },
+  coupon_happy_a: {
+    title: "Tebus Murah Paket Happy A - Eat And Go",
+    emoji: "🍛"
+  },
+  coupon_happy_b: {
+    title: "Tebus Murah Paket Happy B - Eat And Go",
+    emoji: "🍚"
+  },
+  coupon_happy_b_idm: {
+    title: "Tebus Murah Paket Happy B - Eat And Go IDM",
+    emoji: "🍲"
+  }
+};
+
 const styles = StyleSheet.create({
   screen: {
     gap: spacing.md
+  },
+  couponIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EAFBF7"
+  },
+  couponIconEmoji: {
+    fontSize: 32
   },
   headerRow: {
     flexDirection: "row",

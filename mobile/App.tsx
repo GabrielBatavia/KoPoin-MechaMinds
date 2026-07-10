@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal } from "react-native";
 import { useFonts, Geist_900Black } from "@expo-google-fonts/geist";
 
 import { DemoState, mainMissionId } from "./src/data/kopoinSeed";
@@ -21,9 +21,13 @@ import { NotificationsScreen } from "./src/screens/NotificationsScreen";
 import { ProductionQRFeedbackTone } from "./src/screens/ProductionQRScreen";
 import { ProfileControlScreen } from "./src/screens/ProfileControlScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
+import { RedeemPointsScreen } from "./src/screens/RedeemPointsScreen";
+import { QRCodeMemberScreen } from "./src/screens/QRCodeMemberScreen";
+import { ReferralPromoScreen } from "./src/screens/ReferralPromoScreen";
+import { Home, Target, Scan, TrendingUp, User } from "lucide-react-native";
 import { colors, spacing } from "./src/theme";
 
-type TabId = "home" | "mission" | "community" | "notifications" | "profile";
+type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "redeem" | "referral";
 
 const demoStateStorageKey = "kopoin-demo-state-v2";
 const wizardSeenStorageKey = "kopoin-wizard-seen-v2";
@@ -32,8 +36,8 @@ const validDemoCode = "KOPI-SUKAMAJU-001";
 const tabs: { id: TabId; label: string }[] = [
   { id: "home", label: "Beranda" },
   { id: "mission", label: "Misi" },
-  { id: "community", label: "Komunitas" },
-  { id: "notifications", label: "Notifikasi" },
+  { id: "community", label: "Qr Code" },
+  { id: "notifications", label: "Riwayat" },
   { id: "profile", label: "Profil" }
 ];
 
@@ -169,6 +173,20 @@ export default function App() {
     setActiveTab("home");
   }
 
+  function handleRedeemCoupon(couponId: string, points: number) {
+    setDemoState((currentState) => {
+      const currentRedeemed = currentState.redeemedCoupons || [];
+      return {
+        ...currentState,
+        user: {
+          ...currentState.user,
+          kopoinBalance: Math.max(0, currentState.user.kopoinBalance - points)
+        },
+        redeemedCoupons: [...currentRedeemed, couponId]
+      };
+    });
+  }
+
   function handleSubmitVote(optionId: string) {
     const result = submitVote(demoState, optionId);
     setDemoState(result.state);
@@ -211,6 +229,7 @@ export default function App() {
           onJoinTeam={handleJoinTeam}
           onManualCodeChange={setManualCode}
           onOpenCommunity={() => setActiveTab("community")}
+          onOpenRedeem={() => setActiveTab("redeem")}
           onScanCode={handleScannedCode}
           onSubmitMission={handleSubmitMission}
           scanCompleted={demoState.scanCompleted}
@@ -224,21 +243,10 @@ export default function App() {
 
     if (activeTab === "community") {
       return (
-        <CommunityHubScreen
-          campaign={demoState.campaign}
-          completionSummary={demoState.latestCompletion}
-          currentTeamId={demoState.team.id}
-          hasJoinedTeam={demoState.hasJoinedTeam}
-          leaderboard={demoState.leaderboard}
-          onJoinTeam={handleJoinTeam}
-          onOpenMission={() => setActiveTab("mission")}
-          onVote={handleSubmitVote}
-          scanCompleted={demoState.scanCompleted}
-          team={demoState.team}
-          teamWrap={teamWrap}
-          userVote={demoState.userVote}
-          voteFeedback={voteFeedback}
-          votePoll={demoState.votePoll}
+        <QRCodeMemberScreen
+          user={demoState.user}
+          onClose={() => setActiveTab("home")}
+          onOpenReferral={() => setActiveTab("referral")}
         />
       );
     }
@@ -277,7 +285,59 @@ export default function App() {
         team={demoState.team}
         user={demoState.user}
         userVote={demoState.userVote}
+        redeemedCoupons={demoState.redeemedCoupons || []}
       />
+    );
+  }
+
+  function renderBottomNav() {
+    return (
+      <View style={styles.bottomNav}>
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeTab;
+          
+          if (tab.id === "community") {
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => setActiveTab(tab.id)}
+                style={styles.navFabContainer}
+                activeOpacity={0.8}
+              >
+                <View style={styles.navFabCircle}>
+                  <Scan size={26} color="#FFFFFF" strokeWidth={2.5} />
+                </View>
+              </TouchableOpacity>
+            );
+          }
+
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => setActiveTab(tab.id)}
+              style={styles.navItem}
+              activeOpacity={0.7}
+            >
+              {tab.id === "home" && (
+                <Home size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
+              )}
+              {tab.id === "mission" && (
+                <Target size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
+              )}
+              {tab.id === "notifications" && (
+                <TrendingUp size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
+              )}
+              {tab.id === "profile" && (
+                <User size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
+              )}
+
+              <Text style={isActive ? styles.navLabelActive : styles.navLabel}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     );
   }
 
@@ -299,22 +359,56 @@ export default function App() {
     return <AuthScreen onSuccess={handleAuthSuccess} />;
   }
 
+  if (activeTab === "redeem") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <RedeemPointsScreen
+          user={demoState.user}
+          redeemedCoupons={demoState.redeemedCoupons || []}
+          onRedeemCoupon={handleRedeemCoupon}
+          onClose={() => setActiveTab("mission")}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (activeTab === "community") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={{ flex: 1 }}>
+          <QRCodeMemberScreen
+            user={demoState.user}
+            onClose={() => setActiveTab("home")}
+            onOpenReferral={() => setActiveTab("referral")}
+          />
+        </View>
+        {renderBottomNav()}
+      </SafeAreaView>
+    );
+  }
+
+  if (activeTab === "referral") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <ReferralPromoScreen
+          user={demoState.user}
+          onClose={() => setActiveTab("community")}
+          onNavigateToProfile={() => setActiveTab("profile")}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {renderActiveScreen()}
       </ScrollView>
-      <View style={styles.bottomNav}>
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTab;
-            return (
-            <TouchableOpacity key={tab.id} onPress={() => setActiveTab(tab.id)} style={isActive ? styles.navItemActive : styles.navItem}>
-              <Text style={isActive ? styles.navLabelActive : styles.navLabel}>{tab.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {renderBottomNav()}
     </SafeAreaView>
   );
 }
@@ -342,47 +436,65 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: "absolute",
-    left: spacing.md,
-    right: spacing.md,
-    bottom: spacing.md,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 80,
     flexDirection: "row",
-    gap: spacing.xs,
-    padding: spacing.xs,
-    backgroundColor: "rgba(255,255,255,0.96)",
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.line,
-    shadowColor: "#24413D",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 8
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1.5,
+    borderTopColor: "#E5E9F0",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 10
   },
   navItem: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 999,
-    paddingVertical: 11,
-    paddingHorizontal: 4
+    paddingVertical: 6,
+    gap: 2
   },
-  navItemActive: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 999,
-    paddingVertical: 11,
-    paddingHorizontal: 4,
-    backgroundColor: colors.teal
+  navIcon: {
+    marginBottom: 2
   },
   navLabelActive: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: "900"
+    color: colors.teal,
+    fontSize: 9.5,
+    fontWeight: "800",
+    textAlign: "center"
   },
   navLabel: {
     color: colors.muted,
-    fontSize: 10,
-    fontWeight: "900"
+    fontSize: 9.5,
+    fontWeight: "600",
+    textAlign: "center"
+  },
+  navFabContainer: {
+    width: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 60
+  },
+  navFabCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.tealDark,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.tealDark,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    marginTop: -30
   }
 });

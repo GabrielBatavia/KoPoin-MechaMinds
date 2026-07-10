@@ -141,6 +141,7 @@ export type DemoState = {
   userVote: UserVote | null;
   verificationLogs: VerificationLog[];
   votePoll: VotePoll;
+  redeemedCoupons?: string[];
 };
 
 export const acceptedQrCodes = ["KOPI-SUKAMAJU-001", "KOPI-SUKAMAJU-QR-001"];
@@ -304,6 +305,7 @@ export function createInitialDemoState(): DemoState {
     usedQrCodes: [],
     userVote: null,
     verificationLogs: [],
+    redeemedCoupons: [],
     votePoll: {
       id: "poll_reward_berikutnya",
       title: "Pilih reward komunitas berikutnya",
