@@ -1,1 +1,10 @@
-mobile/
+/mobile/
+node_modules/
+apps/*/node_modules/
+.expo/
+apps/*/.expo/
+dist/
+web-build/
+*.log
+.env
+.env.*
