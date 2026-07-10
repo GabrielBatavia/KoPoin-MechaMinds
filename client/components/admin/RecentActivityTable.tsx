@@ -1,5 +1,5 @@
 import React from "react"
-import { RecentActivity } from "@/data/kopoinAdminMockData"
+import { RecentActivity } from "@/data/kopoinAdminApi"
 import { Activity, QrCode, ClipboardCheck } from "lucide-react"
 
 export interface RecentActivityTableProps {

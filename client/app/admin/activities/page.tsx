@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { useDemoState } from "@/data/kopoinAdminMockData"
+import { useAdminDashboard } from "@/data/kopoinAdminApi"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { RecentActivityTable } from "@/components/admin/RecentActivityTable"
-import { Filter } from "lucide-react"
 
 export default function ActivitiesPage() {
-  const { activities } = useDemoState()
+  const { data, isLoading, error, refresh } = useAdminDashboard()
+  const activities = data.activities
   const [statusFilter, setStatusFilter] = useState<"all" | "verified" | "pending" | "rejected">("all")
   const filteredActivities = activities.filter((act) => {
     if (statusFilter === "all") return true
@@ -19,9 +19,17 @@ export default function ActivitiesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Log Aktivitas Partisipasi</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Seluruh rekam jejak kontribusi, verifikasi manual, dan scan QR transaksi dari anggota koperasi.
+          Seluruh rekam jejak kontribusi, verifikasi manual, dan scan QR transaksi dari database.
         </p>
       </div>
+
+      {isLoading && <div className="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-500">Memuat aktivitas...</div>}
+      {error && (
+        <div className="rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+          <button onClick={refresh} className="ml-3 font-bold underline">Coba lagi</button>
+        </div>
+      )}
 
       {/* ponytail: Integrated the filter select dropdown directly inside the RecentActivityTable headerAction prop, unifying the layout and removing the duplicate cards. */}
       <RecentActivityTable

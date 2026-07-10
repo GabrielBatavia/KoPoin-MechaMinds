@@ -145,6 +145,18 @@ export type VotePoll = {
   options: VoteOption[];
 };
 
+export type Coupon = {
+  id: string;
+  title: string;
+  originalPrice: string;
+  promoPrice: string;
+  points: number;
+  merchant: string;
+  emoji: string;
+  category: string;
+  tags: string[];
+};
+
 export type UserVote = {
   pollId: string;
   optionId: string;
@@ -169,6 +181,7 @@ export type DemoState = {
   verificationLogs: VerificationLog[];
   votePoll: VotePoll;
   redeemedCoupons?: string[];
+  coupons?: Coupon[];
   hasJoinedCommunity?: boolean;
   communities?: Community[];
   transactions?: Transaction[];

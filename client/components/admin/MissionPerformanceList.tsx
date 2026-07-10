@@ -1,5 +1,5 @@
 import React from "react"
-import { MissionPerformance } from "@/data/kopoinAdminMockData"
+import { MissionPerformance } from "@/data/kopoinAdminApi"
 import { Target, Star } from "lucide-react"
 
 export interface MissionPerformanceListProps {

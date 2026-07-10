@@ -1,5 +1,5 @@
 import React from "react"
-import { RecentActivity } from "@/data/kopoinAdminMockData"
+import { RecentActivity } from "@/data/kopoinAdminApi"
 import { ShieldCheck, QrCode, UserCheck } from "lucide-react"
 
 export interface VerificationLogTableProps {

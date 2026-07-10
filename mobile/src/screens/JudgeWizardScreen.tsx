@@ -79,7 +79,7 @@ export function JudgeWizardScreen({ onFinish, onSkip }: JudgeWizardScreenProps) 
       
       {/* Immersive linear gradient background */}
       <LinearGradient
-        colors={["#C3DAFF", "#2A6BE6", "#0B1C3F", "#040817"]}
+        colors={["#D7F3EF", "#0F6B63", "#073F3A", "#021B18"]}
         locations={[0.0, 0.4, 0.75, 1.0]}
         start={{ x: 0.9, y: 0.05 }}
         end={{ x: 0.1, y: 0.95 }}
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 18,
     borderRadius: 2.5,
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#0F6B63",
     marginRight: 3,
   },
   logoBar2: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#2563EB", // Active blue indicator
+    backgroundColor: "#0F6B63",
   },
   actionContainer: {
     width: "100%",
@@ -261,10 +261,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 54,
     borderRadius: 14,
-    backgroundColor: "#2563EB",
+    backgroundColor: "#0F6B63",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#2563EB",
+    shadowColor: "#0F6B63",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

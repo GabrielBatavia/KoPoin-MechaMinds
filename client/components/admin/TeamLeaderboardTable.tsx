@@ -1,5 +1,5 @@
 import React from "react"
-import { TeamLeaderboardEntry } from "@/data/kopoinAdminMockData"
+import { TeamLeaderboardEntry } from "@/data/kopoinAdminApi"
 import { Award, ArrowUp, Users, CheckCircle2 } from "lucide-react"
 
 export interface TeamLeaderboardTableProps {

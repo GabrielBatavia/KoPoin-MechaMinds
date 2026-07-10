@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth';
 import mobileRouter from './routes/mobile';
+import adminRouter from './routes/admin';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 // Auth routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/mobile', mobileRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // Basic welcome route
 app.get('/', (req, res) => {

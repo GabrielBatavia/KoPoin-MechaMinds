@@ -464,6 +464,7 @@ export default function App() {
         <RedeemPointsScreen
           user={demoState.user}
           redeemedCoupons={demoState.redeemedCoupons || []}
+          coupons={demoState.coupons}
           onRedeemCoupon={handleRedeemCoupon}
           onClose={() => setActiveTab("mission")}
         />

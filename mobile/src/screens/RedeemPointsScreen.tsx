@@ -29,22 +29,12 @@ import {
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
-import type { User } from "../data/kopoinSeed";
+import type { Coupon, User } from "../data/kopoinSeed";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - spacing.md * 3) / 2;
 
-type CouponItem = {
-  id: string;
-  title: string;
-  originalPrice: string;
-  promoPrice: string;
-  points: number;
-  merchant: string;
-  emoji: string;
-  category: string;
-  tags: string[];
-};
+type CouponItem = Coupon;
 
 const MOCK_COUPONS: CouponItem[] = [
   {
@@ -102,6 +92,7 @@ type CategoryDetails = {
 type RedeemPointsScreenProps = {
   user: User;
   redeemedCoupons: string[];
+  coupons?: CouponItem[];
   onRedeemCoupon: (couponId: string, points: number) => void;
   onClose: () => void;
 };
@@ -109,6 +100,7 @@ type RedeemPointsScreenProps = {
 export function RedeemPointsScreen({
   user,
   redeemedCoupons,
+  coupons,
   onRedeemCoupon,
   onClose
 }: RedeemPointsScreenProps) {
@@ -134,9 +126,10 @@ export function RedeemPointsScreen({
   };
 
   const currentSubTags = subTagsMap[activeCategory] || ["Semua"];
+  const availableCoupons = coupons && coupons.length > 0 ? coupons : MOCK_COUPONS;
 
   // Filter coupons based on Category, Tags, and Search Query
-  const filteredCoupons = MOCK_COUPONS.filter((coupon) => {
+  const filteredCoupons = availableCoupons.filter((coupon) => {
     const matchesCat =
       activeCategory === "Semua" ||
       coupon.category === activeCategory;

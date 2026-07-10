@@ -1,6 +1,6 @@
 "use client"
 
-import { useDemoState } from "@/data/kopoinAdminMockData"
+import { useAdminDashboard } from "@/data/kopoinAdminApi"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { KpiCard } from "@/components/admin/KpiCard"
 import { CampaignProgressCard } from "@/components/admin/CampaignProgressCard"
@@ -11,10 +11,29 @@ import { MissionPerformanceList } from "@/components/admin/MissionPerformanceLis
 import { Users, CheckCircle2, Award, QrCode, Flame, Percent } from "lucide-react"
 
 export default function Page() {
-  const { campaign, kpis, leaderboard, activities, missions } = useDemoState()
+  const { data, isLoading, error, refresh } = useAdminDashboard()
+  const { campaign, kpis, leaderboard, activities, missions } = data
+  const todayLabel = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date())
 
   return (
     <AdminShell breadcrumbPage="Ringkasan Dasbor" loadingText="Memuat Dasbor Admin...">
+      {isLoading && (
+        <div className="rounded-xl border border-gray-100 bg-white p-6 text-sm font-semibold text-gray-500">
+          Memuat data dashboard dari server...
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+          <button onClick={refresh} className="ml-3 font-bold underline">Coba lagi</button>
+        </div>
+      )}
+
       {/* Header Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -24,7 +43,7 @@ export default function Page() {
           </p>
         </div>
         <div className="text-xs text-gray-400 font-mono text-right hidden lg:block">
-          Tanggal: 5 Juli 2026
+          Tanggal: {todayLabel}
         </div>
       </div>
 
@@ -75,16 +94,18 @@ export default function Page() {
       </div>
 
       {/* Campaign Progress Panel */}
-      <CampaignProgressCard
-        campaignName={campaign.name}
-        currentPoints={campaign.current_points}
-        targetPoints={campaign.reward_target_points}
-        progressPercent={campaign.progress_percent}
-        rewardName={campaign.reward_name}
-        dayCurrent={campaign.day_current}
-        dayTotal={campaign.day_total}
-        status={campaign.status}
-      />
+      {campaign && (
+        <CampaignProgressCard
+          campaignName={campaign.name}
+          currentPoints={campaign.current_points}
+          targetPoints={campaign.reward_target_points}
+          progressPercent={campaign.progress_percent}
+          rewardName={campaign.reward_name}
+          dayCurrent={campaign.day_current}
+          dayTotal={campaign.day_total}
+          status={campaign.status}
+        />
+      )}
 
       {/* Detailed Lists & Tables Grid */}
       <div className="grid gap-6 lg:grid-cols-3">

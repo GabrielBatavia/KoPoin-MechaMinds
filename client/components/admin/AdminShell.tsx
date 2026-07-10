@@ -17,8 +17,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { useDemoState } from "@/data/kopoinAdminMockData"
-import { DemoControlToggle } from "@/components/admin/DemoControlToggle"
 
 export interface BreadcrumbLinkData {
   label: string
@@ -36,26 +34,8 @@ export function AdminShell({
   children,
   breadcrumbPage,
   breadcrumbLinks = [],
-  loadingText = "Memuat...",
+  loadingText: _loadingText = "Memuat...",
 }: AdminShellProps) {
-  const { isMounted } = useDemoState()
-
-  if (!isMounted) {
-    return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-gray-50 text-gray-400 font-medium gap-4">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-24 h-24 rounded-full border border-gray-100 border-t-[#0F6B63] animate-spin" style={{ animationDuration: '1.5s' }} />
-          <img
-            src="/simkopdes-symbol.png"
-            alt="Simkopdes Loader"
-            className="w-16 h-16 animate-pulse duration-1000 object-contain"
-          />
-        </div>
-        <span className="text-xs font-semibold text-gray-400 tracking-wide mt-2 animate-pulse">{loadingText}</span>
-      </div>
-    )
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -98,7 +78,6 @@ export function AdminShell({
         </header>
 
         <div className="flex flex-1 flex-col gap-6 p-6 bg-gray-50/30">
-          <DemoControlToggle />
           {children}
         </div>
       </SidebarInset>

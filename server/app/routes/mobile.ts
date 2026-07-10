@@ -106,9 +106,10 @@ async function buildState(userId: string) {
     voteOptionsResult,
     userVoteResult,
     redemptionsResult,
+    couponsResult,
   ] = await Promise.all([
     supabase.from("auth").select("*").eq("id", userId).maybeSingle(),
-    supabase.from("kopoin_campaigns").select("*").eq("id", "camp_7hari_produk_lokal").maybeSingle(),
+    supabase.from("kopoin_campaigns").select("*").eq("status", "active").limit(1).maybeSingle(),
     supabase.from("kopoin_missions").select("*").order("priority", { ascending: true }),
     supabase.from("kopoin_user_missions").select("*").eq("user_id", userId),
     supabase.from("kopoin_transactions").select("*").eq("user_id", userId).order("occurred_at", { ascending: false }),
@@ -117,6 +118,7 @@ async function buildState(userId: string) {
     supabase.from("kopoin_vote_options").select("*").eq("poll_id", "poll_reward_berikutnya"),
     supabase.from("kopoin_user_votes").select("*").eq("user_id", userId).eq("poll_id", "poll_reward_berikutnya").maybeSingle(),
     supabase.from("kopoin_coupon_redemptions").select("coupon_id").eq("user_id", userId),
+    supabase.from("kopoin_coupons").select("*").eq("active", true).order("points", { ascending: true }),
   ]);
 
   for (const result of [
@@ -130,6 +132,7 @@ async function buildState(userId: string) {
     voteOptionsResult,
     userVoteResult,
     redemptionsResult,
+    couponsResult,
   ]) {
     if (result.error) throw result.error;
   }
@@ -248,6 +251,17 @@ async function buildState(userId: string) {
     usedQrCodes: (userMissionsResult.data || []).map((row: any) => row.used_code).filter(Boolean),
     verificationLogs: [],
     redeemedCoupons: (redemptionsResult.data || []).map((row: any) => row.coupon_id),
+    coupons: (couponsResult.data || []).map((coupon: any) => ({
+      id: coupon.id,
+      title: coupon.title,
+      originalPrice: coupon.original_price,
+      promoPrice: coupon.promo_price,
+      points: Number(coupon.points || 0),
+      merchant: coupon.merchant,
+      emoji: coupon.emoji,
+      category: coupon.category,
+      tags: coupon.tags || [],
+    })),
     transactions: (transactionsResult.data || []).map((tx: any) => ({
       id: tx.id,
       title: tx.title,
