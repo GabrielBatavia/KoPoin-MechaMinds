@@ -234,6 +234,8 @@ export function OpenStreetMapViewer({
     return () => window.removeEventListener("message", listener);
   }, [onLocationSelect]);
 
+  const WebViewComp = WebView as any;
+
   return (
     <View style={[styles.container, { height }]}>
       {Platform.OS === "web" ? (
@@ -244,12 +246,12 @@ export function OpenStreetMapViewer({
           onLoad={() => setIsLoaded(true)}
         />
       ) : (
-        <WebView
+        <WebViewComp
           ref={webViewRef}
           source={{ html: htmlContent }}
           style={styles.webview}
           onLoadEnd={() => setIsLoaded(true)}
-          onMessage={(e) => handleMessagePayload(e.nativeEvent.data)}
+          onMessage={(e: any) => handleMessagePayload(e?.nativeEvent?.data)}
           scrollEnabled={false}
         />
       )}
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(32, 160, 144, 0.18)",
     backgroundColor: "#E8F0EE",
     position: "relative",
-    ...shadows.sm
+    ...shadows.card
   },
   webview: {
     flex: 1,
@@ -288,7 +290,7 @@ const styles = StyleSheet.create({
   },
   loaderText: {
     fontSize: 13,
-    color: colors.slateDark,
+    color: colors.slate,
     fontWeight: "500"
   }
 });

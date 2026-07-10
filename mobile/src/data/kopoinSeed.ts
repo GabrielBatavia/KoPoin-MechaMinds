@@ -422,3 +422,61 @@ function createBaselineActivities(): Activity[] {
     }
   ];
 }
+
+export type NearbyTeam = {
+  id: string;
+  name: string;
+  cooperativeName: string;
+  category: string;
+  areaLabel: string;
+  distanceLabel: string;
+  members: number;
+  activeMembers: number;
+  logoInitials: string;
+  missionTitle: string;
+  rewardTitle: string;
+  accessNote?: string;
+};
+
+export const defaultNearbyTeams: NearbyTeam[] = [
+  {
+    id: "team_sukamaju",
+    name: "Tim Pemuda Sukamaju",
+    cooperativeName: "Koperasi Pemuda Sukamaju",
+    category: "Komunitas Desa",
+    areaLabel: "Desa Sukamaju, Malang",
+    distanceLabel: "100 m",
+    members: 42,
+    activeMembers: 38,
+    logoInitials: "PS",
+    missionTitle: "Transaksi Bersama 10 Juta",
+    rewardTitle: "Diskon Belanja Koperasi 15%"
+  },
+  {
+    id: "team_bangko",
+    name: "Tim Desa Bangko",
+    cooperativeName: "Koperasi Tani Bangko",
+    category: "Komunitas Tani",
+    areaLabel: "Desa Bangko, Malang",
+    distanceLabel: "200 m",
+    members: 28,
+    activeMembers: 24,
+    logoInitials: "DB",
+    missionTitle: "Beli Hasil Tani & Pupuk Bersama",
+    rewardTitle: "Voucher Sembako Rp 100.000"
+  },
+  {
+    id: "team_universitas_malang",
+    name: "Tim Universitas Malang",
+    cooperativeName: "Kopma Universitas Malang",
+    category: "Komunitas Kampus",
+    areaLabel: "Klojen, Malang",
+    distanceLabel: "1,2 km",
+    members: 120,
+    activeMembers: 95,
+    logoInitials: "UM",
+    missionTitle: "Belanja Buku & Alat Tulis Bersama",
+    rewardTitle: "Potongan Kas Koperasi 20%"
+  }
+];
+

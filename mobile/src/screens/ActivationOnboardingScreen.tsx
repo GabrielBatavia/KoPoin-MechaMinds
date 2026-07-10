@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: "rgba(11, 96, 86, 0.16)",
-    ...shadows.sm
+    ...shadows.card
   },
   flexOne: {
     flex: 1
