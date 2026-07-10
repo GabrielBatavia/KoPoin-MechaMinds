@@ -60,7 +60,7 @@ export function SuccessStateScreen({ completionSummary, scanCompleted, user }: S
               {completionSummary.productName} berhasil masuk ledger. Progres pribadi dan tim langsung berubah.
             </Text>
             <ImpactRow
-              label="Saldo Gabriel"
+              label={`Saldo ${user.name || "Tamu"}`}
               before={formatNumber(completionSummary.balanceBefore)}
               after={formatNumber(completionSummary.balanceAfter)}
               suffix="Kopoin"

@@ -7,14 +7,27 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 // helper to sign tokens
-const signToken = (payload: object, expires: string) => jwt.sign(payload, JWT_SECRET, { expiresIn: expires });
+const signToken = (payload: object, expires: any) => jwt.sign(payload, JWT_SECRET, { expiresIn: expires });
 
 // REGISTER
 router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name, nik, phone, province } = req.body;
+    const { 
+      email, 
+      password, 
+      name, 
+      nik, 
+      phone, 
+      province,
+      pekerjaan,
+      jenis_kelamin,
+      koperasi_ref,
+      anggota_ref,
+      alamat_koperasi,
+      file_ktp
+    } = req.body;
     if (!email || !password || !name || !nik || !phone || !province) {
-      res.status(400).json({ success: false, error: { message: "Semua field harus diisi" } });
+      res.status(400).json({ success: false, error: { message: "Semua field wajib harus diisi" } });
       return;
     }
 
@@ -33,6 +46,12 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
       nik,
       phone,
       province,
+      pekerjaan: pekerjaan || null,
+      jenis_kelamin: jenis_kelamin || null,
+      koperasi_ref: koperasi_ref || null,
+      anggota_ref: anggota_ref || null,
+      alamat_koperasi: alamat_koperasi || null,
+      file_ktp: file_ktp || null
     });
 
     if (error) throw error;
@@ -86,6 +105,12 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
           nik: user.nik,
           phone: user.phone,
           province: user.province,
+          pekerjaan: user.pekerjaan,
+          jenis_kelamin: user.jenis_kelamin,
+          koperasi_ref: user.koperasi_ref,
+          anggota_ref: user.anggota_ref,
+          alamat_koperasi: user.alamat_koperasi,
+          file_ktp: user.file_ktp
         },
       },
     });
@@ -104,7 +129,11 @@ router.post("/refresh", async (req: Request, res: Response): Promise<void> => {
     }
 
     const decoded = jwt.verify(refresh_token, JWT_SECRET) as { id: string };
-    const { data: user } = await supabase.from("auth").select("id, email, name, nik, phone, province").eq("id", decoded.id).maybeSingle();
+    const { data: user } = await supabase
+      .from("auth")
+      .select("id, email, name, nik, phone, province, pekerjaan, jenis_kelamin, koperasi_ref, anggota_ref, alamat_koperasi, file_ktp")
+      .eq("id", decoded.id)
+      .maybeSingle();
 
     if (!user) {
       res.status(401).json({ success: false, error: { message: "User tidak ditemukan" } });

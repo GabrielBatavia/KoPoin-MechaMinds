@@ -9,9 +9,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ponytail: Basic middleware configuration: credentials enabled CORS and simple cookie parser.
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: true,
   credentials: true,
 }));
 app.use(cookieParser());

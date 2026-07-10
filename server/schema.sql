@@ -9,6 +9,12 @@ CREATE TABLE IF NOT EXISTS auth (
   nik VARCHAR(16) NOT NULL,
   phone VARCHAR(20) NOT NULL,
   province VARCHAR(100) NOT NULL,
+  pekerjaan VARCHAR(255),
+  jenis_kelamin VARCHAR(50),
+  koperasi_ref VARCHAR(255),
+  anggota_ref VARCHAR(100),
+  alamat_koperasi TEXT,
+  file_ktp VARCHAR(255),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

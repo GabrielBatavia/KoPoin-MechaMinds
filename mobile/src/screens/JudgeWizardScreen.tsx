@@ -101,7 +101,7 @@ export function JudgeWizardScreen({ onFinish, onSkip }: JudgeWizardScreenProps) 
           >
             {/* Brand Logo & Name */}
             <View style={styles.brandRow}>
-              <Image source={require("../assets/images/logo.png")} style={styles.wizardLogo} resizeMode="contain" />
+              <Image source={require("../assets/images/white-logo.png")} style={styles.wizardLogo} resizeMode="contain" />
             </View>
 
             {/* Slide Title */}
@@ -292,9 +292,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   wizardLogo: {
-    width: 140,
+    width: 45,
     height: 45,
-    marginBottom: 24,
+    marginBottom: 4,
     alignSelf: "flex-start"
   }
 });

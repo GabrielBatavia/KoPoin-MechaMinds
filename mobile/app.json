@@ -4,6 +4,7 @@
     "slug": "kopoin-mvp",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./src/assets/images/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "plugins": [
@@ -34,9 +35,15 @@
         "android.permission.CAMERA"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#F8F1DE"
+        "foregroundImage": "./src/assets/images/logo.png",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.anonymous.kopoinmvp"
+    },
+    "splash": {
+      "image": "./src/assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
     },
     "web": {
       "bundler": "metro"

@@ -32,7 +32,7 @@ export function TeamHomeScreen({ hasJoinedTeam, onJoinTeam, rank, team }: TeamHo
         </TouchableOpacity>
       ) : (
         <View style={styles.successStrip}>
-          <Text style={styles.successStripText}>Gabriel sudah berada di Tim Pemuda Sukamaju.</Text>
+          <Text style={styles.successStripText}>Anda sudah bergabung di Tim Pemuda Sukamaju.</Text>
         </View>
       )}
     </Section>

@@ -44,7 +44,7 @@ export function ProfileControlScreen({
 
       <View style={styles.walletHero}>
         <View style={styles.walletOrb} />
-        <Text style={styles.walletKicker}>Benefit Gabriel</Text>
+        <Text style={styles.walletKicker}>Benefit {user.name || "Tamu"}</Text>
         <Text style={styles.walletBalance}>{formatKopoin(user.kopoinBalance)}</Text>
         <Text style={styles.walletCopy}>Poin reward, kupon, dan penghematan dari aktivitas komunitas. Bukan saldo uang.</Text>
         <View style={styles.walletStats}>
@@ -103,7 +103,7 @@ export function ProfileControlScreen({
         <Text style={styles.cardCopy}>
           {user.achievementUnlocked
             ? `Terbuka setelah validasi ${completionSummary?.productName ?? "produk lokal"}. Siap dibagikan sebagai pencapaian tim.`
-            : "Validasi produk lokal untuk membuka achievement pertama Gabriel."}
+            : `Validasi produk lokal untuk membuka achievement pertama ${user.name || "Tamu"}.`}
         </Text>
         <View style={styles.streakBox}>
           <Text style={styles.streakTitle}>{user.streakLabel}</Text>
@@ -119,7 +119,7 @@ export function ProfileControlScreen({
 
       <View style={styles.memberCard}>
         <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>G</Text>
+          <Text style={styles.avatarText}>{user.name ? user.name.charAt(0).toUpperCase() : "T"}</Text>
         </View>
         <View style={styles.flexOne}>
           <Text style={styles.memberName}>{user.name}</Text>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   logo: {
-    width: 90,
+    width: 30,
     height: 30,
     marginBottom: 10,
     alignSelf: "flex-start"

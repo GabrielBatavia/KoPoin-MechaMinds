@@ -103,7 +103,7 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
             </View>
           ))
         ) : (
-          <Text style={styles.bodyText}>Belum ada percobaan QR dari Gabriel.</Text>
+          <Text style={styles.bodyText}>Belum ada percobaan QR.</Text>
         )}
       </View>
 

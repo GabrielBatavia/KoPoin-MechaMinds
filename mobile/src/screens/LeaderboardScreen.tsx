@@ -26,7 +26,7 @@ export function LeaderboardScreen({ completionSummary, currentTeamId, leaderboar
         <View style={styles.transitionBanner}>
           <Text style={styles.transitionTitle}>Tim Pemuda Sukamaju naik peringkat</Text>
           <Text style={styles.transitionCopy}>
-            Rank #{completionSummary.rankBefore} → #{completionSummary.rankAfter} · skor +{formatNumber(scoreDelta)} setelah aksi Gabriel.
+            Rank #{completionSummary.rankBefore} → #{completionSummary.rankAfter} · skor +{formatNumber(scoreDelta)} setelah aksi Anda.
           </Text>
         </View>
       ) : (

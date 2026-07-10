@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -12,7 +12,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ImageBackground,
-  Image
+  Image,
+  ScrollView,
+  Animated
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Path, Circle, Line } from "react-native-svg";
@@ -29,9 +31,107 @@ import {
   Tag,
   MapPin,
   Paperclip,
-  Check
+  Check,
+  ChevronDown,
+  Camera,
+  Phone,
+  Globe
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get("window");
+
+const CONFETTI_COLORS = ["#FFD700", "#FF4500", "#1E90FF", "#32CD32", "#FF69B4", "#8A2BE2", "#00FFFF"];
+
+type ConfettiPieceProps = {
+  delay: number;
+};
+
+function ConfettiPiece({ delay }: ConfettiPieceProps) {
+  const fallAnim = useRef(new Animated.Value(-50)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const swingAnim = useRef(new Animated.Value(0)).current;
+
+  const randomLeft = useRef(Math.random() * (WINDOW_WIDTH - 20)).current;
+  const randomSize = useRef(Math.random() * 8 + 6).current;
+  const randomColor = useRef(CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]).current;
+  const randomDuration = useRef(Math.random() * 2000 + 2500).current;
+  const randomRotate = useRef((Math.random() * 360).toString() + "deg").current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(fallAnim, {
+            toValue: WINDOW_HEIGHT,
+            duration: randomDuration,
+            useNativeDriver: true,
+          }),
+          Animated.timing(rotateAnim, {
+            toValue: 1,
+            duration: randomDuration,
+            useNativeDriver: true,
+          }),
+          Animated.timing(swingAnim, {
+            toValue: 1,
+            duration: randomDuration * 0.5,
+            useNativeDriver: true,
+          })
+        ])
+      ])
+    ).start();
+  }, []);
+
+  const rotateValue = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [randomRotate, "720deg"]
+  });
+
+  const translateX = swingAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, Math.random() * 30 - 15, 0]
+  });
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: randomLeft,
+        top: 0,
+        width: randomSize,
+        height: randomSize * (Math.random() > 0.5 ? 1.5 : 1),
+        backgroundColor: randomColor,
+        borderRadius: Math.random() > 0.7 ? 999 : 0,
+        transform: [
+          { translateY: fallAnim },
+          { rotate: rotateValue },
+          { translateX: translateX }
+        ],
+        opacity: 0.8,
+        zIndex: 99
+      }}
+    />
+  );
+}
+
+function ConfettiRain() {
+  const pieces = useRef(
+    Array.from({ length: 45 }).map((_, i) => ({
+      id: i,
+      delay: Math.random() * 3000
+    }))
+  ).current;
+
+  return (
+    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+      {pieces.map((piece) => (
+        <ConfettiPiece key={piece.id} delay={piece.delay} />
+      ))}
+    </View>
+  );
+}
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -39,78 +139,205 @@ type AuthScreenProps = {
   onSuccess: () => void;
 };
 
+const API_URL = Platform.select({
+  android: "http://10.0.2.2:8080/api/v1",
+  ios: "http://localhost:8080/api/v1",
+  default: "http://localhost:8080/api/v1"
+});
+
 export function AuthScreen({ onSuccess }: AuthScreenProps) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [registerStep, setRegisterStep] = useState(1);
   const [isRegistered, setIsRegistered] = useState(false);
-  
+
+  // Floating animation for mascot
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isRegistered) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: -12,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: 1500,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    } else {
+      floatAnim.setValue(0);
+    }
+  }, [isRegistered]);
+
+  // Dev Easter Egg Tap trigger
+  const [logoTapCount, setLogoTapCount] = useState(0);
+
+  const handleLogoPress = () => {
+    const nextCount = logoTapCount + 1;
+    if (nextCount >= 3) {
+      setIsRegistered(true);
+      setLogoTapCount(0);
+    } else {
+      setLogoTapCount(nextCount);
+    }
+  };
+
+  // API loading & error states
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   // Login States
-  const [email, setEmail] = useState("micahmad@potarastudio.com");
-  const [password, setPassword] = useState("mic4hmad#");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
   // Register States based on DB columns
-  const [anggotaRef, setAnggotaRef] = useState("AG-REF-8919");
-  const [koperasiRef, setKoperasiRef] = useState("Koperasi Desa Sukamaju");
-  const [nama, setNama] = useState("Gabriel Batavia");
-  const [nik, setNik] = useState("3273012903020005");
-  const [kodeWilayah, setKodeWilayah] = useState("32.73.01");
-  const [jenisKelamin, setJenisKelamin] = useState("Laki-laki");
-  const [pekerjaan, setPekerjaan] = useState("Wiraswasta / Pelaku UMKM");
-  const [fileKtp, setFileKtp] = useState("ktp_gabriel_batavia.jpg");
+  const [anggotaRef, setAnggotaRef] = useState("");
+  const [koperasiRef, setKoperasiRef] = useState("");
+  const [nama, setNama] = useState("");
+  const [nik, setNik] = useState("");
+  const [alamatKoperasi, setAlamatKoperasi] = useState("");
+  const [jenisKelamin, setJenisKelamin] = useState("");
+  const [pekerjaan, setPekerjaan] = useState("");
+  const [fileKtp, setFileKtp] = useState("");
+  const [noHp, setNoHp] = useState("");
+  const [provinsi, setProvinsi] = useState("");
+
+  // Dropdown toggle states
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+  const [showKoperasiDropdown, setShowKoperasiDropdown] = useState(false);
 
   function handleTabChange(tab: "login" | "register") {
     setActiveTab(tab);
     setRegisterStep(1);
+    setErrorMsg("");
+  }
+
+  async function handleLogin() {
+    if (!email || !password) {
+      setErrorMsg("Email dan kata sandi wajib diisi");
+      return;
+    }
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        setErrorMsg(resData.error?.message || "Email atau kata sandi salah.");
+        setLoading(false);
+        return;
+      }
+
+      await AsyncStorage.setItem("kopoin-user-token", resData.data.access_token);
+      await AsyncStorage.setItem("kopoin-user-refresh-token", resData.data.refresh_token);
+      await AsyncStorage.setItem("kopoin-user-data", JSON.stringify(resData.data.user));
+
+      setLoading(false);
+      onSuccess();
+    } catch (err: any) {
+      setErrorMsg("Gagal terhubung ke server. Pastikan server backend Anda aktif.");
+      setLoading(false);
+    }
+  }
+
+  async function handleRegister() {
+    if (!email || !password || !nama || !nik || !noHp || !provinsi) {
+      setErrorMsg("Mohon lengkapi semua field wajib");
+      return;
+    }
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      // 1. Register User
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          name: nama,
+          nik,
+          phone: noHp,
+          province: provinsi,
+          pekerjaan,
+          jenis_kelamin: jenisKelamin,
+          koperasi_ref: koperasiRef,
+          anggota_ref: anggotaRef,
+          alamat_koperasi: alamatKoperasi,
+          file_ktp: fileKtp
+        })
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        setErrorMsg(resData.error?.message || "Registrasi gagal. Silakan coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Automatically Log in User
+      const loginResponse = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const loginData = await loginResponse.json();
+
+      if (loginResponse.ok && loginData.success) {
+        await AsyncStorage.setItem("kopoin-user-token", loginData.data.access_token);
+        await AsyncStorage.setItem("kopoin-user-refresh-token", loginData.data.refresh_token);
+        await AsyncStorage.setItem("kopoin-user-data", JSON.stringify(loginData.data.user));
+      }
+
+      setLoading(false);
+      setIsRegistered(true);
+    } catch (err: any) {
+      setErrorMsg("Gagal terhubung ke server. Pastikan server backend Anda aktif.");
+      setLoading(false);
+    }
   }
 
   if (isRegistered) {
     return (
       <SafeAreaView style={styles.successScreen}>
         <StatusBar style="dark" />
-        <View style={styles.successContent}>
-          {/* Confetti Party Horn Svg */}
-          <Svg width={180} height={180} viewBox="0 0 200 200" style={styles.successSvg}>
-            {/* Confetti curls */}
-            <Path d="M 115 105 C 130 95, 140 100, 138 78 C 136 60, 150 55, 156 68" stroke="#F4B400" strokeWidth={3} strokeLinecap="round" fill="none" />
-            <Path d="M 125 115 C 145 120, 155 110, 148 95 C 142 80, 158 75, 163 85" stroke="#F4B400" strokeWidth={3} strokeLinecap="round" fill="none" />
-            
-            {/* Sparkles / Stars */}
-            {/* Yellow star left */}
-            <Path d="M 68 85 l 2 3 l 3 2 l -3 2 l -2 3 l -2 -3 l -3 -2 l 3 -2 z" fill="#F4B400" />
-            <Circle cx="82" cy="88" r="2.5" fill="#F4B400" />
-            {/* Red star right */}
-            <Path d="M 175 145 l 2 3 l 3 2 l -3 2 l -2 3 l -2 -3 l -3 -2 l 3 -2 z" fill="#BA3B34" />
-            <Circle cx="162" cy="155" r="2.5" fill="#BA3B34" />
-            {/* Small yellow dot bottom */}
-            <Circle cx="132" cy="172" r="2" fill="#F4B400" />
-            
-            {/* Red lines popping out */}
-            <Line x1="108" y1="78" x2="120" y2="92" stroke="#BA3B34" strokeWidth={3.5} strokeLinecap="round" />
-            <Line x1="122" y1="126" x2="142" y2="122" stroke="#BA3B34" strokeWidth={3.5} strokeLinecap="round" />
-            <Circle cx="87" cy="112" r="2.5" fill="#BA3B34" />
-            
-            {/* Blue Party Horn Cone */}
-            <Path
-              d="M 68 160 C 80 145, 100 120, 122 108 C 122 108, 134 122, 110 148 C 92 168, 75 170, 68 160 Z"
-              fill="#0C66E4" 
-            />
-            {/* Cone opening mouth ellipse */}
-            <Path
-              d="M 122 108 C 128 102, 120 94, 110 102 C 100 110, 106 120, 110 122 C 116 122, 122 108, 122 108 Z"
-              fill="#0049B0"
-            />
-            {/* Stripe details */}
-            <Path d="M 85 148 C 92 138, 102 128, 114 120" stroke="rgba(255,255,255,0.18)" strokeWidth={2.5} strokeLinecap="round" fill="none" />
-            <Path d="M 95 138 C 102 128, 108 120, 118 114" stroke="rgba(255,255,255,0.18)" strokeWidth={2.5} strokeLinecap="round" fill="none" />
-          </Svg>
+        {/* Falling Confetti Rain animation */}
+        <ConfettiRain />
 
-          <Text style={styles.successTitle}>Registrasi Selesai</Text>
-          <Text style={styles.successSubtitle}>Selamat menikmati layanan Kopoin</Text>
+        <View style={styles.successContent}>
+          <Animated.Image
+            source={require("../assets/images/maskot-1.png")}
+            style={[
+              styles.successImage,
+              { transform: [{ translateY: floatAnim }] }
+            ]}
+            resizeMode="contain"
+          />
+
+          <Text style={styles.successTitle}>Pendaftaran Berhasil!</Text>
+          <Text style={styles.successSubtitle}>Selamat menikmati layanan Kopoin. Mari bersama majukan Koperasi Desa!</Text>
         </View>
 
-        <TouchableOpacity style={styles.successBtn} onPress={onSuccess} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.successBtn}
+          onPress={onSuccess}
+          activeOpacity={0.8}
+        >
           <Text style={styles.successBtnText}>SELESAI</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -129,10 +356,12 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
 
         {/* Top Header Section */}
         <View style={styles.headerSection}>
-          <Image source={require("../assets/images/logo.png")} style={styles.authLogo} resizeMode="contain" />
-          <Text style={styles.headerTitle}>Go ahead and set up{"\n"}your account</Text>
+          <TouchableOpacity activeOpacity={1} onPress={handleLogoPress}>
+            <Image source={require("../assets/images/white-logo.png")} style={styles.authLogo} resizeMode="contain" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Mulai Langkah Baru{"\n"}di Kopoin</Text>
           <Text style={styles.headerSubtitle}>
-            Sign {activeTab === "login" ? "in" : "up"} to enjoy the best managing experience at Koperasi Desa Merah Putih
+            {activeTab === "login" ? "Masuk ke akunmu" : "Daftar sekarang"} untuk menikmati kemudahan bertransaksi di Koperasi Desa Merah Putih
           </Text>
         </View>
 
@@ -150,7 +379,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 activeOpacity={0.9}
               >
                 <Text style={[styles.tabButtonText, activeTab === "login" && styles.activeTabButtonText]}>
-                  Login
+                  Masuk
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -159,7 +388,7 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 activeOpacity={0.9}
               >
                 <Text style={[styles.tabButtonText, activeTab === "register" && styles.activeTabButtonText]}>
-                  Register
+                  Daftar
                 </Text>
               </TouchableOpacity>
             </View>
@@ -189,270 +418,456 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                   </View>
                 </View>
                 <Text style={styles.stepTitleText}>
-                  {registerStep === 1 && "Step 1: Identitas Diri"}
-                  {registerStep === 2 && "Step 2: Pekerjaan & Gender"}
-                  {registerStep === 3 && "Step 3: Informasi Koperasi"}
-                  {registerStep === 4 && "Step 4: Lokasi & Dokumen"}
+                  {registerStep === 1 && "Langkah 1: Identitas Diri & Akun"}
+                  {registerStep === 2 && "Langkah 2: Profil & Gender"}
+                  {registerStep === 3 && "Langkah 3: Referensi Koperasi"}
+                  {registerStep === 4 && "Langkah 4: Alamat & Verifikasi KTP"}
                 </Text>
               </View>
             )}
 
-            {/* Input Form Fields */}
-            {activeTab === "login" ? (
-              <View style={styles.formContainer}>
-                {/* Email Address Input */}
-                <View style={styles.inputOuterContainer}>
-                  <View style={styles.iconContainer}>
-                    <Mail size={22} color="#5E7A6B" />
+            {/* Scrollable Form Fields */}
+            <ScrollView
+              style={styles.scrollForm}
+              contentContainerStyle={styles.scrollFormContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Input Form Fields */}
+              {activeTab === "login" ? (
+                <View style={styles.formContainer}>
+                  {/* Email Address Input */}
+                  <View style={styles.inputOuterContainer}>
+                    <View style={styles.iconContainer}>
+                      <Mail size={22} color="#0F6B63" />
+                    </View>
+                    <View style={styles.inputInnerContainer}>
+                      <Text style={styles.inputLabel}>Alamat Email</Text>
+                      <TextInput
+                        style={styles.inputField}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Masukkan alamat email Anda"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
                   </View>
-                  <View style={styles.inputInnerContainer}>
-                    <Text style={styles.inputLabel}>Email Address</Text>
-                    <TextInput
-                      style={styles.inputField}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="Enter your email"
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
+
+                  {/* Password Input */}
+                  <View style={styles.inputOuterContainer}>
+                    <View style={styles.iconContainer}>
+                      <Lock size={22} color="#0F6B63" />
+                    </View>
+                    <View style={styles.inputInnerContainer}>
+                      <Text style={styles.inputLabel}>Kata Sandi</Text>
+                      <TextInput
+                        style={styles.inputField}
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Masukkan kata sandi Anda"
+                        placeholderTextColor="#9CA3AF"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={styles.eyeIconContainer}
+                      onPress={() => setShowPassword(!showPassword)}
+                      activeOpacity={0.7}
+                    >
+                      {showPassword ? (
+                        <Eye size={22} color="#9CA3AF" />
+                      ) : (
+                        <EyeOff size={22} color="#9CA3AF" />
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </View>
+              ) : (
+                <View style={styles.formContainer}>
+                  {registerStep === 1 && (
+                    <>
+                      <View style={{ flexDirection: "row", gap: spacing.md }}>
+                        {/* Nama */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <User size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Nama Lengkap</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={nama}
+                              onChangeText={setNama}
+                              placeholder="Nama lengkap Anda"
+                              placeholderTextColor="#9CA3AF"
+                              autoCorrect={false}
+                            />
+                          </View>
+                        </View>
 
-                {/* Password Input */}
-                <View style={styles.inputOuterContainer}>
-                  <View style={styles.iconContainer}>
-                    <Lock size={22} color="#5E7A6B" />
-                  </View>
-                  <View style={styles.inputInnerContainer}>
-                    <Text style={styles.inputLabel}>Password</Text>
-                    <TextInput
-                      style={styles.inputField}
-                      value={password}
-                      onChangeText={setPassword}
-                      placeholder="Enter your password"
-                      placeholderTextColor="#9CA3AF"
-                      secureTextEntry={!showPassword}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.eyeIconContainer}
-                    onPress={() => setShowPassword(!showPassword)}
-                    activeOpacity={0.7}
-                  >
-                    {showPassword ? (
-                      <Eye size={22} color="#9CA3AF" />
-                    ) : (
-                      <EyeOff size={22} color="#9CA3AF" />
-                    )}
-                  </TouchableOpacity>
+                        {/* NIK */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <IdCard size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>NIK</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={nik}
+                              onChangeText={setNik}
+                              placeholder="16 digit NIK Anda"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="numeric"
+                              maxLength={16}
+                            />
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={{ flexDirection: "row", gap: spacing.md }}>
+                        {/* Email Address */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <Mail size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Alamat Email</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={email}
+                              onChangeText={setEmail}
+                              placeholder="Email aktif Anda"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="email-address"
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                            />
+                          </View>
+                        </View>
+
+                        {/* Password */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <Lock size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Kata Sandi</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={password}
+                              onChangeText={setPassword}
+                              placeholder="Buat kata sandi baru"
+                              placeholderTextColor="#9CA3AF"
+                              secureTextEntry={!showPassword}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                            />
+                          </View>
+                          <TouchableOpacity
+                            style={styles.eyeIconContainer}
+                            onPress={() => setShowPassword(!showPassword)}
+                            activeOpacity={0.7}
+                          >
+                            {showPassword ? (
+                              <Eye size={22} color="#9CA3AF" />
+                            ) : (
+                              <EyeOff size={22} color="#9CA3AF" />
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </>
+                  )}
+
+                  {registerStep === 2 && (
+                    <>
+                      <View style={{ flexDirection: "row", gap: spacing.md }}>
+                        {/* Pekerjaan */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <Briefcase size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Pekerjaan</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={pekerjaan}
+                              onChangeText={setPekerjaan}
+                              placeholder="Wiraswasta, Petani, Karyawan, dll."
+                              placeholderTextColor="#9CA3AF"
+                              autoCorrect={false}
+                            />
+                          </View>
+                        </View>
+
+                        {/* Nomor Telepon */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <Phone size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Nomor Telepon</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={noHp}
+                              onChangeText={setNoHp}
+                              placeholder="Nomor HP Anda"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="phone-pad"
+                            />
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Jenis Kelamin Dropdown */}
+                      <TouchableOpacity
+                        style={styles.inputOuterContainer}
+                        onPress={() => {
+                          setShowGenderDropdown(!showGenderDropdown);
+                          Keyboard.dismiss();
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Users size={22} color="#0F6B63" />
+                        </View>
+                        <View style={styles.inputInnerContainer}>
+                          <Text style={styles.inputLabel}>Jenis Kelamin</Text>
+                          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingRight: 4 }}>
+                            <Text style={[styles.inputFieldText, !jenisKelamin && { color: "#9CA3AF" }]}>
+                              {jenisKelamin || "Pilih Jenis Kelamin"}
+                            </Text>
+                            <ChevronDown size={18} color="#0F6B63" />
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+
+                      {showGenderDropdown && (
+                        <View style={styles.dropdownOptionsContainer}>
+                          {["Laki-Laki", "Perempuan"].map((option) => (
+                            <TouchableOpacity
+                              key={option}
+                              style={[
+                                styles.dropdownOption,
+                                jenisKelamin === option && styles.dropdownOptionActive
+                              ]}
+                              onPress={() => {
+                                setJenisKelamin(option);
+                                setShowGenderDropdown(false);
+                              }}
+                            >
+                              <Text style={[
+                                styles.dropdownOptionText,
+                                jenisKelamin === option && styles.dropdownOptionTextActive
+                              ]}>
+                                {option}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </>
+                  )}
+
+                  {registerStep === 3 && (
+                    <>
+                      {/* Koperasi Ref Dropdown */}
+                      <TouchableOpacity
+                        style={styles.inputOuterContainer}
+                        onPress={() => {
+                          setShowKoperasiDropdown(!showKoperasiDropdown);
+                          Keyboard.dismiss();
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Building size={22} color="#0F6B63" />
+                        </View>
+                        <View style={styles.inputInnerContainer}>
+                          <Text style={styles.inputLabel}>Koperasi Referensi</Text>
+                          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingRight: 4 }}>
+                            <Text style={[styles.inputFieldText, !koperasiRef && { color: "#9CA3AF" }]}>
+                              {koperasiRef || "Pilih Koperasi Acuan"}
+                            </Text>
+                            <ChevronDown size={18} color="#0F6B63" />
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+
+                      {showKoperasiDropdown && (
+                        <View style={styles.dropdownOptionsContainer}>
+                          {[
+                            "Koperasi Merah Putih Sukamaju",
+                            "Koperasi Simpan Pinjam Desa",
+                            "Koperasi Tani Makmur",
+                            "Koperasi Unit Desa Sejahtera"
+                          ].map((option) => (
+                            <TouchableOpacity
+                              key={option}
+                              style={[
+                                styles.dropdownOption,
+                                koperasiRef === option && styles.dropdownOptionActive
+                              ]}
+                              onPress={() => {
+                                setKoperasiRef(option);
+                                setShowKoperasiDropdown(false);
+                              }}
+                            >
+                              <Text style={[
+                                styles.dropdownOptionText,
+                                koperasiRef === option && styles.dropdownOptionTextActive
+                              ]}>
+                                {option}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+
+                      {/* Anggota Ref */}
+                      <View style={styles.inputOuterContainer}>
+                        <View style={styles.iconContainer}>
+                          <Tag size={22} color="#0F6B63" />
+                        </View>
+                        <View style={styles.inputInnerContainer}>
+                          <Text style={styles.inputLabel}>Nomor Referensi Anggota</Text>
+                          <TextInput
+                            style={styles.inputField}
+                            value={anggotaRef}
+                            onChangeText={setAnggotaRef}
+                            placeholder="Contoh: AG-REF-8919 (Opsional)"
+                            placeholderTextColor="#9CA3AF"
+                            autoCorrect={false}
+                          />
+                        </View>
+                      </View>
+                    </>
+                  )}
+
+                  {registerStep === 4 && (
+                    <>
+                      <View style={{ flexDirection: "row", gap: spacing.md }}>
+                        {/* Alamat Koperasi */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <MapPin size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Alamat Koperasi</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={alamatKoperasi}
+                              onChangeText={setAlamatKoperasi}
+                              placeholder="Nama jalan, RT/RW, desa, kecamatan"
+                              placeholderTextColor="#9CA3AF"
+                              autoCorrect={false}
+                            />
+                          </View>
+                        </View>
+
+                        {/* Provinsi */}
+                        <View style={[styles.inputOuterContainer, { flex: 1 }]}>
+                          <View style={styles.iconContainer}>
+                            <Globe size={22} color="#0F6B63" />
+                          </View>
+                          <View style={styles.inputInnerContainer}>
+                            <Text style={styles.inputLabel}>Provinsi</Text>
+                            <TextInput
+                              style={styles.inputField}
+                              value={provinsi}
+                              onChangeText={setProvinsi}
+                              placeholder="Provinsi Anda"
+                              placeholderTextColor="#9CA3AF"
+                              autoCorrect={false}
+                            />
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* File KTP Upload Gambar */}
+                      <View style={styles.uploadContainer}>
+                        <Text style={styles.uploadLabel}>Foto KTP Anda</Text>
+                        {fileKtp ? (
+                          <View style={styles.uploadPreviewCard}>
+                            <View style={styles.uploadPreviewLeft}>
+                              <Image
+                                source={require("../assets/images/auth.png")}
+                                style={styles.uploadThumbnail}
+                              />
+                              <View style={styles.uploadFileInfo}>
+                                <Text style={styles.uploadFileName} numberOfLines={1}>{fileKtp}</Text>
+                                <Text style={styles.uploadFileSize}>1.2 MB • Unggah berhasil</Text>
+                              </View>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.uploadDeleteBtn}
+                              onPress={() => setFileKtp("")}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.uploadDeleteText}>Hapus</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.uploadPlaceholderCard}
+                            onPress={() => setFileKtp("ktp_gabriel_batavia.jpg")}
+                            activeOpacity={0.8}
+                          >
+                            <Camera size={24} color="#0F6B63" style={{ marginBottom: 6 }} />
+                            <Text style={styles.uploadCtaText}>Ambil Foto / Unggah KTP</Text>
+                            <Text style={styles.uploadSubtext}>Format JPG, PNG (Maks. 5MB)</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </>
+                  )}
                 </View>
-              </View>
-            ) : (
-              <View style={styles.formContainer}>
-                {registerStep === 1 && (
-                  <>
-                    {/* Nama */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <User size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Nama Lengkap</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={nama}
-                          onChangeText={setNama}
-                          placeholder="Nama Lengkap Anda"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
+              )}
+            </ScrollView>
 
-                    {/* NIK */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <IdCard size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>NIK</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={nik}
-                          onChangeText={setNik}
-                          placeholder="16 Digit NIK"
-                          placeholderTextColor="#9CA3AF"
-                          keyboardType="numeric"
-                          maxLength={16}
-                        />
-                      </View>
-                    </View>
-                  </>
-                )}
-
-                {registerStep === 2 && (
-                  <>
-                    {/* Pekerjaan */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <Briefcase size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Pekerjaan</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={pekerjaan}
-                          onChangeText={setPekerjaan}
-                          placeholder="Pekerjaan Anda"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-
-                    {/* Jenis Kelamin */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <Users size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Jenis Kelamin</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={jenisKelamin}
-                          onChangeText={setJenisKelamin}
-                          placeholder="Laki-laki / Perempuan"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-                  </>
-                )}
-
-                {registerStep === 3 && (
-                  <>
-                    {/* Koperasi Ref */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <Building size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Koperasi Ref</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={koperasiRef}
-                          onChangeText={setKoperasiRef}
-                          placeholder="Koperasi Acuan"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-
-                    {/* Anggota Ref */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <Tag size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Anggota Ref</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={anggotaRef}
-                          onChangeText={setAnggotaRef}
-                          placeholder="Referensi Anggota"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-                  </>
-                )}
-
-                {registerStep === 4 && (
-                  <>
-                    {/* Kode Wilayah */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <MapPin size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>Kode Wilayah</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={kodeWilayah}
-                          onChangeText={setKodeWilayah}
-                          placeholder="Kode Wilayah"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-
-                    {/* File KTP */}
-                    <View style={styles.inputOuterContainer}>
-                      <View style={styles.iconContainer}>
-                        <Paperclip size={22} color="#5E7A6B" />
-                      </View>
-                      <View style={styles.inputInnerContainer}>
-                        <Text style={styles.inputLabel}>File KTP</Text>
-                        <TextInput
-                          style={styles.inputField}
-                          value={fileKtp}
-                          onChangeText={setFileKtp}
-                          placeholder="Nama file KTP"
-                          placeholderTextColor="#9CA3AF"
-                          autoCorrect={false}
-                        />
-                      </View>
-                    </View>
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* Remember Me & Forgot Password Row (Only for Login) */}
-            {activeTab === "login" && (
-              <View style={styles.utilitiesRow}>
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => setRememberMe(!rememberMe)}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                    {rememberMe && (
-                      <Check size={12} color="#FFFFFF" strokeWidth={3} />
-                    )}
-                  </View>
-                  <Text style={styles.rememberMeText}>Remember me</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.7}>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            {/* Error Message */}
+            {errorMsg ? (
+              <Text style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 12, fontWeight: "600" }}>
+                {errorMsg}
+              </Text>
+            ) : null}
 
             {/* Submit / Navigation Buttons */}
             {activeTab === "login" ? (
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={onSuccess}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.submitButtonText}>Login</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  style={[styles.submitButton, loading && { opacity: 0.7 }]}
+                  onPress={handleLogin}
+                  disabled={loading}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.submitButtonText}>
+                    {loading ? "Memproses..." : "Masuk"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.guestButton}
+                  onPress={onSuccess}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.guestButtonText}>Masuk sebagai Tamu (Mode Demo)</Text>
+                </TouchableOpacity>
+              </>
             ) : (
               <View style={styles.registerButtonsRow}>
                 {registerStep > 1 && (
                   <TouchableOpacity
-                    style={styles.backButton}
+                    style={[styles.backButton, loading && { opacity: 0.5 }]}
                     onPress={() => setRegisterStep(registerStep - 1)}
+                    disabled={loading}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.backButtonText}>Kembali</Text>
@@ -461,19 +876,21 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
                 <TouchableOpacity
                   style={[
                     styles.nextButton,
-                    registerStep === 1 && { width: "100%" }
+                    registerStep === 1 && { width: "100%" },
+                    loading && { opacity: 0.7 }
                   ]}
                   onPress={() => {
                     if (registerStep < 4) {
                       setRegisterStep(registerStep + 1);
                     } else {
-                      setIsRegistered(true);
+                      handleRegister();
                     }
                   }}
+                  disabled={loading}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.nextButtonText}>
-                    {registerStep === 4 ? "Daftar" : "Lanjut"}
+                    {loading && registerStep === 4 ? "Mendaftar..." : registerStep === 4 ? "Daftar" : "Lanjut"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -508,7 +925,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5
   },
   headerSubtitle: {
-    color: "rgba(255, 255, 255, 0.5)",
+    color: "rgba(255, 255, 255, 0.9)",
     fontSize: 14,
     fontWeight: "500",
     marginTop: spacing.md
@@ -578,8 +995,8 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB"
   },
   stepCircleActive: {
-    backgroundColor: "#6E8E7C",
-    borderColor: "#6E8E7C"
+    backgroundColor: "#0F6B63",
+    borderColor: "#0F6B63"
   },
   stepCircleText: {
     color: "#9CA3AF",
@@ -597,7 +1014,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2
   },
   stepLineActive: {
-    backgroundColor: "#6E8E7C"
+    backgroundColor: "#0F6B63"
   },
   stepTitleText: {
     alignSelf: "flex-start",
@@ -673,8 +1090,8 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   checkboxActive: {
-    backgroundColor: "#6E8E7C",
-    borderColor: "#6E8E7C"
+    backgroundColor: "#0F6B63",
+    borderColor: "#0F6B63"
   },
   rememberMeText: {
     color: "#4B5563",
@@ -682,12 +1099,12 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   forgotPasswordText: {
-    color: "#6E8E7C",
+    color: "#0F6B63",
     fontSize: 13,
     fontWeight: "800"
   },
   submitButton: {
-    backgroundColor: "#6E8E7C",
+    backgroundColor: "#0F6B63",
     borderRadius: 999,
     paddingVertical: 16,
     alignItems: "center",
@@ -722,7 +1139,7 @@ const styles = StyleSheet.create({
   nextButton: {
     flex: 1,
     borderRadius: 999,
-    backgroundColor: "#6E8E7C",
+    backgroundColor: "#0F6B63",
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center"
@@ -736,7 +1153,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 24,
     paddingTop: 80,
     paddingBottom: 40
   },
@@ -746,7 +1163,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: -40
   },
-  successSvg: {
+  successImage: {
+    width: 220,
+    height: 220,
     marginBottom: 40
   },
   successTitle: {
@@ -765,11 +1184,14 @@ const styles = StyleSheet.create({
     lineHeight: 20
   },
   successBtn: {
-    backgroundColor: "#0C66E4",
-    borderRadius: radii.sm,
-    paddingVertical: 16,
+    backgroundColor: "#0F6B63",
+    borderRadius: 999,
+    padding: 16,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+
+    marginHorizontal: 24,
+    marginBottom: 24,
   },
   successBtnText: {
     color: colors.white,
@@ -777,10 +1199,142 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0.5
   },
+  guestButton: {
+    marginTop: spacing.md,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  guestButtonText: {
+    color: "#0F6B63",
+    fontSize: 14,
+    fontWeight: "800",
+    textDecorationLine: "underline"
+  },
   authLogo: {
-    width: 140,
+    width: 45,
     height: 45,
-    marginBottom: 24,
+    marginBottom: 4,
     alignSelf: "flex-start"
+  },
+  inputFieldText: {
+    color: "#1F2937",
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 18
+  },
+  dropdownOptionsContainer: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginTop: -8,
+    padding: spacing.xs,
+    gap: 2
+  },
+  dropdownOption: {
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md
+  },
+  dropdownOptionActive: {
+    backgroundColor: "#EAFBF7"
+  },
+  dropdownOptionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4B5563"
+  },
+  dropdownOptionTextActive: {
+    color: "#0F6B63",
+    fontWeight: "800"
+  },
+  uploadContainer: {
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs
+  },
+  uploadLabel: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    fontWeight: "700",
+    marginBottom: 6,
+    textTransform: "capitalize",
+    paddingLeft: 4
+  },
+  uploadPlaceholderCard: {
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "#0F6B63",
+    borderRadius: radii.lg,
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EAFBF7"
+  },
+  uploadCtaText: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#0F6B63",
+    marginBottom: 2
+  },
+  uploadSubtext: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    fontWeight: "600"
+  },
+  uploadPreviewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    backgroundColor: colors.white
+  },
+  uploadPreviewLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1
+  },
+  uploadThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    marginRight: spacing.sm
+  },
+  uploadFileInfo: {
+    flex: 1,
+    justifyContent: "center"
+  },
+  uploadFileName: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#1F2937"
+  },
+  uploadFileSize: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    marginTop: 2
+  },
+  uploadDeleteBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.sm,
+    backgroundColor: "#FDF0F0",
+    borderWidth: 1,
+    borderColor: "#FCA5A5"
+  },
+  uploadDeleteText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.danger
+  },
+  scrollForm: {
+    maxHeight: SCREEN_HEIGHT * 0.46
+  },
+  scrollFormContent: {
+    paddingBottom: spacing.sm
   }
 });

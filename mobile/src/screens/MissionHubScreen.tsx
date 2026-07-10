@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
+import Svg, { Circle as SvgCircle, Path } from "react-native-svg";
 
 import type { Campaign, CompletionSummary, Mission, Team, User, VerificationLog } from "../data/kopoinSeed";
 import { colors, radii, shadows, spacing } from "../theme";
@@ -66,22 +67,82 @@ export function MissionHubScreen({
         </View>
       </View>
 
-      <View style={styles.heroCard}>
-        <View style={styles.rewardOrb} />
-        <View style={styles.badgeGold}>
-          <Text style={styles.badgeGoldText}>Reward Bersama</Text>
+      {/* Curved Ranking Track Card */}
+      <View style={styles.rankingCard}>
+
+        {/* Curved Track visualization */}
+        <View style={styles.trackContainer}>
+          <Svg height="130" width="100%" viewBox="0 0 340 130" style={StyleSheet.absoluteFillObject}>
+            <Path
+              d="M 35,35 Q 170,120 305,35"
+              fill="none"
+              stroke="#E5E7EB"
+              strokeWidth="2"
+              strokeDasharray="4,4"
+            />
+          </Svg>
+
+          {/* Avatar 1 (Far-Left, Rank #4) */}
+          <View style={[styles.avatarPositioner, { left: "4%", top: 15, width: 40, height: 40 }]}>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60" }}
+              style={styles.trackAvatarRank4}
+            />
+            <View style={[styles.avatarBadge, { backgroundColor: "#E5E7EB" }]}>
+              <Text style={[styles.avatarBadgeText, { color: "#4B5563" }]}>4</Text>
+            </View>
+          </View>
+
+          {/* Avatar 2 (Mid-Left, Rank #2) */}
+          <View style={[styles.avatarPositioner, { left: "24%", top: 44, width: 48, height: 48 }]}>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=60" }}
+              style={styles.trackAvatarRank2}
+            />
+            <View style={[styles.avatarBadge, { backgroundColor: "#9CA3AF" }]}>
+              <Text style={[styles.avatarBadgeText, { color: "#FFFFFF" }]}>2</Text>
+            </View>
+          </View>
+
+          {/* Avatar 3 (Center, Rank #1) */}
+          <View style={[styles.avatarPositioner, { left: "42.5%", top: 60, width: 58, height: 58 }]}>
+            <View style={styles.crownWrapper}>
+              <Text style={styles.crownEmoji}>👑</Text>
+            </View>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60" }}
+              style={[styles.trackAvatarRank1, styles.currentUserAvatar]}
+            />
+            <View style={[styles.avatarBadge, { backgroundColor: "#FBBF24" }]}>
+              <Text style={[styles.avatarBadgeText, { color: "#FFFFFF" }]}>1</Text>
+            </View>
+          </View>
+
+          {/* Avatar 4 (Mid-Right, Rank #3) */}
+          <View style={[styles.avatarPositioner, { left: "64%", top: 44, width: 48, height: 48 }]}>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=60" }}
+              style={styles.trackAvatarRank3}
+            />
+            <View style={[styles.avatarBadge, { backgroundColor: "#D97706" }]}>
+              <Text style={[styles.avatarBadgeText, { color: "#FFFFFF" }]}>3</Text>
+            </View>
+          </View>
+
+          {/* Avatar 5 (Far-Right, Rank #5) */}
+          <View style={[styles.avatarPositioner, { left: "84%", top: 15, width: 40, height: 40 }]}>
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60" }}
+              style={styles.trackAvatarRank5}
+            />
+            <View style={[styles.avatarBadge, { backgroundColor: "#E5E7EB" }]}>
+              <Text style={[styles.avatarBadgeText, { color: "#4B5563" }]}>5</Text>
+            </View>
+          </View>
         </View>
-        <Text style={styles.heroTitle}>Buka Kupon Produk Lokal</Text>
-        <Text style={styles.heroCopy}>Setiap aksi anggota menambah progress Tim Pemuda Sukamaju menuju benefit bersama.</Text>
-        <View style={styles.heroMetricRow}>
-          <HeroMetric label="Progress" value={`${campaign.currentValue}/${campaign.targetValue}`} />
-          <HeroMetric label="Aksi lagi" value={`${remainingActions}`} />
-          <HeroMetric label="Anggota" value="34" />
-        </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-        </View>
-        <Text style={styles.progressCopy}>{progressPercent}% selesai. {campaign.deadlineLabel.replace("Berakhir ", "")} jadi batas campaign demo.</Text>
+
+        {/* Footer info text inside card */}
+        <Text style={styles.rankingFooterText}>Weekly Member Peringkat Keaktifan Tim</Text>
       </View>
 
       <TouchableOpacity style={styles.redeemBanner} onPress={onOpenRedeem} activeOpacity={0.8}>
@@ -243,10 +304,10 @@ const styles = StyleSheet.create({
     gap: spacing.md
   },
   logo: {
-    width: 90,
+    width: 30,
     height: 30,
     marginBottom: 10,
-    alignItems: "center"
+    alignSelf: "flex-start"
   },
   headerMeta: {
     color: colors.muted,
@@ -665,6 +726,128 @@ const styles = StyleSheet.create({
     color: colors.teal,
     fontSize: 15,
     fontWeight: "900"
+  },
+  rankingCard: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: "#F3F4F6",
+    position: "relative",
+    overflow: "hidden",
+    ...shadows.card,
+    alignItems: "center"
+  },
+  rankingTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text,
+    textAlign: "center"
+  },
+  statusBadgeRow: {
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    marginTop: 6,
+    marginBottom: 12
+  },
+  statusIndicatorCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  statusIndicatorText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  trackContainer: {
+    height: 140,
+    width: "100%",
+    position: "relative",
+    marginTop: 8
+  },
+  avatarPositioner: {
+    position: "absolute",
+    width: 44,
+    height: 44
+  },
+  trackAvatarRank1: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 3,
+    borderColor: "#FBBF24"
+  },
+  trackAvatarRank2: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2.5,
+    borderColor: "#9CA3AF"
+  },
+  trackAvatarRank3: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2.5,
+    borderColor: "#D97706"
+  },
+  trackAvatarRank4: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF"
+  },
+  trackAvatarRank5: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF"
+  },
+  crownWrapper: {
+    position: "absolute",
+    top: -18,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20
+  },
+  crownEmoji: {
+    fontSize: 16
+  },
+  currentUserAvatar: {
+    borderColor: "#8B5CF6",
+    borderWidth: 2.5
+  },
+  avatarBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#FFFFFF"
+  },
+  avatarBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "900",
+    lineHeight: 11
+  },
+  rankingFooterText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.muted,
+    marginTop: 12,
+    textAlign: "center"
   }
 });
 

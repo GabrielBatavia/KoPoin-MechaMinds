@@ -17,17 +17,18 @@ import { CommunityHubScreen } from "./src/screens/CommunityHubScreen";
 import { HomeDashboardScreen } from "./src/screens/HomeDashboardScreen";
 import { JudgeWizardScreen } from "./src/screens/JudgeWizardScreen";
 import { MissionHubScreen } from "./src/screens/MissionHubScreen";
-import { NotificationsScreen } from "./src/screens/NotificationsScreen";
+import { HistorysScreen } from "./src/screens/HistorysScreen";
 import { ProductionQRFeedbackTone } from "./src/screens/ProductionQRScreen";
 import { ProfileControlScreen } from "./src/screens/ProfileControlScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { RedeemPointsScreen } from "./src/screens/RedeemPointsScreen";
 import { QRCodeMemberScreen } from "./src/screens/QRCodeMemberScreen";
 import { ReferralPromoScreen } from "./src/screens/ReferralPromoScreen";
+import { GroceryScreen } from "./src/screens/GroceryScreen";
 import { Home, Target, Scan, TrendingUp, User } from "lucide-react-native";
 import { colors, spacing } from "./src/theme";
 
-type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "redeem" | "referral";
+type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "redeem" | "referral" | "grocery" | "community_hub";
 
 const demoStateStorageKey = "kopoin-demo-state-v2";
 const wizardSeenStorageKey = "kopoin-wizard-seen-v2";
@@ -64,19 +65,33 @@ export default function App() {
 
     async function hydrate() {
       try {
-        const [storedState, wizardSeen, loggedIn] = await Promise.all([
+        const [storedState, wizardSeen, loggedIn, dbUserData] = await Promise.all([
           AsyncStorage.getItem(demoStateStorageKey),
           AsyncStorage.getItem(wizardSeenStorageKey),
-          AsyncStorage.getItem("kopoin-logged-in-v2")
+          AsyncStorage.getItem("kopoin-logged-in-v2"),
+          AsyncStorage.getItem("kopoin-user-data")
         ]);
 
         if (!isMounted) {
           return;
         }
 
+        let parsedState: DemoState = getInitialDemoState();
         if (storedState) {
-          setDemoState(JSON.parse(storedState) as DemoState);
+          parsedState = JSON.parse(storedState) as DemoState;
         }
+
+        if (dbUserData) {
+          const dbUser = JSON.parse(dbUserData);
+          parsedState.user = {
+            ...parsedState.user,
+            id: dbUser.id,
+            name: dbUser.name,
+            memberNo: dbUser.nik ? `NIK-${dbUser.nik.substring(0, 6)}` : parsedState.user.memberNo
+          };
+        }
+
+        setDemoState(parsedState);
 
         const hasSeenWizard = wizardSeen === "true";
         const hasLoggedIn = loggedIn === "true";
@@ -127,6 +142,22 @@ export default function App() {
   function handleAuthSuccess() {
     setShowAuth(false);
     AsyncStorage.setItem("kopoin-logged-in-v2", "true").catch(() => undefined);
+
+    AsyncStorage.getItem("kopoin-user-data").then((data) => {
+      if (data) {
+        const dbUser = JSON.parse(data);
+        setDemoState((prev) => ({
+          ...prev,
+          user: {
+            ...prev.user,
+            id: dbUser.id,
+            name: dbUser.name,
+            memberNo: dbUser.nik ? `NIK-${dbUser.nik.substring(0, 6)}` : prev.user.memberNo
+          }
+        }));
+      }
+    }).catch(() => undefined);
+
     setActiveTab("home");
   }
 
@@ -169,6 +200,9 @@ export default function App() {
     setFeedbackTone("info");
     setVoteFeedback("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
     AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
+    AsyncStorage.removeItem("kopoin-user-token").catch(() => undefined);
+    AsyncStorage.removeItem("kopoin-user-refresh-token").catch(() => undefined);
+    AsyncStorage.removeItem("kopoin-user-data").catch(() => undefined);
     setShowAuth(true);
     setActiveTab("home");
   }
@@ -205,6 +239,9 @@ export default function App() {
           onOpenCommunity={() => setActiveTab("community")}
           onOpenMission={() => setActiveTab("mission")}
           onOpenProfile={() => setActiveTab("profile")}
+          onOpenRedeem={() => setActiveTab("redeem")}
+          onOpenPromo={() => setActiveTab("grocery")}
+          onOpenCommunityHub={() => setActiveTab("community_hub")}
           rank={pemudaRank}
           scanCompleted={demoState.scanCompleted}
           team={demoState.team}
@@ -213,6 +250,8 @@ export default function App() {
         />
       );
     }
+
+
 
     if (activeTab === "mission") {
       return (
@@ -253,7 +292,7 @@ export default function App() {
 
     if (activeTab === "notifications") {
       return (
-        <NotificationsScreen
+        <HistorysScreen
           campaign={demoState.campaign}
           completionSummary={demoState.latestCompletion}
           hasJoinedTeam={demoState.hasJoinedTeam}
@@ -276,6 +315,9 @@ export default function App() {
         hasJoinedTeam={demoState.hasJoinedTeam}
         onReplayWizard={() => {
           AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
+          AsyncStorage.removeItem("kopoin-user-token").catch(() => undefined);
+          AsyncStorage.removeItem("kopoin-user-refresh-token").catch(() => undefined);
+          AsyncStorage.removeItem("kopoin-user-data").catch(() => undefined);
           setShowAuth(true);
           setShowWizard(true);
         }}
@@ -385,6 +427,83 @@ export default function App() {
           />
         </View>
         {renderBottomNav()}
+      </SafeAreaView>
+    );
+  }
+
+  if (activeTab === "grocery") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <GroceryScreen
+          user={demoState.user}
+          onClose={() => setActiveTab("home")}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (activeTab === "community_hub") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <CommunityHubScreen
+          user={demoState.user}
+          onClose={() => setActiveTab("home")}
+          hasJoinedCommunity={demoState.hasJoinedCommunity}
+          onJoinCommunitySuccess={() => {
+            setDemoState((prev) => ({
+              ...prev,
+              hasJoinedCommunity: true,
+              missions: [
+                ...prev.missions,
+                {
+                  id: "comm_mission_1",
+                  title: "Penghijauan Dusun Sukamaju",
+                  description: "Tanam minimal 5 bibit pohon rindang bersama anggota komunitas.",
+                  points: 150,
+                  target: 5,
+                  current: 0,
+                  actionType: "qr_scan",
+                  pointsEarned: 0,
+                  completed: false,
+                  campaignId: prev.campaign.id,
+                  deadlineLabel: prev.campaign.deadlineLabel,
+                  priority: "P1"
+                },
+                {
+                  id: "comm_mission_2",
+                  title: "Kerja Bakti Booth Koperasi",
+                  description: "Gotong royong membersihkan dan mendekorasi booth koperasi desa.",
+                  points: 100,
+                  target: 1,
+                  current: 0,
+                  actionType: "qr_scan",
+                  pointsEarned: 0,
+                  completed: false,
+                  campaignId: prev.campaign.id,
+                  deadlineLabel: prev.campaign.deadlineLabel,
+                  priority: "P1"
+                },
+                {
+                  id: "comm_mission_3",
+                  title: "Pelatihan UMKM Koperasi",
+                  description: "Ikuti kelas pelatihan kerajinan bambu lokal Desa Merah Putih.",
+                  points: 120,
+                  target: 1,
+                  current: 0,
+                  actionType: "qr_scan",
+                  pointsEarned: 0,
+                  completed: false,
+                  campaignId: prev.campaign.id,
+                  deadlineLabel: prev.campaign.deadlineLabel,
+                  priority: "P1"
+                }
+              ]
+            }));
+            setActiveTab("mission");
+          }}
+        />
       </SafeAreaView>
     );
   }

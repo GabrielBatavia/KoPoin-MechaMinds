@@ -146,6 +146,9 @@ type HomeDashboardScreenProps = {
   onOpenCommunity: () => void;
   onOpenMission: () => void;
   onOpenProfile: () => void;
+  onOpenRedeem?: () => void;
+  onOpenPromo?: () => void;
+  onOpenCommunityHub?: () => void;
   rank: number;
   scanCompleted: boolean;
   team: Team;
@@ -162,6 +165,9 @@ export function HomeDashboardScreen({
   onOpenCommunity,
   onOpenMission,
   onOpenProfile,
+  onOpenRedeem,
+  onOpenPromo,
+  onOpenCommunityHub,
   rank,
   scanCompleted,
   team,
@@ -196,85 +202,40 @@ export function HomeDashboardScreen({
   // Grid services array mapping to Gojek services style
   const services = [
     {
-      id: "beli_kopi",
-      label: "Beli Kopi",
-      icon: "cafe-outline" as const,
-      badge: "+120",
-      badgeBg: colors.text,
-      bg: "#EAFBF7",
+      id: "promo_member",
+      label: "Promo Member",
+      icon: "coffee" as const,
+      imageIcon: require("../assets/images/logo.png"),
+      bg: "#FFFFFF",
       iconColor: colors.teal,
-      action: onOpenMission
+      action: onOpenPromo || onOpenMission
     },
     {
-      id: "belajar",
-      label: "Belajar",
-      icon: "book-outline" as const,
-      badge: "P1",
-      badgeBg: colors.gold,
-      bg: "#FFF6DA",
+      id: "daily_quest",
+      label: "Komunitas",
+      icon: "people-outline" as const,
+      bg: "#FFFFFF",
       iconColor: "#B58400",
-      action: onOpenMission
+      action: onOpenCommunityHub || onOpenMission
     },
     {
       id: "vote_reward",
       label: "Vote Reward",
-      icon: "checkbox-outline" as const,
-      badge: "+30",
-      badgeBg: colors.turquoise,
-      bg: "#E6F8F5",
+      icon: "checkbox" as const,
+      bg: "#FFFFFF",
       iconColor: colors.turquoise,
       action: onOpenCommunity
     },
     {
-      id: "ajak_teman",
-      label: "Ajak Teman",
-      icon: "people-outline" as const,
-      badge: "Hot",
-      badgeBg: colors.danger,
-      bg: "#FDF0F0",
-      iconColor: colors.danger,
-      action: onOpenCommunity
-    },
-    {
-      id: "kupon",
-      label: "Kupon Ku",
+      id: "redeem_point",
+      label: "Redeem Point",
       icon: "pricetag-outline" as const,
-      badge: "10%",
-      badgeBg: colors.gold,
-      bg: "#FFF6DA",
-      iconColor: "#B58400",
-      action: onOpenProfile
+      badge: "Diskon",
+      badgeBg: colors.danger,
+      bg: "#FFFFFF",
+      iconColor: colors.danger,
+      action: onOpenRedeem || onOpenProfile
     },
-    {
-      id: "rank_tim",
-      label: "Rank Tim",
-      icon: "trophy-outline" as const,
-      badge: `#${rank}`,
-      badgeBg: colors.teal,
-      bg: "#EAFBEE",
-      iconColor: "#0E8A38",
-      action: onOpenCommunity
-    },
-    {
-      id: "gabung_tim",
-      label: hasJoinedTeam ? "Tim Saya" : "Gabung Tim",
-      icon: "person-add-outline" as const,
-      badge: hasJoinedTeam ? "Aktif" : "Mulai",
-      badgeBg: hasJoinedTeam ? colors.success : colors.gold,
-      bg: hasJoinedTeam ? "#EAFBF7" : "#FFF9E6",
-      iconColor: hasJoinedTeam ? colors.teal : colors.gold,
-      action: hasJoinedTeam ? onOpenCommunity : onJoinTeam
-    },
-    {
-      id: "lainnya",
-      label: "Lainnya",
-      icon: "ellipsis-horizontal-outline" as const,
-      badge: "",
-      badgeBg: "",
-      bg: "#F2F4F7",
-      iconColor: colors.muted,
-      action: onOpenProfile
-    }
   ];
 
   return (
@@ -395,38 +356,6 @@ export function HomeDashboardScreen({
             <Text style={styles.coinsAmount}>{formatKopoin(user.kopoinBalance)} coins</Text>
           </View>
         </View>
-
-        <View style={styles.balanceDivider} />
-
-        <View style={styles.balanceActions}>
-          {/* Bayar Action */}
-          <TouchableOpacity style={styles.balanceActionItem} onPress={onOpenMission} activeOpacity={0.7}>
-            <View style={styles.actionIconCircle}>
-              <CustomIcon name="arrow-up" size={20} color={colors.white} />
-            </View>
-            <Text style={styles.actionItemLabel}>Bayar</Text>
-          </TouchableOpacity>
-
-          {/* Riwayat Action */}
-          <TouchableOpacity style={styles.balanceActionItem} onPress={onOpenProfile} activeOpacity={0.7}>
-            <View style={styles.actionIconCircle}>
-              <CustomIcon name="document-text" size={20} color={colors.white} />
-            </View>
-            <Text style={styles.actionItemLabel}>Riwayat</Text>
-          </TouchableOpacity>
-
-          {/* Lainnya Action */}
-          <TouchableOpacity style={styles.balanceActionItem} onPress={onOpenCommunity} activeOpacity={0.7}>
-            <View style={styles.actionIconCircle}>
-              <CustomIcon name="grid" size={20} color={colors.white} />
-              {/* Notification Badge */}
-              <View style={styles.redBadge}>
-                <Text style={styles.redBadgeText}>8</Text>
-              </View>
-            </View>
-            <Text style={styles.actionItemLabel}>Lainnya</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* 3. Service Grid (8 elements arranged beautifully) */}
@@ -440,7 +369,11 @@ export function HomeDashboardScreen({
           >
             <View style={styles.iconBoxContainer}>
               <View style={[styles.iconBox, { backgroundColor: svc.bg }]}>
-                <CustomIcon name={svc.icon} size={24} color={svc.iconColor} />
+                {svc.imageIcon ? (
+                  <Image source={svc.imageIcon} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                ) : (
+                  <CustomIcon name={svc.icon} size={24} color={svc.iconColor} />
+                )}
               </View>
               {svc.badge ? (
                 <View style={[styles.gridBadge, { backgroundColor: svc.badgeBg }]}>
@@ -652,7 +585,7 @@ const styles = StyleSheet.create({
     marginTop: 4
   },
   dashboardLogo: {
-    width: 90,
+    width: 30,
     height: 30,
     marginBottom: 8,
     alignSelf: "flex-start"
@@ -806,7 +739,7 @@ const styles = StyleSheet.create({
   balanceCard: {
     backgroundColor: colors.white,
     borderRadius: 20,
-    padding: spacing.sm,
+    padding: spacing.md,
     flexDirection: "row",
     alignItems: "center",
     marginTop: -28,
@@ -859,7 +792,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8
   },
   balanceActions: {
-    flex: 1.4,
+    flex: 1.2,
     flexDirection: "row",
     justifyContent: "space-around"
   },
@@ -920,7 +853,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 52,
     height: 52,
-    borderRadius: 18,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,

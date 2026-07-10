@@ -15,4 +15,4 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   realtime: {
     websocket: WebSocket,
   },
-});
+} as any);

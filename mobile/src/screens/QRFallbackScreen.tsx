@@ -60,7 +60,7 @@ export function QRFallbackScreen({
         <Text style={styles.bodyText}>
           {usedQrCodes.length > 0
             ? `Kode terpakai: ${usedQrCodes.join(", ")}. Submit ulang akan diblokir dan dicatat di log.`
-            : "Belum ada kode yang dipakai Gabriel. Kode valid pertama akan masuk ledger aksi."}
+            : "Belum ada kode yang dipakai. Kode valid pertama akan masuk ledger aksi."}
         </Text>
       </View>
 

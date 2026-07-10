@@ -142,6 +142,7 @@ export type DemoState = {
   verificationLogs: VerificationLog[];
   votePoll: VotePoll;
   redeemedCoupons?: string[];
+  hasJoinedCommunity?: boolean;
 };
 
 export const acceptedQrCodes = ["KOPI-SUKAMAJU-001", "KOPI-SUKAMAJU-QR-001"];
