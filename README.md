@@ -40,6 +40,7 @@
 - [Dukungan terhadap SIMKOPDES](#dukungan-terhadap-simkopdes)
 - [Dampak yang Ingin Dicapai](#dampak-yang-ingin-dicapai)
 - [Teknologi](#teknologi)
+- [Akses Demo untuk Juri](#akses-demo-untuk-juri)
 - [Roadmap](#roadmap)
 - [Demo dan Dokumentasi](#demo-dan-dokumentasi)
 - [Tim MechaMinds](#tim-mechaminds)
@@ -348,6 +349,37 @@ npm start
 | Rank Tim Pemuda Sukamaju | `#3 -> #2` |
 | Achievement | `Anak Lokal, Selera Global` |
 | Reward unlock | `26 aksi lagi` |
+
+### Akses Demo untuk Juri
+
+Juri dapat memilih salah satu dari dua jalur berikut. **Web Demo** adalah jalur tercepat dan tidak membutuhkan instalasi. **Aplikasi Android** disiapkan melalui halaman GitHub Releases agar APK dapat diunduh dari satu alamat yang stabil ketika build native tersedia.
+
+<table>
+<tr>
+<td width="50%" align="center" valign="top">
+
+<h3>🌐 Coba Web Demo</h3>
+<a href="https://dist-self-six-92.vercel.app">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=https%3A%2F%2Fdist-self-six-92.vercel.app" alt="QR Code Web Demo Kopoin" width="220">
+</a>
+<p><a href="https://dist-self-six-92.vercel.app"><strong>Buka Kopoin Web Demo</strong></a><br>
+Scan QR untuk langsung mencoba alur demo di browser.</p>
+
+</td>
+<td width="50%" align="center" valign="top">
+
+<h3>📱 Download Aplikasi Android</h3>
+<a href="https://github.com/GabrielBatavia/KoPoin-MechaMinds/releases/latest">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=https%3A%2F%2Fgithub.com%2FGabrielBatavia%2FKoPoin-MechaMinds%2Freleases%2Flatest" alt="QR Code Download Aplikasi Android Kopoin" width="220">
+</a>
+<p><a href="https://github.com/GabrielBatavia/KoPoin-MechaMinds/releases/latest"><strong>Buka Download APK</strong></a><br>
+Scan QR untuk menuju halaman rilis APK Android.</p>
+
+</td>
+</tr>
+</table>
+
+> **Catatan delivery:** Web Demo sudah live di Vercel. APK Android akan dipublikasikan sebagai aset pada GitHub Release terbaru; jika APK belum muncul, gunakan Web Demo sebagai jalur penjurian utama.
 
 ### Dokumen Demo
 
