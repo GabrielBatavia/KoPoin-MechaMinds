@@ -1,8 +1,40 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
+import React from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  Dimensions
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  Wallet,
+  Award,
+  ChevronRight,
+  Gift,
+  TrendingUp,
+  Users,
+  Star,
+  Flame,
+  Shield,
+  RotateCcw,
+  Play,
+  UserPlus,
+  CheckCircle,
+  Clock,
+  Plus,
+  CreditCard,
+  BadgeCheck,
+  Vote,
+  ShoppingBag
+} from "lucide-react-native";
 
 import type { CompletionSummary, Cooperative, Team, User, UserVote } from "../data/kopoinSeed";
 import { colors, radii, shadows, spacing } from "../theme";
 import { formatKopoin, formatRupiah } from "../utils/formatters";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type ProfileControlScreenProps = {
   completionSummary: CompletionSummary | null;
@@ -34,411 +66,376 @@ export function ProfileControlScreen({
   const initial = user.name ? user.name.charAt(0).toUpperCase() : "T";
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.container}>
 
-      {/* ── Header Row ── */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
-          <View>
-            <Text style={styles.headerGreeting}>Profil Anggota</Text>
-            <Text style={styles.headerTitle}>KoPoin</Text>
+      {/* ── 1. Gradient Header (full-bleed, same as Home) ── */}
+      <LinearGradient
+        colors={[colors.tealDark, colors.teal]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.headerGradient}
+      >
+        {/* Brand row */}
+        <View style={styles.brandRow}>
+          <View style={{ alignItems: "flex-start" }}>
+            <Image source={require("../assets/images/white-logo.png")} style={styles.dashboardLogo} resizeMode="contain" />
+            <Text style={styles.headerMeta}>Profil Anggota</Text>
+          </View>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>Level {user.level}</Text>
           </View>
         </View>
-        <View style={styles.statusPill}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>{user.status}</Text>
-        </View>
-      </View>
 
-      {/* ── Profile Hero Card ── */}
-      <View style={styles.profileHero}>
-        {/* Decorative blobs */}
-        <View style={styles.heroBlob1} />
-        <View style={styles.heroBlob2} />
-        <View style={styles.heroBlob3} />
-
-        {/* Avatar + identity */}
-        <View style={styles.heroTop}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarRing}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarInitial}>{initial}</Text>
+        {/* Profile Identity Card (inside gradient) */}
+        <View style={styles.profileIdentityCard}>
+          <View style={styles.identityTop}>
+            <LinearGradient
+              colors={["#FFE082", "#FFB300"]}
+              style={styles.avatarGradient}
+            >
+              <Text style={styles.avatarInitial}>{initial}</Text>
+            </LinearGradient>
+            <View style={styles.identityInfo}>
+              <Text style={styles.identityName}>{user.name || "Tamu"}</Text>
+              <Text style={styles.identityMemberNo}>{user.memberNo}</Text>
+              <View style={styles.identityCoopRow}>
+                <Text style={styles.identityCoop}>{cooperative.name}</Text>
               </View>
             </View>
             {user.achievementUnlocked && (
-              <View style={styles.avatarBadge}>
-                <Text style={styles.avatarBadgeEmoji}>🏅</Text>
+              <View style={styles.verifiedBadge}>
+                <BadgeCheck size={14} color="#FFFFFF" />
               </View>
             )}
           </View>
-          <View style={styles.heroIdentity}>
-            <Text style={styles.heroName}>{user.name || "Tamu"}</Text>
-            <Text style={styles.heroMemberNo}>{user.memberNo}</Text>
-            <View style={styles.heroCoopRow}>
-              <Text style={styles.heroCoop}>📍 {cooperative.name}</Text>
+
+          {/* Team status */}
+          {hasJoinedTeam && (
+            <View style={styles.teamStrip}>
+              <Users size={13} color={colors.teal} />
+              <Text style={styles.teamStripText}>{team.name}</Text>
+              <View style={styles.teamStripDot} />
+              <Text style={styles.teamStripStatus}>{user.status}</Text>
             </View>
-            {hasJoinedTeam && (
-              <View style={styles.heroTeamPill}>
-                <Text style={styles.heroTeamText}>👥 {team.name}</Text>
-              </View>
-            )}
+          )}
+        </View>
+      </LinearGradient>
+
+      {/* ── 2. Balance Card (floating overlap, same as Home) ── */}
+      <View style={styles.balanceCard}>
+        <View style={styles.balanceLeft}>
+          <View style={styles.walletIconBox}>
+            <Wallet size={22} color={colors.teal} />
+          </View>
+          <View style={styles.balanceInfo}>
+            <Text style={styles.balanceLabel}>KoPoin Balance</Text>
+            <View style={styles.balanceRow}>
+              <Text style={styles.balanceAmount}>{formatKopoin(user.kopoinBalance)}</Text>
+            </View>
           </View>
         </View>
-
-        {/* Balance display */}
-        <View style={styles.heroBalanceSection}>
-          <View style={styles.heroBalanceRow}>
-            <View>
-              <Text style={styles.heroBalanceKicker}>Total KoPoin</Text>
-              <Text style={styles.heroBalance}>{formatKopoin(user.kopoinBalance)}</Text>
-            </View>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeLabel}>LEVEL</Text>
-              <Text style={styles.levelBadgeValue}>{user.level}</Text>
-            </View>
-          </View>
-          <Text style={styles.heroBalanceSub}>
-            Poin reward dari aktivitas komunitas. Bukan saldo uang.
-          </Text>
-        </View>
-
-        {/* Stats strip */}
-        <View style={styles.heroStatsStrip}>
-          <HeroStat icon="💰" label="Hemat bulan ini" value={formatRupiah(user.monthlySaving)} />
-          <View style={styles.heroStatDivider} />
-          <HeroStat icon="🔥" label="Streak" value="3 minggu" />
-          <View style={styles.heroStatDivider} />
-          <HeroStat icon="🗳️" label="Voting" value={userVote ? "Sudah" : "Belum"} />
+        <View style={styles.balanceDivider} />
+        <View style={styles.balanceRight}>
+          <Text style={styles.savingLabel}>Hemat</Text>
+          <Text style={styles.savingAmount}>{formatRupiah(user.monthlySaving)}</Text>
+          <Text style={styles.savingPeriod}>bulan ini</Text>
         </View>
       </View>
 
-      {/* ── Default Coupon (always shown) ── */}
-      <CouponTicket
-        emoji="☕"
-        discount="10%"
-        title="Voucher Kopi Sukamaju"
-        subtitle="Berlaku 2 hari lagi"
-        note="Est. hemat Rp12.000 per transaksi"
-        tone="default"
-      />
+      {/* ── 3. Quick Stats Grid (4-icon grid like Home services) ── */}
+      <View style={styles.gridContainer}>
+        <TouchableOpacity style={styles.gridItem} activeOpacity={0.7}>
+          <View style={styles.iconBoxContainer}>
+            <View style={[styles.iconBox, { backgroundColor: "#FFFFFF" }]}>
+              <TrendingUp size={22} color={colors.teal} />
+            </View>
+          </View>
+          <Text style={styles.gridValue}>{formatRupiah(user.monthlySaving)}</Text>
+          <Text style={styles.gridLabel}>Hemat/bln</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.gridItem} activeOpacity={0.7}>
+          <View style={styles.iconBoxContainer}>
+            <View style={[styles.iconBox, { backgroundColor: "#FFFFFF" }]}>
+              <ShoppingBag size={22} color="#7C3AED" />
+            </View>
+          </View>
+          <Text style={styles.gridValue}>{formatRupiah(184000)}</Text>
+          <Text style={styles.gridLabel}>Total hemat</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.gridItem} activeOpacity={0.7}>
+          <View style={styles.iconBoxContainer}>
+            <View style={[styles.iconBox, { backgroundColor: "#FFFFFF" }]}>
+              <Gift size={22} color={colors.gold} />
+            </View>
+            <View style={[styles.gridBadge, { backgroundColor: colors.turquoise }]}>
+              <Text style={styles.gridBadgeText}>4</Text>
+            </View>
+          </View>
+          <Text style={styles.gridValue}>4 kali</Text>
+          <Text style={styles.gridLabel}>Reward</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.gridItem} activeOpacity={0.7}>
+          <View style={styles.iconBoxContainer}>
+            <View style={[styles.iconBox, { backgroundColor: "#FFFFFF" }]}>
+              <Vote size={22} color={userVote ? colors.turquoise : colors.muted} />
+            </View>
+            {userVote && (
+              <View style={[styles.gridBadge, { backgroundColor: colors.turquoise }]}>
+                <Text style={styles.gridBadgeText}>✓</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.gridValue}>{userVote ? "Sudah" : "Belum"}</Text>
+          <Text style={styles.gridLabel}>Voting</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 4. Active Coupon Card (green promo style like Home) ── */}
+      <View style={styles.couponCard}>
+        <View style={styles.couponLeft}>
+          <View style={styles.couponTag}>
+            <Text style={styles.couponTagText}>KUPON AKTIF</Text>
+          </View>
+          <Text style={styles.couponTitle}>Voucher Kopi Sukamaju</Text>
+          <Text style={styles.couponSub}>Diskon 10% · Berlaku 2 hari lagi · Est. hemat Rp12.000</Text>
+        </View>
+        <View style={styles.couponRight}>
+          <View style={styles.couponChevronCircle}>
+            <ChevronRight size={18} color={colors.gold} />
+          </View>
+        </View>
+      </View>
 
       {/* ── Redeemed Coupons ── */}
       {redeemedCoupons.map((couponId, index) => {
         const coupon = COUPON_DETAILS[couponId];
         if (!coupon) return null;
         return (
-          <CouponTicket
-            key={`${couponId}-${index}`}
-            emoji={coupon.emoji}
-            discount="✓"
-            title={coupon.title}
-            subtitle="Kupon Aktif — sudah ditukar"
-            note="Tunjukkan ke kasir Eat & Go"
-            tone="redeemed"
-          />
+          <View key={`${couponId}-${index}`} style={styles.redeemedCard}>
+            <View style={styles.redeemedIconBox}>
+              <CheckCircle size={18} color="#059669" />
+            </View>
+            <View style={styles.redeemedInfo}>
+              <Text style={styles.redeemedTag}>KUPON DITUKAR</Text>
+              <Text style={styles.redeemedTitle} numberOfLines={1}>{coupon.title}</Text>
+              <Text style={styles.redeemedSub}>Tunjukkan ke kasir Eat & Go</Text>
+            </View>
+          </View>
         );
       })}
 
-      {/* ── Savings Stats Grid ── */}
-      <View style={styles.sectionLabel}>
-        <Text style={styles.sectionLabelText}>📊 Ringkasan Benefit</Text>
-      </View>
-      <View style={styles.statsGrid}>
-        <StatCell icon="💸" label="Hemat bulan ini" value={formatRupiah(user.monthlySaving)} accent={colors.teal} />
-        <StatCell icon="🏦" label="Hemat sejak gabung" value={formatRupiah(184000)} accent="#7C3AED" />
-        <StatCell icon="🎟️" label="Reward dipakai" value="4 kali" accent={colors.gold} />
-        <StatCell icon="🗳️" label="Status voting" value={userVote ? "Sudah ikut" : "Belum ikut"} accent={userVote ? colors.turquoise : colors.muted} />
-      </View>
-
-      {/* ── Reward Progress Card ── */}
+      {/* ── 5. Reward Progress Section ── */}
+      <Text style={styles.sectionTitleText}>Reward Progress</Text>
       <View style={styles.rewardCard}>
-        <Text style={styles.cardKicker}>🎯 Reward Progress</Text>
-        <Text style={styles.cardTitle}>Benefit yang dibuka tim</Text>
-        <View style={styles.rewardList}>
-          <RewardRow icon="✅" title="Voucher Belanja" state="Terbuka" tone="done" />
-          <RewardRow icon="🔥" title="Badge Tim Eksklusif" state="Sedang Dikejar" tone="current" />
-          <RewardRow icon="🔒" title="Diskon UMKM Lokal" state="Terkunci" tone="locked" />
-        </View>
+        <RewardItem
+          icon={<CheckCircle size={18} color="#059669" />}
+          title="Voucher Belanja"
+          state="Terbuka"
+          bgColor="#ECFDF5"
+          borderColor="#6EE7B7"
+          stateColor="#059669"
+        />
+        <RewardItem
+          icon={<Flame size={18} color="#D97706" />}
+          title="Badge Tim Eksklusif"
+          state="Sedang Dikejar"
+          bgColor="#FFFBEB"
+          borderColor="#FDE68A"
+          stateColor="#D97706"
+        />
+        <RewardItem
+          icon={<Shield size={18} color={colors.muted} />}
+          title="Diskon UMKM Lokal"
+          state="Terkunci"
+          bgColor={colors.background}
+          borderColor={colors.line}
+          stateColor={colors.muted}
+        />
       </View>
 
-      {/* ── Achievement Card ── */}
-      <View style={styles.achievementCard}>
-        <View style={styles.achievementTop}>
-          <View style={styles.achievementBadgeBox}>
-            <Text style={styles.achievementBadgeEmoji}>
-              {user.achievementUnlocked ? "🏅" : "🎖️"}
-            </Text>
-          </View>
-          <View style={styles.flexOne}>
-            <Text style={styles.cardKicker}>✨ Achievement & Streak</Text>
-            <Text style={styles.achievementTitle}>
+      {/* ── 6. Achievement + Streak Carousel Card (like Home pilihan buat kamu) ── */}
+      <Text style={styles.sectionTitleText}>Achievement & Streak</Text>
+      <View style={styles.achievementRow}>
+        {/* Achievement card */}
+        <View style={styles.achieveCard}>
+          <LinearGradient
+            colors={user.achievementUnlocked ? [colors.teal, colors.tealDark] : ["#6B7280", "#374151"]}
+            style={styles.achieveGraphic}
+          >
+            <Award size={28} color="#FFFFFF" />
+            <View style={styles.achievePointsBadge}>
+              <Text style={styles.achievePointsText}>{user.achievementUnlocked ? "UNLOCKED" : "LOCKED"}</Text>
+            </View>
+          </LinearGradient>
+          <View style={styles.achieveBody}>
+            <Text style={styles.achieveTag}>{user.achievementUnlocked ? "TERBUKA" : "TERKUNCI"}</Text>
+            <Text style={styles.achieveTitleText} numberOfLines={2}>
               {user.achievementUnlocked ? "Anak Lokal, Selera Global" : "Achievement hampir terbuka"}
             </Text>
-            <Text style={styles.cardCopy}>
+            <Text style={styles.achieveSubText} numberOfLines={2}>
               {user.achievementUnlocked
-                ? `Terbuka setelah validasi ${completionSummary?.productName ?? "produk lokal"}. Siap dibagikan ke juri.`
-                : `Validasi produk lokal untuk membuka achievement pertama ${user.name || "Tamu"}.`}
+                ? `Validasi ${completionSummary?.productName ?? "produk lokal"} berhasil.`
+                : `Validasi produk lokal untuk membukanya.`}
             </Text>
           </View>
         </View>
 
-        <View style={styles.streakBox}>
-          <View style={styles.streakRow}>
-            <Text style={styles.streakEmoji}>🔥</Text>
-            <View style={styles.flexOne}>
-              <Text style={styles.streakTitle}>{user.streakLabel}</Text>
-              <Text style={styles.streakCopy}>
-                Streak bisa dijaga lewat voting atau belajar, bukan belanja saja.
-              </Text>
+        {/* Streak card */}
+        <View style={styles.achieveCard}>
+          <LinearGradient
+            colors={["#F59E0B", "#B45309"]}
+            style={styles.achieveGraphic}
+          >
+            <Flame size={28} color="#FFFFFF" />
+            <View style={styles.achievePointsBadge}>
+              <Text style={styles.achievePointsText}>3 MINGGU</Text>
             </View>
-            <View style={styles.streakWeeks}>
-              <Text style={styles.streakWeeksNum}>3</Text>
-              <Text style={styles.streakWeeksLabel}>minggu</Text>
-            </View>
-          </View>
-          {/* Streak bar */}
-          <View style={styles.streakBarRow}>
-            {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-              <View key={d} style={[styles.streakBarDot, d <= 3 && styles.streakBarDotFilled]} />
-            ))}
+          </LinearGradient>
+          <View style={styles.achieveBody}>
+            <Text style={styles.achieveTag}>STREAK AKTIF</Text>
+            <Text style={styles.achieveTitleText}>{user.streakLabel}</Text>
+            <Text style={styles.achieveSubText} numberOfLines={2}>
+              Dijaga lewat voting atau belajar, bukan belanja saja.
+            </Text>
           </View>
         </View>
       </View>
 
-      {/* ── Referral Card ── */}
-      <View style={styles.referralCard}>
-        <View style={styles.referralTop}>
-          <View style={styles.referralIconBox}>
-            <Text style={styles.referralIcon}>🤝</Text>
+      {/* ── 7. Referral Card (green promo card style) ── */}
+      <TouchableOpacity style={styles.referralPromoCard} activeOpacity={0.8}>
+        <View style={styles.referralPromoLeft}>
+          <View style={styles.referralTag}>
+            <Text style={styles.referralTagText}>REFERRAL AKTIF</Text>
           </View>
-          <View style={styles.flexOne}>
-            <Text style={styles.cardKicker}>🔗 Referral Aktif</Text>
-            <Text style={styles.cardTitle}>3 teman diajak</Text>
-          </View>
-          <View style={styles.referralCountBubble}>
-            <Text style={styles.referralCountNum}>3</Text>
-            <Text style={styles.referralCountLabel}>invited</Text>
+          <Text style={styles.referralTitle}>3 Teman Diajak</Text>
+          <Text style={styles.referralSub}>2 sudah onboarding · 1 menunggu transaksi pertama</Text>
+          <View style={styles.referralAvatarRow}>
+            <ReferralDot icon={<CheckCircle size={12} color="#FFFFFF" />} bg="#059669" />
+            <ReferralDot icon={<CheckCircle size={12} color="#FFFFFF" />} bg="#059669" />
+            <ReferralDot icon={<Clock size={12} color="#FFFFFF" />} bg="#F59E0B" />
+            <ReferralDot icon={<Plus size={12} color="rgba(255,255,255,0.5)" />} bg="rgba(255,255,255,0.2)" />
+            <ReferralDot icon={<Plus size={12} color="rgba(255,255,255,0.5)" />} bg="rgba(255,255,255,0.2)" />
           </View>
         </View>
-        <Text style={styles.cardCopy}>
-          2 sudah onboarding · 1 menunggu transaksi pertama
-        </Text>
-        {/* Referral progress */}
-        <View style={styles.referralProgressRow}>
-          <ReferralFriend label="Budi S." state="active" />
-          <ReferralFriend label="Ani R." state="active" />
-          <ReferralFriend label="Hendra" state="pending" />
-          <ReferralFriend label="+" state="empty" />
-          <ReferralFriend label="+" state="empty" />
+        <View style={styles.referralPromoRight}>
+          <View style={styles.referralChevronCircle}>
+            <UserPlus size={18} color={colors.teal} />
+          </View>
         </View>
-        <Text style={styles.referralNote}>
-          Reward referral terbuka setelah teman kamu aktif bertransaksi.
-        </Text>
-      </View>
+      </TouchableOpacity>
 
-      {/* ── Member Identity Card ── */}
-      <View style={styles.memberCard}>
-        <View style={styles.memberCardHeader}>
-          <Text style={styles.memberCardKicker}>🪪 Kartu Anggota</Text>
-        </View>
-        <View style={styles.memberCardBody}>
-          <View style={styles.memberAvatarMini}>
-            <Text style={styles.memberAvatarInitial}>{initial}</Text>
+      {/* ── 8. Member ID Card ── */}
+      <Text style={styles.sectionTitleText}>Kartu Anggota</Text>
+      <View style={styles.memberIdCard}>
+        <LinearGradient
+          colors={[colors.tealDark, colors.teal]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.memberIdGradient}
+        >
+          <View style={styles.memberIdTop}>
+            <Image source={require("../assets/images/white-logo.png")} style={styles.memberIdLogo} resizeMode="contain" />
+            <Text style={styles.memberIdBrand}>KoPoin Member</Text>
           </View>
-          <View style={styles.flexOne}>
-            <Text style={styles.memberName}>{user.name}</Text>
-            <Text style={styles.memberMeta}>{user.memberNo}</Text>
-            <Text style={styles.memberMeta}>{cooperative.name} · {cooperative.location}</Text>
-            <View style={styles.memberTeamRow}>
-              <Text style={styles.memberTeam}>
-                {hasJoinedTeam ? `👥 ${team.name}` : "Belum bergabung ke tim"}
-              </Text>
+          <View style={styles.memberIdBody}>
+            <LinearGradient colors={["#FFE082", "#FFB300"]} style={styles.memberIdAvatar}>
+              <Text style={styles.memberIdInitial}>{initial}</Text>
+            </LinearGradient>
+            <View style={styles.memberIdInfo}>
+              <Text style={styles.memberIdName}>{user.name}</Text>
+              <Text style={styles.memberIdMeta}>{user.memberNo}</Text>
+              <Text style={styles.memberIdMeta}>{cooperative.name} · {cooperative.location}</Text>
+              <View style={styles.memberIdTeamPill}>
+                <Text style={styles.memberIdTeamText}>
+                  {hasJoinedTeam ? team.name : "Belum bergabung"}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={styles.memberQrPlaceholder}>
-            <Text style={styles.memberQrIcon}>▦</Text>
-            <Text style={styles.memberQrLabel}>ID</Text>
+          <View style={styles.memberIdFooter}>
+            <View style={styles.memberIdQr}>
+              <CreditCard size={16} color="rgba(255,255,255,0.6)" />
+            </View>
+            <Text style={styles.memberIdFooterText}>Level {user.level} · {user.status}</Text>
           </View>
-        </View>
+        </LinearGradient>
       </View>
 
-      {/* ── Demo Control Card ── */}
+      {/* ── 9. Demo Control (subtle, bottom) ── */}
       <View style={styles.controlCard}>
-        <View style={styles.controlHeader}>
-          <Text style={styles.controlIcon}>⚙️</Text>
-          <View style={styles.flexOne}>
+        <View style={styles.controlRow}>
+          <View style={styles.controlIconBox}>
+            <RotateCcw size={16} color={colors.muted} />
+          </View>
+          <View style={styles.controlInfo}>
             <Text style={styles.controlTitle}>Kontrol Demo</Text>
-            <Text style={styles.controlCopy}>
-              State lokal {persisted ? "tersimpan" : "memuat"}. Reset mengulang flow dari progress 73/100, saldo 1.730, rank #3.
+            <Text style={styles.controlSub}>
+              State {persisted ? "tersimpan" : "memuat"} · Reset ke progress 73/100, saldo 1.730, rank #3
             </Text>
           </View>
         </View>
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.primaryButton} onPress={onResetDemo} activeOpacity={0.85}>
-            <Text style={styles.primaryButtonText}>↺ Reset Demo</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={onResetDemo} activeOpacity={0.8}>
+            <RotateCcw size={14} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>Reset Demo</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton} onPress={onReplayWizard} activeOpacity={0.85}>
-            <Text style={styles.secondaryButtonText}>▷ Replay Wizard</Text>
+          <TouchableOpacity style={styles.secondaryButton} onPress={onReplayWizard} activeOpacity={0.8}>
+            <Play size={14} color={colors.teal} />
+            <Text style={styles.secondaryButtonText}>Replay Wizard</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.limitNote}>
+        <Text style={styles.controlNote}>
           {scanCompleted
-            ? "✓ Misi sudah tercatat. Duplicate guard tetap aktif."
-            : "ℹ KoPoin bukan dompet digital dan tidak menyimpan dana."}
+            ? "Misi sudah tercatat. Duplicate guard tetap aktif."
+            : "KoPoin bukan dompet digital dan tidak menyimpan dana."}
         </Text>
       </View>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
-function HeroStat({ icon, label, value }: { icon: string; label: string; value: string }) {
-  return (
-    <View style={styles.heroStatItem}>
-      <Text style={styles.heroStatIcon}>{icon}</Text>
-      <Text style={styles.heroStatValue}>{value}</Text>
-      <Text style={styles.heroStatLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function CouponTicket({
-  emoji,
-  discount,
-  title,
-  subtitle,
-  note,
-  tone,
-}: {
-  emoji: string;
-  discount: string;
-  title: string;
-  subtitle: string;
-  note: string;
-  tone: "default" | "redeemed";
-}) {
-  const isRedeemed = tone === "redeemed";
-  return (
-    <View style={[styles.couponOuter, isRedeemed && styles.couponOuterRedeemed]}>
-      {/* Left discount circle */}
-      <View style={styles.couponLeftNotch} />
-      <View style={[styles.couponLeft, isRedeemed && styles.couponLeftRedeemed]}>
-        <Text style={styles.couponEmoji}>{emoji}</Text>
-        <Text style={[styles.couponDiscount, isRedeemed && styles.couponDiscountRedeemed]}>
-          {discount}
-        </Text>
-        <Text style={styles.couponDiscountLabel}>
-          {isRedeemed ? "DIPAKAI" : "DISKON"}
-        </Text>
-      </View>
-      {/* Dashed separator */}
-      <View style={styles.couponSeparator}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <View key={i} style={styles.couponDash} />
-        ))}
-      </View>
-      {/* Right content */}
-      <View style={styles.couponRight}>
-        <View style={styles.couponKickerRow}>
-          <View style={[styles.couponKickerDot, isRedeemed && styles.couponKickerDotRedeemed]} />
-          <Text style={[styles.couponKicker, isRedeemed && styles.couponKickerRedeemed]}>
-            {isRedeemed ? "Kupon Aktif (Loyalty)" : "Kupon Aktif"}
-          </Text>
-        </View>
-        <Text style={styles.couponTitle} numberOfLines={2}>{title}</Text>
-        <Text style={styles.couponSubtitle}>{subtitle}</Text>
-        <Text style={styles.couponNote}>{note}</Text>
-      </View>
-      <View style={styles.couponRightNotch} />
-    </View>
-  );
-}
-
-function StatCell({
-  icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  accent: string;
-}) {
-  return (
-    <View style={styles.statCell}>
-      <View style={[styles.statCellIcon, { backgroundColor: `${accent}18` }]}>
-        <Text style={styles.statCellIconText}>{icon}</Text>
-      </View>
-      <Text style={styles.statCellLabel}>{label}</Text>
-      <Text style={[styles.statCellValue, { color: accent }]}>{value}</Text>
-    </View>
-  );
-}
-
-function RewardRow({
+function RewardItem({
   icon,
   title,
   state,
-  tone,
+  bgColor,
+  borderColor,
+  stateColor,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   state: string;
-  tone: "done" | "current" | "locked";
+  bgColor: string;
+  borderColor: string;
+  stateColor: string;
 }) {
-  const isDone = tone === "done";
-  const isCurrent = tone === "current";
   return (
-    <View style={[styles.rewardRow, isCurrent && styles.rewardRowCurrent]}>
-      <View style={[styles.rewardIconBox, isDone && styles.rewardIconBoxDone, isCurrent && styles.rewardIconBoxCurrent]}>
-        <Text style={styles.rewardIcon}>{icon}</Text>
+    <View style={[styles.rewardRow, { backgroundColor: bgColor, borderColor }]}>
+      <View style={[styles.rewardIconBox, { backgroundColor: bgColor, borderColor }]}>
+        {icon}
       </View>
-      <Text style={[styles.rewardTitle, tone === "locked" && styles.rewardTitleLocked]}>{title}</Text>
-      <View style={[
-        styles.rewardStatePill,
-        isDone && styles.rewardStatePillDone,
-        isCurrent && styles.rewardStatePillCurrent,
-      ]}>
-        <Text style={[
-          styles.rewardStateText,
-          isDone && styles.rewardStateTextDone,
-          isCurrent && styles.rewardStateTextCurrent,
-        ]}>{state}</Text>
+      <Text style={styles.rewardTitle}>{title}</Text>
+      <View style={[styles.rewardStatePill, { borderColor }]}>
+        <Text style={[styles.rewardStateText, { color: stateColor }]}>{state}</Text>
       </View>
     </View>
   );
 }
 
-function ReferralFriend({ label, state }: { label: string; state: "active" | "pending" | "empty" }) {
+function ReferralDot({ icon, bg }: { icon: React.ReactNode; bg: string }) {
   return (
-    <View style={styles.referralFriend}>
-      <View style={[
-        styles.referralFriendAvatar,
-        state === "active" && styles.referralFriendAvatarActive,
-        state === "pending" && styles.referralFriendAvatarPending,
-        state === "empty" && styles.referralFriendAvatarEmpty,
-      ]}>
-        <Text style={[styles.referralFriendLabel, state === "empty" && styles.referralFriendLabelEmpty]}>
-          {label}
-        </Text>
-      </View>
-      <View style={[
-        styles.referralFriendDot,
-        state === "active" && styles.referralFriendDotActive,
-        state === "pending" && styles.referralFriendDotPending,
-      ]} />
+    <View style={[styles.referralDot, { backgroundColor: bg }]}>
+      {icon}
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Data
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Data ────────────────────────────────────────────────────────────────────
 
 const COUPON_DETAILS: Record<string, { title: string; emoji: string }> = {
   coupon_happy_a_idm: { title: "Tebus Murah Paket Happy A - Eat And Go IDM", emoji: "🍱" },
@@ -447,872 +444,744 @@ const COUPON_DETAILS: Record<string, { title: string; emoji: string }> = {
   coupon_happy_b_idm: { title: "Tebus Murah Paket Happy B - Eat And Go IDM", emoji: "🍲" },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  screen: {
-    gap: spacing.md,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
 
-  // ── Header ──
-  headerRow: {
+  // ── Header Gradient (matches Home exactly) ──
+  headerGradient: {
+    marginHorizontal: -spacing.md,
+    marginTop: -spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md + 14,
+    paddingBottom: 48,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: spacing.md,
+    marginTop: 4,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  dashboardLogo: {
+    width: 30,
+    height: 30,
+    marginBottom: 8,
+    alignSelf: "flex-start",
   },
-  logo: {
-    width: 32,
-    height: 32,
-  },
-  headerGreeting: {
-    color: colors.muted,
-    fontSize: 11,
+  headerMeta: {
+    color: "#EAFBF7",
+    fontSize: 12,
     fontWeight: "700",
+    marginTop: -2,
   },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "900",
-    marginTop: 1,
-  },
-  statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  headerBadge: {
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    backgroundColor: colors.surfaceMint,
-    borderWidth: 1.5,
-    borderColor: "#A7F3D0",
-    ...shadows.card,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: colors.turquoise,
-  },
-  statusText: {
-    color: colors.teal,
+  headerBadgeText: {
+    color: colors.white,
     fontSize: 11,
     fontWeight: "900",
   },
 
-  // ── Profile Hero ──
-  profileHero: {
-    borderRadius: 28,
-    padding: spacing.lg,
-    backgroundColor: colors.teal,
-    overflow: "hidden",
-    ...shadows.card,
+  // ── Profile Identity Card (inside gradient) ──
+  profileIdentityCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 20,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
-  heroBlob1: {
-    position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    top: -80,
-    right: -60,
-  },
-  heroBlob2: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "rgba(25,168,142,0.22)",
-    bottom: -40,
-    left: -20,
-  },
-  heroBlob3: {
-    position: "absolute",
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "rgba(244,180,0,0.16)",
-    top: 30,
-    right: 110,
-  },
-  heroTop: {
+  identityTop: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 14,
   },
-  avatarWrapper: {
-    position: "relative",
-  },
-  avatarRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 3,
-    borderColor: "rgba(255,255,255,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarCircle: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    backgroundColor: "rgba(255,255,255,0.18)",
+  avatarGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.25)",
+    borderColor: "#FFFFFF",
   },
   avatarInitial: {
     color: "#FFFFFF",
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: "900",
   },
-  avatarBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.gold,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.teal,
-  },
-  avatarBadgeEmoji: {
-    fontSize: 12,
-  },
-  heroIdentity: {
+  identityInfo: {
     flex: 1,
-    paddingTop: 2,
   },
-  heroName: {
+  identityName: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "900",
-    lineHeight: 26,
   },
-  heroMemberNo: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 12,
+  identityMemberNo: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 11,
     fontWeight: "700",
     marginTop: 2,
-    letterSpacing: 0.5,
   },
-  heroCoopRow: {
-    marginTop: 4,
+  identityCoopRow: {
+    marginTop: 2,
   },
-  heroCoop: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  heroTeamPill: {
-    marginTop: 6,
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  heroTeamText: {
-    color: "#FFFFFF",
+  identityCoop: {
+    color: "rgba(255,255,255,0.5)",
     fontSize: 11,
-    fontWeight: "900",
+    fontWeight: "600",
   },
-  heroBalanceSection: {
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
+  verifiedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.turquoise,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  teamStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.12)",
   },
-  heroBalanceRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  heroBalanceKicker: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  heroBalance: {
+  teamStripText: {
     color: "#FFFFFF",
-    fontSize: 38,
-    fontWeight: "900",
-    lineHeight: 44,
-    marginTop: 2,
-  },
-  levelBadge: {
-    alignItems: "center",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-  },
-  levelBadgeLabel: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  levelBadgeValue: {
-    color: colors.gold,
-    fontSize: 26,
-    fontWeight: "900",
-    lineHeight: 30,
-  },
-  heroBalanceSub: {
-    color: "rgba(255,255,255,0.5)",
     fontSize: 12,
-    fontWeight: "700",
-    marginTop: 6,
-    lineHeight: 17,
-  },
-  heroStatsStrip: {
-    flexDirection: "row",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.10)",
-  },
-  heroStatItem: {
+    fontWeight: "900",
     flex: 1,
-    alignItems: "center",
   },
-  heroStatDivider: {
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    marginVertical: 4,
-  },
-  heroStatIcon: {
-    fontSize: 18,
-    marginBottom: 3,
-  },
-  heroStatValue: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  heroStatLabel: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 2,
-    textTransform: "uppercase",
-    letterSpacing: 0.2,
-    textAlign: "center",
-  },
-
-  // ── Section Label ──
-  sectionLabel: {
-    marginBottom: -6,
-  },
-  sectionLabelText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "900",
-  },
-
-  // ── Coupon Ticket ──
-  couponOuter: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    borderRadius: 18,
-    backgroundColor: "#FFFBEB",
-    borderWidth: 1.5,
-    borderColor: "#FDE68A",
-    overflow: "hidden",
-    ...shadows.card,
-  },
-  couponOuterRedeemed: {
-    backgroundColor: "#F0FDF9",
-    borderColor: "#A7F3D0",
-  },
-  couponLeftNotch: {
-    position: "absolute",
-    left: 72,
-    top: -8,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    zIndex: 10,
-  },
-  couponLeft: {
-    width: 76,
-    backgroundColor: "#FEF3C7",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    gap: 2,
-  },
-  couponLeftRedeemed: {
-    backgroundColor: "#ECFDF5",
-  },
-  couponEmoji: {
-    fontSize: 26,
-    marginBottom: 4,
-  },
-  couponDiscount: {
-    color: "#D97706",
-    fontSize: 22,
-    fontWeight: "900",
-    lineHeight: 24,
-  },
-  couponDiscountRedeemed: {
-    color: "#059669",
-    fontSize: 18,
-  },
-  couponDiscountLabel: {
-    color: colors.muted,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  couponSeparator: {
-    width: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    paddingVertical: spacing.sm,
-    gap: 0,
-  },
-  couponDash: {
-    width: 1.5,
+  teamStripDot: {
+    width: 5,
     height: 5,
-    borderRadius: 1,
-    backgroundColor: "#FDE68A",
-    marginVertical: 2,
-  },
-  couponRight: {
-    flex: 1,
-    padding: 14,
-    justifyContent: "center",
-  },
-  couponKickerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: 4,
-  },
-  couponKickerDot: {
-    width: 6,
-    height: 6,
     borderRadius: 3,
-    backgroundColor: "#D97706",
+    backgroundColor: "#34D399",
   },
-  couponKickerDotRedeemed: {
-    backgroundColor: "#059669",
-  },
-  couponKicker: {
-    color: "#D97706",
-    fontSize: 10,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  couponKickerRedeemed: {
-    color: "#059669",
-  },
-  couponTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "900",
-    lineHeight: 19,
-  },
-  couponSubtitle: {
-    color: colors.muted,
+  teamStripStatus: {
+    color: "#34D399",
     fontSize: 11,
-    fontWeight: "700",
-    marginTop: 3,
-  },
-  couponNote: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  couponRightNotch: {
-    position: "absolute",
-    left: 72,
-    bottom: -8,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    zIndex: 10,
+    fontWeight: "900",
   },
 
-  // ── Stats Grid ──
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  statCell: {
-    minWidth: "47%",
-    flex: 1,
-    borderRadius: 18,
-    padding: 14,
+  // ── Balance Card (floating, matches Home) ──
+  balanceCard: {
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderRadius: 20,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: -28,
+    marginHorizontal: 2,
+    shadowColor: "#24413D",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+    borderWidth: 1,
     borderColor: colors.line,
-    ...shadows.card,
   },
-  statCellIcon: {
+  balanceLeft: {
+    flex: 1.2,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 4,
+  },
+  walletIconBox: {
     width: 38,
     height: 38,
     borderRadius: 12,
+    backgroundColor: "#EAFBF7",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginRight: 8,
   },
-  statCellIconText: {
-    fontSize: 20,
+  balanceInfo: {
+    flex: 1,
   },
-  statCellLabel: {
-    color: colors.muted,
+  balanceLabel: {
     fontSize: 10,
     fontWeight: "800",
+    color: colors.muted,
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
-  statCellValue: {
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  balanceAmount: {
     fontSize: 17,
     fontWeight: "900",
-    marginTop: 3,
-    lineHeight: 21,
+    color: colors.text,
+  },
+  balanceDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: colors.line,
+    marginHorizontal: 12,
+  },
+  balanceRight: {
+    alignItems: "flex-end",
+  },
+  savingLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  savingAmount: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: colors.teal,
+    marginTop: 1,
+  },
+  savingPeriod: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.muted,
+    marginTop: 1,
+  },
+
+  // ── Grid (matches Home services grid) ──
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginHorizontal: 2,
+  },
+  gridItem: {
+    width: "23%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  iconBoxContainer: {
+    position: "relative",
+    marginBottom: 6,
+  },
+  iconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  gridBadge: {
+    position: "absolute",
+    top: -6,
+    right: -8,
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 16,
+    height: 16,
+  },
+  gridBadgeText: {
+    color: colors.white,
+    fontSize: 8,
+    fontWeight: "900",
+  },
+  gridValue: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  gridLabel: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "800",
+    textAlign: "center",
+    marginTop: 1,
+  },
+
+  // ── Coupon Card (green promo style) ──
+  couponCard: {
+    backgroundColor: colors.surfaceGold,
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderColor: "#F1D98D",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  couponLeft: {
+    flex: 1,
+  },
+  couponTag: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.gold,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  couponTagText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "900",
+  },
+  couponTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  couponSub: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+  },
+  couponRight: {
+    paddingLeft: 12,
+  },
+  couponChevronCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#FFF6DA",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#F1D98D",
+  },
+
+  // ── Redeemed coupon cards ──
+  redeemedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 14,
+    marginHorizontal: 2,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: "#6EE7B7",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  redeemedIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#ECFDF5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  redeemedInfo: {
+    flex: 1,
+  },
+  redeemedTag: {
+    color: "#059669",
+    fontSize: 9,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  redeemedTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  redeemedSub: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  // ── Section Title (matches Home) ──
+  sectionTitleText: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text,
+    marginHorizontal: 2,
+    marginBottom: 12,
+    marginTop: 24,
   },
 
   // ── Reward Card ──
   rewardCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderRadius: 18,
+    padding: 14,
+    marginHorizontal: 2,
+    gap: 8,
+    borderWidth: 1,
     borderColor: colors.line,
-    gap: spacing.sm,
-    ...shadows.card,
-  },
-  rewardList: {
-    gap: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   rewardRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderRadius: radii.md,
+    borderRadius: 12,
     padding: 12,
-    backgroundColor: colors.background,
-    marginBottom: 4,
-  },
-  rewardRowCurrent: {
-    backgroundColor: "#FFFBEB",
     borderWidth: 1,
-    borderColor: "#FDE68A",
   },
   rewardIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    backgroundColor: "#F3F4F6",
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-  },
-  rewardIconBoxDone: {
-    backgroundColor: "#ECFDF5",
     borderWidth: 1,
-    borderColor: "#6EE7B7",
-  },
-  rewardIconBoxCurrent: {
-    backgroundColor: "#FFFBEB",
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-  },
-  rewardIcon: {
-    fontSize: 18,
   },
   rewardTitle: {
     flex: 1,
     color: colors.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
-  },
-  rewardTitleLocked: {
-    color: colors.muted,
   },
   rewardStatePill: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderWidth: 1,
-    borderColor: colors.line,
-  },
-  rewardStatePillDone: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#6EE7B7",
-  },
-  rewardStatePillCurrent: {
-    backgroundColor: "#FFFBEB",
-    borderColor: "#FDE68A",
   },
   rewardStateText: {
-    color: colors.muted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "900",
-  },
-  rewardStateTextDone: {
-    color: "#059669",
-  },
-  rewardStateTextCurrent: {
-    color: "#D97706",
   },
 
-  // ── Achievement Card ──
-  achievementCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: "#F0FDF9",
-    borderWidth: 1.5,
-    borderColor: "#A7F3D0",
-    gap: spacing.md,
-  },
-  achievementTop: {
+  // ── Achievement Cards (carousel style like Home) ──
+  achievementRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
+    gap: 12,
+    marginHorizontal: 2,
   },
-  achievementBadgeBox: {
-    width: 56,
-    height: 56,
+  achieveCard: {
+    flex: 1,
+    backgroundColor: colors.white,
     borderRadius: 18,
-    backgroundColor: colors.teal,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.line,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  achieveGraphic: {
+    height: 80,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.tealDark,
+    position: "relative",
   },
-  achievementBadgeEmoji: {
-    fontSize: 28,
-  },
-  achievementTitle: {
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "900",
-    marginTop: 3,
-  },
-  streakBox: {
-    borderRadius: radii.md,
-    padding: 14,
+  achievePointsBadge: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: "#A7F3D0",
-    gap: 10,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  streakEmoji: {
-    fontSize: 24,
-  },
-  streakTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  streakCopy: {
-    color: colors.muted,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  streakWeeks: {
-    alignItems: "center",
-    width: 44,
-  },
-  streakWeeksNum: {
+  achievePointsText: {
     color: colors.teal,
-    fontSize: 22,
+    fontSize: 8,
     fontWeight: "900",
-    lineHeight: 26,
-  },
-  streakWeeksLabel: {
-    color: colors.muted,
-    fontSize: 9,
-    fontWeight: "900",
-    textTransform: "uppercase",
     letterSpacing: 0.3,
   },
-  streakBarRow: {
+  achieveBody: {
+    padding: 12,
+  },
+  achieveTag: {
+    color: colors.turquoise,
+    fontSize: 9,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  achieveTitleText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  achieveSubText: {
+    fontSize: 11,
+    color: colors.muted,
+    lineHeight: 15,
+    fontWeight: "600",
+  },
+
+  // ── Referral Promo Card (green promo style) ──
+  referralPromoCard: {
+    backgroundColor: colors.teal,
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginHorizontal: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  referralPromoLeft: {
+    flex: 1,
+  },
+  referralTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  referralTagText: {
+    color: colors.white,
+    fontSize: 9,
+    fontWeight: "900",
+  },
+  referralTitle: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  referralSub: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  referralAvatarRow: {
     flexDirection: "row",
     gap: 6,
   },
-  streakBarDot: {
-    flex: 1,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: "#D1FAE5",
-  },
-  streakBarDotFilled: {
-    backgroundColor: colors.turquoise,
-  },
-
-  // ── Referral Card ──
-  referralCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    gap: 10,
-    ...shadows.card,
-  },
-  referralTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  referralIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 15,
-    backgroundColor: "#EEF2FF",
+  referralDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#C7D2FE",
   },
-  referralIcon: {
-    fontSize: 24,
+  referralPromoRight: {
+    paddingLeft: 12,
   },
-  referralCountBubble: {
+  referralChevronCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
     alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: colors.teal,
+    justifyContent: "center",
   },
-  referralCountNum: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "900",
-    lineHeight: 24,
+
+  // ── Member ID Card ──
+  memberIdCard: {
+    marginHorizontal: 2,
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  referralCountLabel: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 9,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
+  memberIdGradient: {
+    padding: spacing.md,
   },
-  referralProgressRow: {
+  memberIdTop: {
     flexDirection: "row",
-    gap: 8,
-    marginTop: 4,
-  },
-  referralFriend: {
     alignItems: "center",
-    gap: 4,
+    gap: 8,
+    marginBottom: 14,
   },
-  referralFriendAvatar: {
-    width: 46,
-    height: 46,
+  memberIdLogo: {
+    width: 20,
+    height: 20,
+  },
+  memberIdBrand: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  memberIdBody: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  memberIdAvatar: {
+    width: 48,
+    height: 48,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    backgroundColor: colors.background,
-  },
-  referralFriendAvatarActive: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#6EE7B7",
-  },
-  referralFriendAvatarPending: {
-    backgroundColor: "#FFFBEB",
-    borderColor: "#FDE68A",
-  },
-  referralFriendAvatarEmpty: {
-    backgroundColor: colors.background,
-    borderStyle: "dashed",
-  },
-  referralFriendLabel: {
-    color: colors.text,
-    fontSize: 10,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-  referralFriendLabelEmpty: {
-    color: colors.muted,
-    fontSize: 16,
-  },
-  referralFriendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.line,
-  },
-  referralFriendDotActive: {
-    backgroundColor: "#34D399",
-  },
-  referralFriendDotPending: {
-    backgroundColor: "#FBBF24",
-  },
-  referralNote: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700",
-    lineHeight: 16,
-  },
-
-  // ── Member Card ──
-  memberCard: {
-    borderRadius: radii.lg,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    overflow: "hidden",
-    ...shadows.card,
-  },
-  memberCardHeader: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-  },
-  memberCardKicker: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  memberCardBody: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    padding: spacing.md,
-  },
-  memberAvatarMini: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: colors.teal,
-    alignItems: "center",
-    justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#A7F3D0",
+    borderColor: "#FFFFFF",
   },
-  memberAvatarInitial: {
+  memberIdInitial: {
     color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "900",
-  },
-  memberName: {
-    color: colors.text,
     fontSize: 18,
     fontWeight: "900",
   },
-  memberMeta: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-    marginTop: 1,
+  memberIdInfo: {
+    flex: 1,
   },
-  memberTeamRow: {
-    marginTop: 4,
-  },
-  memberTeam: {
-    color: colors.teal,
-    fontSize: 12,
+  memberIdName: {
+    color: "#FFFFFF",
+    fontSize: 16,
     fontWeight: "900",
   },
-  memberQrPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.background,
+  memberIdMeta: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  memberIdTeamPill: {
+    alignSelf: "flex-start",
+    marginTop: 6,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  memberIdTeamText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  memberIdFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.12)",
+  },
+  memberIdQr: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.line,
   },
-  memberQrIcon: {
-    color: colors.teal,
-    fontSize: 22,
-    lineHeight: 26,
-  },
-  memberQrLabel: {
-    color: colors.muted,
-    fontSize: 8,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  memberIdFooterText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 11,
+    fontWeight: "800",
   },
 
   // ── Control Card ──
   controlCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: "#F8FBFA",
-    borderWidth: 1.5,
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 24,
+    marginHorizontal: 2,
+    marginBottom: 8,
+    borderWidth: 1,
     borderColor: colors.line,
-    gap: spacing.sm,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  controlHeader: {
+  controlRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
+    marginBottom: 12,
   },
-  controlIcon: {
-    fontSize: 22,
-    marginTop: 1,
+  controlIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  controlInfo: {
+    flex: 1,
   },
   controlTitle: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "900",
   },
-  controlCopy: {
+  controlSub: {
     color: colors.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "700",
-    marginTop: 3,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+    marginTop: 2,
   },
   buttonRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    marginTop: 4,
   },
   primaryButton: {
     flex: 1,
-    borderRadius: radii.md,
-    paddingVertical: 14,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 12,
+    paddingVertical: 12,
     backgroundColor: colors.teal,
-    ...shadows.card,
+    shadowColor: "#24413D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
   primaryButtonText: {
     color: colors.white,
@@ -1321,11 +1190,14 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     flex: 1,
-    borderRadius: radii.md,
-    paddingVertical: 14,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 12,
+    paddingVertical: 12,
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.line,
   },
   secondaryButtonText: {
@@ -1333,37 +1205,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
   },
-  limitNote: {
+  controlNote: {
     color: colors.muted,
     fontSize: 11,
-    lineHeight: 17,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-
-  // ── Shared ──
-  cardKicker: {
-    color: colors.teal,
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  cardTitle: {
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "900",
-    marginTop: 3,
-  },
-  cardCopy: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "700",
-    marginTop: spacing.xs,
-  },
-  flexOne: {
-    flex: 1,
+    lineHeight: 16,
+    fontWeight: "600",
+    marginTop: 10,
   },
 });

@@ -9,6 +9,19 @@ import {
   VoteOption
 } from "../data/kopoinSeed";
 
+export type CompleteOnboardingInput = {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  areaLabel: string;
+  latitude: number;
+  longitude: number;
+  selectedTeamId: string;
+  referralCode?: string;
+  joinReason?: string;
+};
+
 export type SubmitResult =
   | {
       status: "success";
