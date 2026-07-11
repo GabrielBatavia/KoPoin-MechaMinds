@@ -19,13 +19,8 @@ export const metadata: Metadata = {
   description:
     "Join the community where experts answer your hardest questions. Over 2.4 million reviews.",
   icons: {
-    icon: [
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/icon.svg",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
