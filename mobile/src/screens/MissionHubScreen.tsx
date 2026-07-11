@@ -1,11 +1,51 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Animated } from "react-native";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  Animated,
+  Dimensions,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  Trophy,
+  Zap,
+  ShoppingBag,
+  Users,
+  MapPin,
+  BookOpen,
+  CheckSquare,
+  ChevronRight,
+  ArrowRight,
+  Target,
+  Gift,
+  TrendingUp,
+  CheckCircle,
+  Lock,
+  Flame,
+  Share2,
+  Star,
+  Wallet,
+} from "lucide-react-native";
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg";
 
-import type { Campaign, CompletionSummary, Mission, Team, User, VerificationLog } from "../data/kopoinSeed";
-import { colors, radii, shadows, spacing } from "../theme";
+import type {
+  Campaign,
+  CompletionSummary,
+  Mission,
+  Team,
+  User,
+  UserVote,
+  VerificationLog,
+  VotePoll,
+} from "../data/kopoinSeed";
+import { colors, shadows, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
 import { ProductionQRFeedbackTone, ProductionQRScreen } from "./ProductionQRScreen";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type MissionHubScreenProps = {
   campaign: Campaign;
@@ -20,13 +60,18 @@ type MissionHubScreenProps = {
   onJoinTeam: () => void;
   onManualCodeChange: (value: string) => void;
   onOpenCommunity: () => void;
+  onOpenProfile: () => void;
   onOpenRedeem: () => void;
   onScanCode: (code: string) => void;
   onSubmitMission: () => void;
+  onVote: (optionId: string) => void;
   scanCompleted: boolean;
   team: Team;
   user: User;
+  userVote: UserVote | null;
   usedQrCodes: string[];
+  voteFeedback: string;
+  votePoll: VotePoll;
   verificationLogs: VerificationLog[];
 };
 
@@ -43,108 +88,176 @@ export function MissionHubScreen({
   onJoinTeam,
   onManualCodeChange,
   onOpenCommunity,
+  onOpenProfile,
   onOpenRedeem,
   onScanCode,
   onSubmitMission,
+  onVote,
   scanCompleted,
   team,
   user,
+  userVote,
   usedQrCodes,
-  verificationLogs
+  voteFeedback,
+  votePoll,
+  verificationLogs,
 }: MissionHubScreenProps) {
   const progressPercent = Math.round((campaign.currentValue / campaign.targetValue) * 100);
   const remainingActions = campaign.targetValue - campaign.currentValue;
-  const learningMission = missions.find((item) => item.actionType === "learning");
-  const voteMission = missions.find((item) => item.actionType === "vote");
-  const inviteMission = missions.find((item) => item.id === "comm_mission_1");
-  const checkinMission = missions.find((item) => item.id === "comm_mission_2");
+  const learningMission = missions.find((m) => m.actionType === "learning");
+  const voteMission = missions.find((m) => m.actionType === "vote");
+  const inviteMission = missions.find((m) => m.id === "comm_mission_1");
+  const checkinMission = missions.find((m) => m.id === "comm_mission_2");
+  const initial = user.name ? user.name.charAt(0).toUpperCase() : "A";
 
+  // Pulse animation for LIVE dot
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.5, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
   return (
-    <View style={styles.screen}>
-      {/* ── Header ── */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
-          <View>
-            <Text style={styles.headerGreeting}>Selamat datang 👋</Text>
-            <Text style={styles.headerName}>{user.name ?? "Anggota"}</Text>
-          </View>
-        </View>
-        <View style={styles.headerBadge}>
-          <View style={styles.headerBadgeDot} />
-          <Text style={styles.headerBadgeText}>{team.name}</Text>
-        </View>
-      </View>
+    <View style={styles.container}>
 
-      {/* ── Poin Balance Hero Card ── */}
-      <TouchableOpacity style={styles.heroCard} onPress={onOpenRedeem} activeOpacity={0.93}>
-        {/* Decorative blobs */}
-        <View style={styles.heroBlob1} />
-        <View style={styles.heroBlob2} />
-        <View style={styles.heroBlob3} />
-
-        <View style={styles.heroInner}>
-          <View style={styles.heroLeft}>
-            <View style={styles.heroKickerRow}>
-              <View style={styles.heroKickerDot} />
-              <Text style={styles.heroKicker}>Poin Loyalty Aktif</Text>
-            </View>
-            <Text style={styles.heroBalance}>{formatNumber(user.kopoinBalance)}</Text>
-            <Text style={styles.heroUnit}>KoPoin</Text>
-            <Text style={styles.heroSub}>Tukar kupon makan & belanja lokal</Text>
+      {/* ── 1. Gradient Header (identical to Home) ── */}
+      <LinearGradient
+        colors={[colors.tealDark, colors.teal]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.headerGradient}
+      >
+        {/* Brand row */}
+        <View style={styles.brandRow}>
+          <View style={{ alignItems: "flex-start" }}>
+            <Image source={require("../assets/images/white-logo.png")} style={styles.dashboardLogo} resizeMode="contain" />
+            <Text style={styles.headerMeta}>Hub Misi Aktif</Text>
           </View>
-          <View style={styles.heroRight}>
-            <View style={styles.heroGiftCircle}>
-              <Text style={styles.heroGiftEmoji}>🎁</Text>
+          <View style={styles.headerActions}>
+            <View style={styles.headerBadge}>
+              <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
+              <Text style={styles.headerBadgeText}>LIVE</Text>
             </View>
-            <View style={styles.heroChevron}>
-              <Text style={styles.heroChevronText}>↗</Text>
-            </View>
+            <TouchableOpacity onPress={onOpenProfile} activeOpacity={0.8} style={styles.avatarButton}>
+              <LinearGradient colors={["#FFE082", "#FFB300"]} style={styles.avatarGradient}>
+                <Text style={styles.avatarText}>{initial}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Metrics strip */}
-        <View style={styles.heroMetricStrip}>
-          <View style={styles.heroMetricItem}>
-            <Text style={styles.heroMetricVal}>{progressPercent}%</Text>
-            <Text style={styles.heroMetricLbl}>Progress Tim</Text>
+        {/* Mission Promo Card inside gradient (glassmorphism) */}
+        <View style={styles.heroPromoCard}>
+          <View style={styles.heroPromoLeft}>
+            <View style={styles.promoBadge}>
+              <Text style={styles.promoBadgeText}>MISI AKTIF</Text>
+            </View>
+            <Text style={styles.promoTitle}>
+              {mission?.title ?? "Beli produk lokal"}
+            </Text>
+            <Text style={styles.promoSub}>
+              {mission?.description ?? "Beli Kopi Sukamaju dan validasi kode transaksi kamu."}
+            </Text>
+            <TouchableOpacity style={styles.promoLink} onPress={onOpenRedeem} activeOpacity={0.7}>
+              <Text style={styles.promoLinkText}>Lihat reward →</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.heroMetricDivider} />
-          <View style={styles.heroMetricItem}>
-            <Text style={styles.heroMetricVal}>#1</Text>
-            <Text style={styles.heroMetricLbl}>Peringkat</Text>
+          <View style={styles.heroPromoRight}>
+            <View style={styles.coffeeCupFloating}>
+              <ShoppingBag size={26} color={colors.teal} />
+            </View>
+            <View style={styles.pointsBadge}>
+              <Text style={styles.pointsBadgeText}>+{mission?.points ?? 120}</Text>
+              <Text style={styles.pointsBadgeUnit}>poin</Text>
+            </View>
           </View>
-          <View style={styles.heroMetricDivider} />
-          <View style={styles.heroMetricItem}>
-            <Text style={styles.heroMetricVal}>{remainingActions}</Text>
-            <Text style={styles.heroMetricLbl}>Sisa Aksi</Text>
+        </View>
+
+        {/* Promo image slider replaced by promo banner */}
+        <View style={styles.sliderBanner}>
+          <View style={styles.sliderBannerLeft}>
+            <Text style={styles.sliderBannerTag}>🎯 CAMPAIGN</Text>
+            <Text style={styles.sliderBannerTitle}>{campaign.title ?? "Dukung UMKM Lokal"}</Text>
+            <View style={styles.sliderProgressTrack}>
+              <View style={[styles.sliderProgressFill, { width: `${progressPercent}%` }]} />
+            </View>
+            <Text style={styles.sliderProgressText}>
+              {campaign.currentValue}/{campaign.targetValue} Aksi · {progressPercent}% tercapai
+            </Text>
           </View>
+          <View style={styles.sliderBannerRight}>
+            <Text style={styles.sliderBannerPercent}>{progressPercent}%</Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* ── 2. KoPoin Balance Card (floating overlap like Home) ── */}
+      <TouchableOpacity style={styles.balanceCard} onPress={onOpenRedeem} activeOpacity={0.8}>
+        <View style={styles.balanceLeft}>
+          <View style={styles.walletIconBox}>
+            <Wallet size={22} color={colors.teal} />
+          </View>
+          <View style={styles.balanceInfo}>
+            <Text style={styles.balanceLabel}>KoPoin Balance</Text>
+            <Text style={styles.balanceAmount}>{formatNumber(user.kopoinBalance)}</Text>
+          </View>
+        </View>
+        <View style={styles.balanceDivider} />
+        <View style={styles.balanceRight}>
+          <Text style={styles.balanceRightLabel}>Sisa Aksi</Text>
+          <Text style={styles.balanceRightValue}>{remainingActions}</Text>
+        </View>
+        <View style={styles.balanceDivider} />
+        <View style={styles.balanceRight}>
+          <Text style={styles.balanceRightLabel}>Tim</Text>
+          <Text style={styles.balanceRightTeam} numberOfLines={1}>{team.name.split(" ").slice(-1)[0]}</Text>
         </View>
       </TouchableOpacity>
 
-      {/* ── Leaderboard Track Card ── */}
+      {/* ── 3. Mission Quick-Action Grid (same as Home services grid) ── */}
+      <View style={styles.gridContainer}>
+        <MissionGridItem
+          icon={<ShoppingBag size={22} color={colors.teal} />}
+          label="Beli Produk"
+          points={120}
+          bg="#EAFBF7"
+          isLive={!scanCompleted}
+        />
+        <MissionGridItem
+          icon={<Users size={22} color="#7C3AED" />}
+          label="Ajak Teman"
+          points={80}
+          bg="#EEF2FF"
+          isLive={false}
+        />
+        <MissionGridItem
+          icon={<MapPin size={22} color="#D97706" />}
+          label="Check-in"
+          points={60}
+          bg="#FFFBEB"
+          isLive={false}
+        />
+        <MissionGridItem
+          icon={<BookOpen size={22} color="#059669" />}
+          label="Belajar"
+          points={60}
+          bg="#ECFDF5"
+          isLive={false}
+        />
+      </View>
+
+      {/* ── 4. Leaderboard Track Card (green promo card width, upgraded) ── */}
       <View style={styles.leaderCard}>
         <View style={styles.leaderHeader}>
           <View>
-            <Text style={styles.leaderKicker}>🏆 Peringkat Keaktifan</Text>
+            <View style={styles.leaderTitleRow}>
+              <Trophy size={14} color={colors.gold} />
+              <Text style={styles.leaderKicker}>Peringkat Keaktifan</Text>
+            </View>
             <Text style={styles.leaderTitle}>Posisi tim minggu ini</Text>
           </View>
           <View style={styles.leaderLivePill}>
@@ -153,228 +266,248 @@ export function MissionHubScreen({
           </View>
         </View>
 
-        {/* Arc track */}
+        {/* Arc SVG track */}
         <View style={styles.trackContainer}>
           <Svg height="130" width="100%" viewBox="0 0 340 130" style={StyleSheet.absoluteFillObject}>
             <Defs>
               <SvgLinearGradient id="trackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#0F6B63" stopOpacity="0.12" />
-                <Stop offset="50%" stopColor="#0F6B63" stopOpacity="0.28" />
-                <Stop offset="100%" stopColor="#0F6B63" stopOpacity="0.12" />
+                <Stop offset="0%" stopColor="#0F6B63" stopOpacity="0.10" />
+                <Stop offset="50%" stopColor="#19A88E" stopOpacity="0.30" />
+                <Stop offset="100%" stopColor="#0F6B63" stopOpacity="0.10" />
               </SvgLinearGradient>
             </Defs>
-            {/* Track shadow */}
-            <Path
-              d="M 35,35 Q 170,120 305,35"
-              fill="none"
-              stroke="#E2ECE8"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            {/* Track fill */}
-            <Path
-              d="M 35,35 Q 170,120 305,35"
-              fill="none"
-              stroke="url(#trackGrad)"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-            {/* Dashed guide */}
-            <Path
-              d="M 35,35 Q 170,120 305,35"
-              fill="none"
-              stroke="#19A88E"
-              strokeWidth="1.5"
-              strokeDasharray="5,7"
-              strokeLinecap="round"
-            />
+            <Path d="M 35,35 Q 170,120 305,35" fill="none" stroke="#E2ECE8" strokeWidth="12" strokeLinecap="round" />
+            <Path d="M 35,35 Q 170,120 305,35" fill="none" stroke="url(#trackGrad)" strokeWidth="4" strokeLinecap="round" />
+            <Path d="M 35,35 Q 170,120 305,35" fill="none" stroke="#19A88E" strokeWidth="1.5" strokeDasharray="5,7" strokeLinecap="round" />
           </Svg>
 
           {/* Rank #4 */}
-          <View style={[styles.avatarPositioner, { left: "2%", top: 10 }]}>
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60" }}
-              style={styles.trackAvatarSm}
-            />
-            <View style={[styles.rankBadge, styles.rankBadgeGray]}>
-              <Text style={styles.rankBadgeText}>4</Text>
+          <View style={[styles.avatarPos, { left: "2%", top: 8 }]}>
+            <View style={styles.avatarSmRing}>
+              <Image source={{ uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60" }} style={styles.avatarSm} />
             </View>
+            <View style={[styles.rankBadge, { backgroundColor: "#9CA3AF" }]}><Text style={styles.rankNum}>4</Text></View>
           </View>
 
           {/* Rank #2 */}
-          <View style={[styles.avatarPositioner, { left: "23%", top: 38 }]}>
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=60" }}
-              style={styles.trackAvatarMd}
-            />
-            <View style={[styles.rankBadge, styles.rankBadgeSilver]}>
-              <Text style={styles.rankBadgeText}>2</Text>
+          <View style={[styles.avatarPos, { left: "23%", top: 36 }]}>
+            <View style={styles.avatarMdRing}>
+              <Image source={{ uri: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=60" }} style={styles.avatarMd} />
             </View>
+            <View style={[styles.rankBadge, { backgroundColor: "#C0C0C0" }]}><Text style={styles.rankNum}>2</Text></View>
           </View>
 
           {/* Rank #1 – YOU */}
-          <View style={[styles.avatarPositioner, { left: "42%", top: 54 }]}>
-            <View style={styles.crownWrapper}>
-              <Text style={styles.crownEmoji}>👑</Text>
-            </View>
-            <View style={styles.avatarRing}>
-              <Image
-                source={{ uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60" }}
-                style={styles.trackAvatarLg}
-              />
-            </View>
-            <View style={[styles.rankBadge, styles.rankBadgeGold]}>
-              <Text style={styles.rankBadgeText}>1</Text>
-            </View>
+          <View style={[styles.avatarPos, { left: "42%", top: 50 }]}>
+            <View style={styles.crownWrap}><Text style={styles.crownText}>👑</Text></View>
+            <LinearGradient colors={["#FFE082", "#FFB300"]} style={styles.avatarLgRing}>
+              <Image source={{ uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60" }} style={styles.avatarLg} />
+            </LinearGradient>
+            <View style={[styles.rankBadge, { backgroundColor: "#FBBF24" }]}><Text style={styles.rankNum}>1</Text></View>
           </View>
 
           {/* Rank #3 */}
-          <View style={[styles.avatarPositioner, { left: "63%", top: 38 }]}>
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=60" }}
-              style={styles.trackAvatarMd}
-            />
-            <View style={[styles.rankBadge, styles.rankBadgeBronze]}>
-              <Text style={styles.rankBadgeText}>3</Text>
+          <View style={[styles.avatarPos, { left: "63%", top: 36 }]}>
+            <View style={styles.avatarMdRing}>
+              <Image source={{ uri: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=60" }} style={styles.avatarMd} />
             </View>
+            <View style={[styles.rankBadge, { backgroundColor: "#CD7F32" }]}><Text style={styles.rankNum}>3</Text></View>
           </View>
 
           {/* Rank #5 */}
-          <View style={[styles.avatarPositioner, { left: "84%", top: 10 }]}>
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60" }}
-              style={styles.trackAvatarSm}
+          <View style={[styles.avatarPos, { left: "84%", top: 8 }]}>
+            <View style={styles.avatarSmRing}>
+              <Image source={{ uri: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60" }} style={styles.avatarSm} />
+            </View>
+            <View style={[styles.rankBadge, { backgroundColor: "#9CA3AF" }]}><Text style={styles.rankNum}>5</Text></View>
+          </View>
+        </View>
+
+        <View style={styles.leaderFooter}>
+          <Star size={12} color={colors.gold} fill={colors.gold} />
+          <Text style={styles.leaderFooterText}>Tim Pemuda Sukamaju memimpin minggu ini</Text>
+        </View>
+      </View>
+
+      {/* ── 5. Milestone Progress (same section title + card pattern as Home) ── */}
+      <Text style={styles.sectionTitle}>Milestone Reward</Text>
+      <View style={styles.milestoneCard}>
+        {/* Progress bar header */}
+        <View style={styles.milestoneBarRow}>
+          <View style={styles.milestoneBarTrack}>
+            <LinearGradient
+              colors={[colors.turquoise, colors.teal]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.milestoneBarFill, { width: `${progressPercent}%` }]}
             />
-            <View style={[styles.rankBadge, styles.rankBadgeGray]}>
-              <Text style={styles.rankBadgeText}>5</Text>
+          </View>
+          <Text style={styles.milestoneBarPercent}>{progressPercent}%</Text>
+        </View>
+
+        <MilestoneItem
+          icon={<CheckCircle size={18} color="#059669" />}
+          poin="5.000 poin"
+          title="Voucher Belanja"
+          state="Terbuka"
+          tone="done"
+        />
+        <View style={styles.milestoneLine} />
+        <MilestoneItem
+          icon={<Flame size={18} color="#D97706" />}
+          poin="8.000 poin"
+          title="Badge Tim Eksklusif"
+          state="Sedang Dikejar"
+          tone="current"
+        />
+        <View style={styles.milestoneLine} />
+        <MilestoneItem
+          icon={<Lock size={18} color={colors.muted} />}
+          poin="10.000 poin"
+          title="Diskon UMKM Lokal"
+          state="Terkunci"
+          tone="locked"
+        />
+      </View>
+
+      {/* ── 6. Pre-mission reward vote ── */}
+      <Text style={styles.sectionTitle}>Pilih reward misi berikutnya</Text>
+      <RewardVoteCard
+        poll={votePoll}
+        selectedOptionId={userVote?.optionId ?? null}
+        feedback={voteFeedback}
+        teamName={team.name}
+        onVote={onVote}
+      />
+
+      {/* ── 7. Mission Task Cards (carousel-style like Home "pilihan buat kamu") ── */}
+      <Text style={styles.sectionTitle}>Tugas Misi Aktif</Text>
+
+      {/* Primary Live Mission — full width green card */}
+      <LinearGradient
+        colors={[colors.teal, colors.tealDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.liveMissionCard}
+      >
+        <View style={styles.liveMissionTop}>
+          <View style={styles.liveMissionTag}>
+            <Zap size={10} color={colors.teal} />
+            <Text style={styles.liveMissionTagText}>MISI UTAMA</Text>
+          </View>
+          <View style={styles.livePill}>
+            <Animated.View style={[styles.livePillDot, { transform: [{ scale: pulseAnim }] }]} />
+            <Text style={styles.livePillText}>AKTIF</Text>
+          </View>
+        </View>
+        <View style={styles.liveMissionBody}>
+          <View style={styles.liveMissionLeft}>
+            <Text style={styles.liveMissionTitle}>
+              {mission?.title ?? "Beli produk lokal"}
+            </Text>
+            <Text style={styles.liveMissionDesc} numberOfLines={2}>
+              {mission?.description ?? "Beli Kopi Sukamaju dan validasi kode transaksi."}
+            </Text>
+            {/* Progress bar */}
+            <View style={styles.missionProgressTrack}>
+              <LinearGradient
+                colors={[colors.turquoise, colors.teal]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[
+                  styles.missionProgressFill,
+                  {
+                    width: `${Math.min(
+                      Math.round(
+                        ((mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)) /
+                          (mission?.target ?? 1)) * 100
+                      ),
+                      100
+                    )}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.missionProgressText}>
+              {mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)}/
+              {mission?.target ?? 1} selesai
+            </Text>
+          </View>
+          <View style={styles.liveMissionRight}>
+            <LinearGradient colors={[colors.teal, colors.tealDark]} style={styles.liveMissionPointBox}>
+              <ShoppingBag size={18} color="#FFFFFF" />
+              <Text style={styles.liveMissionPoints}>+{mission?.points ?? 120}</Text>
+              <Text style={styles.liveMissionPointsUnit}>poin</Text>
+            </LinearGradient>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Secondary missions as 2-col grid cards */}
+      <View style={styles.secondaryMissionsGrid}>
+        <SecondaryMissionCard
+          icon={<Users size={20} color="#7C3AED" />}
+          iconBg="#EEF2FF"
+          title={inviteMission?.title ?? "Ajak anggota aktif"}
+          points={inviteMission?.points ?? 80}
+          current={inviteMission?.current ?? 0}
+          target={inviteMission?.target ?? 5}
+          tag="KOMUNITAS"
+          tagColor="#7C3AED"
+        />
+        <SecondaryMissionCard
+          icon={<MapPin size={20} color="#D97706" />}
+          iconBg="#FFFBEB"
+          title={checkinMission?.title ?? "Check-in koperasi"}
+          points={checkinMission?.points ?? 60}
+          current={checkinMission?.current ?? 0}
+          target={checkinMission?.target ?? 1}
+          tag="LOKASI"
+          tagColor="#D97706"
+        />
+        <SecondaryMissionCard
+          icon={<BookOpen size={20} color="#059669" />}
+          iconBg="#ECFDF5"
+          title={learningMission?.title ?? "Belajar koperasi"}
+          points={learningMission?.points ?? 60}
+          current={learningMission?.completed ? learningMission.target ?? 1 : learningMission?.current ?? 0}
+          target={learningMission?.target ?? 1}
+          tag="BELAJAR"
+          tagColor="#059669"
+        />
+        <SecondaryMissionCard
+          icon={<CheckSquare size={20} color={colors.turquoise} />}
+          iconBg="#EAFBF7"
+          title={voteMission?.title ?? "Pilih reward berikutnya"}
+          points={voteMission?.points ?? 30}
+          current={voteMission?.completed || user.achievementUnlocked ? 1 : voteMission?.current ?? 0}
+          target={voteMission?.target ?? 1}
+          tag="VOTING"
+          tagColor={colors.turquoise}
+        />
+      </View>
+
+      {/* ── 8. Join Team Gate (styled like Home green promo card) ── */}
+      {!hasJoinedTeam && (
+        <TouchableOpacity style={styles.joinCard} onPress={onJoinTeam} activeOpacity={0.85}>
+          <View style={styles.joinLeft}>
+            <View style={styles.joinTag}>
+              <Text style={styles.joinTagText}>GABUNG TIM</Text>
+            </View>
+            <Text style={styles.joinTitle}>Gabung tim sebelum validasi</Text>
+            <Text style={styles.joinSub}>
+              KoPoin menghitung aksi pribadi sebagai kontribusi untuk progress tim.
+            </Text>
+          </View>
+          <View style={styles.joinRight}>
+            <View style={styles.joinChevron}>
+              <ArrowRight size={18} color={colors.teal} />
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
+      )}
 
-        <View style={styles.leaderFooterRow}>
-          <Text style={styles.leaderFooterText}>Tim Pemuda Sukamaju memimpin minggu ini 🎉</Text>
-        </View>
-      </View>
-
-      {/* ── Milestone Timeline Card ── */}
-      <View style={styles.milestoneCard}>
-        <View style={styles.cardHeaderRow}>
-          <View>
-            <Text style={styles.cardKicker}>🎯 Milestone Reward</Text>
-            <Text style={styles.cardTitle}>Perjalanan benefit tim</Text>
-          </View>
-          <View style={styles.percentBubble}>
-            <Text style={styles.percentValue}>{progressPercent}%</Text>
-            <Text style={styles.percentLabel}>tercapai</Text>
-          </View>
-        </View>
-
-        {/* Progress bar */}
-        <View style={styles.milestoneProgressTrack}>
-          <View style={[styles.milestoneProgressFill, { width: `${progressPercent}%` }]} />
-          <View style={[styles.milestoneProgressThumb, { left: `${Math.min(progressPercent, 96)}%` }]} />
-        </View>
-
-        <View style={styles.milestoneList}>
-          <MilestoneRow
-            icon="✅"
-            label="5.000 poin"
-            title="Voucher Belanja"
-            state="Terbuka"
-            tone="done"
-          />
-          <View style={styles.milestoneLine} />
-          <MilestoneRow
-            icon="🔥"
-            label="8.000 poin"
-            title="Badge Tim Eksklusif"
-            state="Sedang Dikejar"
-            tone="current"
-          />
-          <View style={styles.milestoneLine} />
-          <MilestoneRow
-            icon="🔒"
-            label="10.000 poin"
-            title="Diskon UMKM Lokal"
-            state="Terkunci"
-            tone="locked"
-          />
-        </View>
-      </View>
-
-      {/* ── Mission Tasks Card ── */}
-      <View style={styles.taskCard}>
-        <View style={styles.cardHeaderRow}>
-          <View>
-            <Text style={styles.cardKicker}>⚡ Tugas Misi</Text>
-            <Text style={styles.cardTitle}>Banyak cara berkontribusi</Text>
-          </View>
-        </View>
-
-        <MissionTask
-          icon="🛒"
-          current={mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)}
-          description={mission?.description ?? "Beli Kopi Sukamaju dan validasi kode transaksi."}
-          points={mission?.points ?? 120}
-          target={mission?.target ?? 1}
-          title={mission?.title ?? "Beli produk lokal"}
-          tone="live"
-        />
-        <MissionTask
-          icon="👥"
-          current={inviteMission?.current ?? 0}
-          description={inviteMission?.description ?? "Undang teman sampai aktif, bukan sekadar daftar."}
-          points={inviteMission?.points ?? 80}
-          target={inviteMission?.target ?? 5}
-          title={inviteMission?.title ?? "Ajak anggota aktif"}
-          tone="soft"
-        />
-        <MissionTask
-          icon="📍"
-          current={checkinMission?.current ?? 0}
-          description={checkinMission?.description ?? "Check-in mingguan di koperasi atau booth desa."}
-          points={checkinMission?.points ?? 60}
-          target={checkinMission?.target ?? 1}
-          title={checkinMission?.title ?? "Check-in koperasi"}
-          tone="soft"
-        />
-        <MissionTask
-          icon="📚"
-          current={learningMission?.completed ? learningMission.target ?? 1 : learningMission?.current ?? 0}
-          description={learningMission?.description ?? "Tuntaskan modul edukasi ringan."}
-          points={learningMission?.points ?? 60}
-          target={learningMission?.target ?? 1}
-          title={learningMission?.title ?? "Belajar koperasi 5 menit"}
-          tone="soft"
-        />
-        <MissionTask
-          icon="🗳️"
-          current={voteMission?.completed || user.achievementUnlocked ? 1 : voteMission?.current ?? 0}
-          description={voteMission?.description ?? "Ikut voting reward komunitas."}
-          points={voteMission?.points ?? 30}
-          target={voteMission?.target ?? 1}
-          title={voteMission?.title ?? "Pilih reward berikutnya"}
-          tone="soft"
-        />
-      </View>
-
-      {/* ── Join Team Gate ── */}
-      {!hasJoinedTeam ? (
-        <View style={styles.joinGate}>
-          <View style={styles.joinIconRow}>
-            <Text style={styles.joinIcon}>🤝</Text>
-          </View>
-          <Text style={styles.joinTitle}>Gabung tim dulu sebelum validasi</Text>
-          <Text style={styles.joinCopy}>
-            KoPoin menghitung aksi pribadi sebagai kontribusi untuk progress tim kamu.
-          </Text>
-          <TouchableOpacity style={styles.joinButton} onPress={onJoinTeam} activeOpacity={0.85}>
-            <Text style={styles.joinButtonText}>Gabung Tim Pemuda Sukamaju →</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      {/* ── QR Scan Section ── */}
+      {/* ── 9. QR Scanner Section ── */}
       <ProductionQRScreen
         feedback={feedback}
         feedbackTone={feedbackTone}
@@ -388,81 +521,130 @@ export function MissionHubScreen({
         verificationLogs={verificationLogs}
       />
 
-      {/* ── Impact Card ── */}
-      <View style={scanCompleted ? styles.impactCardDone : styles.impactCard}>
-        <View style={styles.impactHeaderRow}>
-          <Text style={scanCompleted ? styles.impactKickerDone : styles.cardKicker}>
-            {scanCompleted ? "✨ Dampak setelah validasi" : "💡 Dampak akan terbuka"}
-          </Text>
-          {scanCompleted && <View style={styles.impactSuccessPill}><Text style={styles.impactSuccessText}>Berhasil!</Text></View>}
-        </View>
-        {completionSummary ? (
-          <View style={styles.impactGrid}>
-            <ImpactStat icon="💰" label="KoPoin" value={`${formatNumber(completionSummary.balanceBefore)} → ${formatNumber(completionSummary.balanceAfter)}`} />
-            <ImpactStat icon="📈" label="Progress" value={`${completionSummary.progressBefore} → ${completionSummary.progressAfter}`} />
-            <ImpactStat icon="🏅" label="Peringkat" value={`#${completionSummary.rankBefore} → #${completionSummary.rankAfter}`} />
-            <ImpactStat icon="🎖️" label="Badge" value={completionSummary.achievementTitle} />
+      {/* ── 10. Impact Card ── */}
+      {scanCompleted ? (
+        <LinearGradient colors={[colors.teal, colors.tealDark]} style={styles.impactCardDone}>
+          <View style={styles.impactTopRow}>
+            <Text style={styles.impactKickerDone}>Dampak setelah validasi</Text>
+            <View style={styles.impactSuccessPill}>
+              <CheckCircle size={11} color="#FFFFFF" />
+              <Text style={styles.impactSuccessText}>Berhasil!</Text>
+            </View>
           </View>
-        ) : (
-          <Text style={styles.cardCopy}>
-            Scan kode demo untuk membuka +120 KoPoin, achievement, perubahan leaderboard, dan reward progress tim.
-          </Text>
-        )}
-      </View>
-
-      {/* ── Share / Community Card ── */}
-      <View style={styles.shareCard}>
-        <View style={styles.shareIconRow}>
-          <Text style={styles.shareIconEmoji}>🚀</Text>
+          {completionSummary && (
+            <View style={styles.impactGrid}>
+              <ImpactCell icon={<Wallet size={14} color="rgba(255,255,255,0.7)" />} label="KoPoin" value={`${formatNumber(completionSummary.balanceBefore)} → ${formatNumber(completionSummary.balanceAfter)}`} />
+              <ImpactCell icon={<TrendingUp size={14} color="rgba(255,255,255,0.7)" />} label="Progress" value={`${completionSummary.progressBefore} → ${completionSummary.progressAfter}`} />
+              <ImpactCell icon={<Trophy size={14} color="rgba(255,255,255,0.7)" />} label="Peringkat" value={`#${completionSummary.rankBefore} → #${completionSummary.rankAfter}`} />
+              <ImpactCell icon={<Star size={14} color="rgba(255,255,255,0.7)" />} label="Badge" value={completionSummary.achievementTitle} />
+            </View>
+          )}
+        </LinearGradient>
+      ) : (
+        <View style={styles.impactCardPending}>
+          <View style={styles.impactPendingRow}>
+            <View style={styles.impactPendingIconBox}>
+              <Target size={20} color={colors.muted} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.impactPendingTitle}>Dampak akan terbuka</Text>
+              <Text style={styles.impactPendingText}>
+                Scan kode demo untuk membuka +120 KoPoin, achievement, perubahan leaderboard, dan reward progress tim.
+              </Text>
+            </View>
+          </View>
         </View>
-        <Text style={styles.cardKicker}>Share Progress</Text>
-        <Text style={styles.shareTitle}>
-          {scanCompleted ? "Tim Pemuda Sukamaju naik ke #2! 🎉" : "Aksi berikutnya bisa menaikkan peringkat tim"}
-        </Text>
-        <Text style={styles.cardCopy}>
-          {scanCompleted
-            ? "Card ini siap jadi materi demo shareable untuk juri."
-            : "Selesaikan validasi untuk membuka team wrap eksklusif."}
-        </Text>
-        <TouchableOpacity style={styles.shareButton} onPress={onOpenCommunity} activeOpacity={0.85}>
-          <Text style={styles.shareButtonText}>Lihat Leaderboard & Team Wrap →</Text>
-        </TouchableOpacity>
-      </View>
+      )}
+
+      {/* ── 11. Share / Leaderboard Card (Flash banner style) ── */}
+      <TouchableOpacity style={styles.shareBanner} onPress={onOpenCommunity} activeOpacity={0.85}>
+        <View style={styles.shareBannerLeft}>
+          <View style={styles.shareIconBox}>
+            <Share2 size={16} color="#FFFFFF" />
+          </View>
+          <View style={styles.shareInfo}>
+            <View style={styles.shareRow}>
+              <Text style={styles.shareKicker}>Share Progress</Text>
+              {scanCompleted && (
+                <View style={styles.shareSuccessBadge}>
+                  <Text style={styles.shareSuccessText}>+Rank</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.shareDesc}>
+              {scanCompleted
+                ? "Tim Pemuda Sukamaju naik ke #2! Bagikan ke juri sekarang."
+                : "Selesaikan validasi untuk membuka team wrap eksklusif."}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.shareBannerRight}>
+          <View style={styles.shareArrowBtn}>
+            <ArrowRight size={14} color={colors.teal} />
+          </View>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
-function MilestoneRow({
+function MissionGridItem({
   icon,
   label,
-  state,
+  points,
+  bg,
+  isLive,
+}: {
+  icon: React.ReactElement<{ color?: string }>;
+  label: string;
+  points: number;
+  bg: string;
+  isLive: boolean;
+}) {
+  return (
+    <View style={styles.gridItem}>
+      <View style={styles.gridIconContainer}>
+        <View style={[styles.gridIconBox, { backgroundColor: bg }]}>{icon}</View>
+        {isLive && (
+          <View style={styles.gridLiveBadge}>
+            <Text style={styles.gridLiveBadgeText}>LIVE</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.gridLabel}>{label}</Text>
+      <Text style={styles.gridPoints}>+{points} poin</Text>
+    </View>
+  );
+}
+
+function MilestoneItem({
+  icon,
+  poin,
   title,
+  state,
   tone,
 }: {
-  icon: string;
-  label: string;
-  state: string;
+  icon: React.ReactNode;
+  poin: string;
   title: string;
+  state: string;
   tone: "done" | "current" | "locked";
 }) {
   const isDone = tone === "done";
   const isCurrent = tone === "current";
-
   return (
     <View style={[styles.milestoneRow, isCurrent && styles.milestoneRowCurrent]}>
-      <View style={[styles.milestoneIconBox, isDone && styles.milestoneIconBoxDone, isCurrent && styles.milestoneIconBoxCurrent]}>
-        <Text style={styles.milestoneIcon}>{icon}</Text>
+      <View style={[styles.milestoneIconBox, isDone && styles.milestoneIconDone, isCurrent && styles.milestoneIconCurrent]}>
+        {icon}
       </View>
-      <View style={styles.flexOne}>
-        <Text style={styles.milestoneLabel}>{label}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.milestonePoin}>{poin}</Text>
         <Text style={[styles.milestoneTitle, tone === "locked" && styles.milestoneTitleLocked]}>{title}</Text>
       </View>
-      <View style={[styles.milestoneStatePill, isDone && styles.milestoneStatePillDone, isCurrent && styles.milestoneStatePillCurrent]}>
-        <Text style={[styles.milestoneStateText, isDone && styles.milestoneStateTextDone, isCurrent && styles.milestoneStateTextCurrent]}>
+      <View style={[styles.milestoneStatePill, isDone && styles.milestoneStateDone, isCurrent && styles.milestoneStateCurrent]}>
+        <Text style={[styles.milestoneStateText, isDone && styles.milestoneStateDoneText, isCurrent && styles.milestoneStateCurrentText]}>
           {state}
         </Text>
       </View>
@@ -470,300 +652,623 @@ function MilestoneRow({
   );
 }
 
-function MissionTask({
-  current,
-  description,
+function SecondaryMissionCard({
   icon,
-  points,
-  target,
+  iconBg,
   title,
-  tone,
+  points,
+  current,
+  target,
+  tag,
+  tagColor,
 }: {
-  current: number;
-  description: string;
-  icon: string;
-  points: number;
-  target: number;
+  icon: React.ReactElement<{ color?: string }>;
+  iconBg: string;
   title: string;
-  tone: "live" | "soft";
+  points: number;
+  current: number;
+  target: number;
+  tag: string;
+  tagColor: string;
 }) {
   const percent = Math.min(Math.round((current / target) * 100), 100);
-  const isComplete = current >= target;
-  const isLive = tone === "live";
-
+  const isDone = current >= target;
   return (
-    <View style={[styles.taskRow, isLive && styles.taskRowLive, isComplete && styles.taskRowDone]}>
-      {isComplete && (
-        <View style={styles.taskCompletedBadge}>
-          <Text style={styles.taskCompletedText}>✓ Selesai</Text>
-        </View>
-      )}
-      <View style={styles.taskTopline}>
-        <View style={[styles.taskIconBox, isLive && styles.taskIconBoxLive]}>
-          <Text style={styles.taskIcon}>{icon}</Text>
-        </View>
-        <View style={styles.flexOne}>
-          <View style={styles.taskTitleRow}>
-            <Text style={[styles.taskTitle, isComplete && styles.taskTitleDone]} numberOfLines={1}>{title}</Text>
-            {isLive && !isComplete && (
-              <View style={styles.taskLivePill}>
-                <Text style={styles.taskLivePillText}>AKTIF</Text>
-              </View>
-            )}
+    <View style={[styles.secondaryCard, isDone && styles.secondaryCardDone]}>
+      <View style={styles.secondaryCardHeader}>
+        <LinearGradient
+          colors={isDone ? [colors.teal, colors.tealDark] : ["#F9FAFB", "#F3F4F6"]}
+          style={styles.secondaryGraphic}
+        >
+          {React.cloneElement(icon, {
+            color: isDone ? "#FFFFFF" : tagColor,
+          })}
+          <View style={[styles.secondaryPointsBadge, { borderColor: `${tagColor}30` }]}>
+            <Text style={[styles.secondaryPointsText, { color: isDone ? "#FFFFFF" : tagColor }]}>+{points}</Text>
           </View>
-          <Text style={styles.taskCopy} numberOfLines={2}>{description}</Text>
-        </View>
-        <View style={[styles.taskPointsBubble, isLive && styles.taskPointsBubbleLive]}>
-          <Text style={[styles.taskPoints, isLive && styles.taskPointsLive]}>+{points}</Text>
-          <Text style={[styles.taskPointsUnit, isLive && styles.taskPointsUnitLive]}>poin</Text>
-        </View>
+        </LinearGradient>
       </View>
-
-      {/* Progress bar */}
-      <View style={styles.taskTrack}>
-        <View
-          style={[
-            styles.taskFill,
-            isLive && styles.taskFillLive,
-            isComplete && styles.taskFillDone,
-            { width: `${percent}%` },
-          ]}
-        />
-      </View>
-
-      <View style={styles.taskFooter}>
-        <Text style={styles.taskMeta}>{current}/{target} selesai</Text>
-        <Text style={[styles.taskPercent, isComplete && styles.taskPercentDone]}>{percent}%</Text>
+      <View style={styles.secondaryCardBody}>
+        <Text style={[styles.secondaryTag, { color: tagColor }]}>{tag}</Text>
+        <Text style={styles.secondaryTitle} numberOfLines={2}>{title}</Text>
+        <View style={styles.secondaryTrack}>
+          <View style={[styles.secondaryFill, { width: `${percent}%`, backgroundColor: isDone ? colors.turquoise : tagColor }]} />
+        </View>
+        <Text style={styles.secondaryMeta}>{current}/{target} selesai</Text>
       </View>
     </View>
   );
 }
 
-function ImpactStat({ icon, label, value }: { icon: string; label: string; value: string }) {
+function RewardVoteCard({
+  poll,
+  selectedOptionId,
+  feedback,
+  teamName,
+  onVote,
+}: {
+  poll: VotePoll;
+  selectedOptionId: string | null;
+  feedback: string;
+  teamName: string;
+  onVote: (optionId: string) => void;
+}) {
+  const cardReveal = useRef(new Animated.Value(0)).current;
+  const totalVotes = poll.options.reduce((total, option) => total + option.votes, 0);
+  const hasVoted = Boolean(selectedOptionId);
+
+  useEffect(() => {
+    Animated.spring(cardReveal, {
+      toValue: 1,
+      friction: 8,
+      tension: 42,
+      useNativeDriver: true,
+    }).start();
+  }, [cardReveal]);
+
   return (
-    <View style={styles.impactStat}>
-      <Text style={styles.impactStatIcon}>{icon}</Text>
-      <Text style={styles.impactLabel}>{label}</Text>
-      <Text style={styles.impactValue}>{value}</Text>
+    <Animated.View
+      style={[
+        styles.rewardVoteCard,
+        {
+          opacity: cardReveal,
+          transform: [
+            {
+              translateY: cardReveal.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }),
+            },
+          ],
+        },
+      ]}
+    >
+      <View style={styles.rewardVoteHeader}>
+        <LinearGradient colors={[colors.gold, "#FFD76A"]} style={styles.rewardVoteIcon}>
+          <Gift size={20} color={colors.tealDark} />
+        </LinearGradient>
+        <View style={styles.rewardVoteHeaderCopy}>
+          <View style={styles.rewardVoteEyebrowRow}>
+            <Text style={styles.rewardVoteEyebrow}>VOTING TIM</Text>
+            <View style={styles.rewardVoteOpenPill}>
+              <View style={styles.rewardVoteOpenDot} />
+              <Text style={styles.rewardVoteOpenText}>TERBUKA</Text>
+            </View>
+          </View>
+          <Text style={styles.rewardVoteTitle}>Reward mana yang mau dikejar?</Text>
+          <Text style={styles.rewardVoteCopy}>
+            Sebelum misi dimulai, suara {teamName} menentukan hadiah yang dibawa pulang.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.rewardVoteMetaRow}>
+        <View style={styles.rewardVoteMetaItem}>
+          <Users size={13} color={colors.teal} />
+          <Text style={styles.rewardVoteMetaText}>{totalVotes} suara masuk</Text>
+        </View>
+        <Text style={styles.rewardVoteRule}>1 anggota · 1 suara</Text>
+      </View>
+
+      <View style={styles.rewardVoteOptions}>
+        {poll.options.map((option, index) => (
+          <RewardVoteOption
+            key={option.id}
+            option={option}
+            index={index}
+            isSelected={selectedOptionId === option.id}
+            onVote={onVote}
+          />
+        ))}
+      </View>
+
+      <View style={styles.rewardVoteBottom}>
+        <View style={styles.rewardVoteBottomIcon}>
+          <CheckCircle size={14} color={hasVoted ? colors.success : colors.muted} />
+        </View>
+        <Text style={styles.rewardVoteBottomText} numberOfLines={2}>
+          {hasVoted ? `Pilihanmu tersimpan · ${feedback}` : "Pilih satu reward untuk ikut menentukan misi berikutnya."}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function RewardVoteOption({
+  option,
+  index,
+  isSelected,
+  onVote,
+}: {
+  option: VotePoll["options"][number];
+  index: number;
+  isSelected: boolean;
+  onVote: (optionId: string) => void;
+}) {
+  const entry = useRef(new Animated.Value(0)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
+  const accent = [colors.gold, colors.turquoise, "#8B5CF6"][index % 3];
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(index * 90),
+      Animated.spring(entry, { toValue: 1, friction: 8, tension: 48, useNativeDriver: true }),
+    ]).start();
+  }, [entry, index]);
+
+  function handlePress() {
+    Animated.sequence([
+      Animated.timing(pressScale, { toValue: 0.985, duration: 70, useNativeDriver: true }),
+      Animated.spring(pressScale, { toValue: 1, friction: 5, tension: 180, useNativeDriver: true }),
+    ]).start();
+    onVote(option.id);
+  }
+
+  return (
+    <Animated.View
+      style={{
+        opacity: entry,
+        transform: [
+          { translateX: entry.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+          { scale: pressScale },
+        ],
+      }}
+    >
+      <TouchableOpacity
+        style={[styles.rewardVoteOption, isSelected && styles.rewardVoteOptionSelected]}
+        onPress={handlePress}
+        activeOpacity={0.9}
+      >
+        <View style={styles.rewardVoteOptionTop}>
+          <View style={[styles.rewardVoteRadio, { borderColor: isSelected ? colors.teal : accent }]}>
+            {isSelected && <View style={styles.rewardVoteRadioSelected} />}
+          </View>
+          <View style={styles.rewardVoteOptionNameRow}>
+            <Text style={styles.rewardVoteOptionName} numberOfLines={1}>{option.label}</Text>
+            {isSelected && <Text style={styles.rewardVoteSelectedLabel}>PILIHANMU</Text>}
+          </View>
+          <Text style={styles.rewardVotePercent}>{option.percent}%</Text>
+        </View>
+        <View style={styles.rewardVoteTrack}>
+          <Animated.View
+            style={[
+              styles.rewardVoteFill,
+              { width: `${Math.min(option.percent, 100)}%`, backgroundColor: isSelected ? colors.teal : accent },
+            ]}
+          />
+        </View>
+        <View style={styles.rewardVoteOptionFooter}>
+          <Text style={styles.rewardVoteVotes}>{option.votes} anggota memilih</Text>
+          <ChevronRight size={14} color={isSelected ? colors.teal : colors.muted} />
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+function ImpactCell({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={styles.impactCell}>
+      {icon}
+      <Text style={styles.impactCellLabel}>{label}</Text>
+      <Text style={styles.impactCellValue}>{value}</Text>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  screen: {
-    gap: spacing.md,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
 
-  // ── Header ──
-  headerRow: {
+  // ── Header Gradient (identical to Home) ──
+  headerGradient: {
+    marginHorizontal: -spacing.md,
+    marginTop: -spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md + 14,
+    paddingBottom: 54,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: spacing.md,
+    marginTop: 4,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  dashboardLogo: {
+    width: 30,
+    height: 30,
+    marginBottom: 8,
+    alignSelf: "flex-start",
   },
-  logo: {
-    width: 32,
-    height: 32,
-  },
-  headerGreeting: {
-    color: colors.muted,
-    fontSize: 11,
+  headerMeta: {
+    color: "#EAFBF7",
+    fontSize: 12,
     fontWeight: "700",
-  },
-  headerName: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "900",
-    marginTop: 1,
+    marginTop: -2,
   },
   headerBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    ...shadows.card,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
-  headerBadgeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: colors.turquoise,
-  },
-  headerBadgeText: {
-    color: colors.teal,
-    fontSize: 11,
-    fontWeight: "900",
-  },
-
-  // ── Hero Card ──
-  heroCard: {
-    borderRadius: 28,
-    padding: spacing.lg,
-    backgroundColor: colors.teal,
-    overflow: "hidden",
-    ...shadows.card,
-  },
-  heroBlob1: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    top: -80,
-    right: -60,
-  },
-  heroBlob2: {
-    position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(25,168,142,0.25)",
-    bottom: -50,
-    left: -30,
-  },
-  heroBlob3: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(244,180,0,0.18)",
-    top: 20,
-    right: 100,
-  },
-  heroInner: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  heroLeft: {
-    flex: 1,
-  },
-  heroKickerRow: {
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-  },
-  heroKickerDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#B8E986",
-  },
-  heroKicker: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  heroBalance: {
-    color: "#FFFFFF",
-    fontSize: 44,
-    fontWeight: "900",
-    marginTop: 6,
-    lineHeight: 50,
-  },
-  heroUnit: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 14,
-    fontWeight: "800",
-    marginTop: -2,
-    letterSpacing: 1,
-  },
-  heroSub: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 8,
-    lineHeight: 17,
-    maxWidth: 200,
-  },
-  heroRight: {
-    alignItems: "flex-end",
     gap: 10,
   },
-  heroGiftCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.14)",
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: "#EF4444",
+  },
+  headerBadgeText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  avatarButton: {
+    borderRadius: 999,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarGradient: {
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 21,
+    borderWidth: 1.5,
+    borderColor: colors.white,
   },
-  heroGiftEmoji: {
-    fontSize: 26,
-  },
-  heroChevron: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.gold,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroChevronText: {
-    color: "#FFFFFF",
+  avatarText: {
+    color: colors.white,
     fontSize: 16,
     fontWeight: "900",
   },
-  heroMetricStrip: {
+
+  // ── Hero Promo Card (glassmorphism inside gradient) ──
+  heroPromoCard: {
     flexDirection: "row",
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 20,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    marginBottom: spacing.md,
   },
-  heroMetricItem: {
+  heroPromoLeft: {
     flex: 1,
-    alignItems: "center",
+    justifyContent: "center",
   },
-  heroMetricDivider: {
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    marginVertical: 2,
+  promoBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.gold,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 6,
   },
-  heroMetricVal: {
-    color: "#FFFFFF",
-    fontSize: 20,
+  promoBadgeText: {
+    color: colors.tealDark,
+    fontSize: 9,
     fontWeight: "900",
   },
-  heroMetricLbl: {
-    color: "rgba(255,255,255,0.55)",
+  promoTitle: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 23,
+    marginBottom: 4,
+  },
+  promoSub: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  promoLink: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  promoLinkText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: "900",
+    textDecorationLine: "underline",
+  },
+  heroPromoRight: {
+    width: 88,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  coffeeCupFloating: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  pointsBadge: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  pointsBadgeText: {
+    color: colors.gold,
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  pointsBadgeUnit: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 9,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+
+  // ── Slider Banner (replaces image slider for mission context) ──
+  sliderBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  sliderBannerLeft: {
+    flex: 1,
+  },
+  sliderBannerTag: {
+    color: colors.gold,
+    fontSize: 10,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  sliderBannerTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    marginBottom: 8,
+  },
+  sliderProgressTrack: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    overflow: "hidden",
+    marginBottom: 5,
+  },
+  sliderProgressFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+  },
+  sliderProgressText: {
+    color: "rgba(255,255,255,0.6)",
     fontSize: 10,
     fontWeight: "700",
-    marginTop: 2,
+  },
+  sliderBannerRight: {
+    paddingLeft: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sliderBannerPercent: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    fontWeight: "900",
+  },
+
+  // ── Balance Card (floating overlap — identical to Home) ──
+  balanceCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: -28,
+    marginHorizontal: 2,
+    shadowColor: "#24413D",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  balanceLeft: {
+    flex: 1.2,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 4,
+  },
+  walletIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#EAFBF7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  balanceInfo: {
+    flex: 1,
+  },
+  balanceLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.muted,
     textTransform: "uppercase",
     letterSpacing: 0.3,
+  },
+  balanceAmount: {
+    fontSize: 17,
+    fontWeight: "900",
+    color: colors.text,
+  },
+  balanceDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: colors.line,
+    marginHorizontal: 10,
+  },
+  balanceRight: {
+    alignItems: "center",
+    minWidth: 50,
+  },
+  balanceRightLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  balanceRightValue: {
+    fontSize: 17,
+    fontWeight: "900",
+    color: colors.teal,
+    marginTop: 1,
+  },
+  balanceRightTeam: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.text,
+    marginTop: 1,
+  },
+
+  // ── Service Grid (identical to Home) ──
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginHorizontal: 2,
+  },
+  gridItem: {
+    width: "23%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  gridIconContainer: {
+    position: "relative",
+    marginBottom: 6,
+  },
+  gridIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  gridLiveBadge: {
+    position: "absolute",
+    top: -6,
+    right: -8,
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    backgroundColor: "#EF4444",
+  },
+  gridLiveBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 7,
+    fontWeight: "900",
+  },
+  gridLabel: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  gridPoints: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: 1,
   },
 
   // ── Leaderboard Card ──
   leaderCard: {
     backgroundColor: colors.white,
-    borderRadius: 24,
+    borderRadius: 18,
     padding: spacing.md,
-    borderWidth: 1.5,
+    marginHorizontal: 2,
+    borderWidth: 1,
     borderColor: colors.line,
-    ...shadows.card,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   leaderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 4,
+  },
+  leaderTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
   leaderKicker: {
     color: colors.text,
@@ -805,45 +1310,64 @@ const styles = StyleSheet.create({
     position: "relative",
     marginTop: 4,
   },
-  avatarPositioner: {
+  avatarPos: {
     position: "absolute",
     alignItems: "center",
   },
-  trackAvatarSm: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  avatarSmRing: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: "#E5E7EB",
+    overflow: "hidden",
   },
-  trackAvatarMd: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  avatarSm: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  avatarMdRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2.5,
     borderColor: "#9CA3AF",
+    overflow: "hidden",
   },
-  trackAvatarLg: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 0,
-    borderColor: "transparent",
+  avatarMd: {
+    width: 47,
+    height: 47,
+    borderRadius: 24,
   },
-  avatarRing: {
+  avatarLgRing: {
     width: 66,
     height: 66,
     borderRadius: 33,
-    borderWidth: 3,
-    borderColor: colors.gold,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(244,180,0,0.1)",
+    padding: 3,
+  },
+  avatarLg: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+  },
+  crownWrap: {
+    position: "absolute",
+    top: -20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20,
+  },
+  crownText: {
+    fontSize: 18,
   },
   rankBadge: {
     position: "absolute",
-    bottom: -2,
-    right: -2,
+    bottom: -3,
+    right: -3,
     width: 18,
     height: 18,
     borderRadius: 9,
@@ -852,90 +1376,307 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
-  rankBadgeGold: { backgroundColor: "#FBBF24" },
-  rankBadgeSilver: { backgroundColor: "#9CA3AF" },
-  rankBadgeBronze: { backgroundColor: "#D97706" },
-  rankBadgeGray: { backgroundColor: "#D1D5DB" },
-  rankBadgeText: {
+  rankNum: {
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "900",
     lineHeight: 11,
   },
-  crownWrapper: {
-    position: "absolute",
-    top: -18,
-    left: 0,
-    right: 0,
+  leaderFooter: {
+    flexDirection: "row",
     alignItems: "center",
-    zIndex: 20,
-  },
-  crownEmoji: {
-    fontSize: 18,
-  },
-  leaderFooterRow: {
+    justifyContent: "center",
+    gap: 5,
     marginTop: 8,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: colors.line,
-    alignItems: "center",
   },
   leaderFooterText: {
+    color: colors.muted,
     fontSize: 12,
     fontWeight: "700",
-    color: colors.muted,
     textAlign: "center",
+  },
+
+  // ── Section Title (matches Home) ──
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: colors.text,
+    marginHorizontal: 2,
+    marginBottom: 12,
+    marginTop: 24,
   },
 
   // ── Milestone Card ──
   milestoneCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderRadius: 18,
+    padding: 14,
+    marginHorizontal: 2,
+    gap: 0,
+    borderWidth: 1,
     borderColor: colors.line,
-    gap: spacing.sm,
-    ...shadows.card,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  milestoneProgressTrack: {
-    height: 10,
+  rewardVoteCard: {
+    backgroundColor: "#FFF9EC",
+    borderRadius: 22,
+    padding: 16,
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderColor: "#F1DFB7",
+    shadowColor: "#8C6A2C",
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  rewardVoteHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  rewardVoteIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  rewardVoteHeaderCopy: {
+    flex: 1,
+  },
+  rewardVoteEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 4,
+  },
+  rewardVoteEyebrow: {
+    color: colors.gold,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+  },
+  rewardVoteOpenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     borderRadius: 999,
-    backgroundColor: "#F0F4F3",
-    overflow: "visible",
-    marginVertical: 4,
-    position: "relative",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    backgroundColor: "#E8F8F4",
+    borderWidth: 1,
+    borderColor: "#B8E8DB",
   },
-  milestoneProgressFill: {
+  rewardVoteOpenDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  rewardVoteOpenText: {
+    color: colors.success,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
+  rewardVoteTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+  rewardVoteCopy: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  rewardVoteMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+    marginBottom: 10,
+    paddingTop: 11,
+    borderTopWidth: 1,
+    borderTopColor: "#F0E4C9",
+  },
+  rewardVoteMetaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  rewardVoteMetaText: {
+    color: colors.teal,
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  rewardVoteRule: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  rewardVoteOptions: {
+    gap: 9,
+  },
+  rewardVoteOption: {
+    backgroundColor: colors.white,
+    borderRadius: 15,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#EEE8DB",
+  },
+  rewardVoteOptionSelected: {
+    backgroundColor: "#EAFBF7",
+    borderColor: "#74D8C1",
+    shadowColor: colors.turquoise,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.13,
+    shadowRadius: 7,
+    elevation: 2,
+  },
+  rewardVoteOptionTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  rewardVoteRadio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    backgroundColor: colors.white,
+  },
+  rewardVoteRadioSelected: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.teal,
+  },
+  rewardVoteOptionNameRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  rewardVoteOptionName: {
+    flexShrink: 1,
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  rewardVoteSelectedLabel: {
+    color: colors.teal,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 0.3,
+  },
+  rewardVotePercent: {
+    color: colors.teal,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  rewardVoteTrack: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "#F1F2EE",
+    overflow: "hidden",
+    marginTop: 9,
+  },
+  rewardVoteFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: colors.turquoise,
   },
-  milestoneProgressThumb: {
-    position: "absolute",
-    top: -3,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.teal,
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-    ...shadows.card,
-    marginLeft: -8,
+  rewardVoteOptionFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
   },
-  milestoneList: {
-    gap: 0,
+  rewardVoteVotes: {
+    color: colors.muted,
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  rewardVoteBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#F0E4C9",
+  },
+  rewardVoteBottomIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E7DECA",
+  },
+  rewardVoteBottomText: {
+    flex: 1,
+    color: colors.muted,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "700",
+  },
+  milestoneBarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
+  },
+  milestoneBarTrack: {
+    flex: 1,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#F0F4F3",
+    overflow: "hidden",
+  },
+  milestoneBarFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
+  milestoneBarPercent: {
+    color: colors.teal,
+    fontSize: 13,
+    fontWeight: "900",
+    minWidth: 32,
+    textAlign: "right",
   },
   milestoneRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    borderRadius: radii.md,
+    gap: 12,
+    borderRadius: 12,
     padding: 12,
     backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   milestoneRowCurrent: {
     backgroundColor: "#FFFBEB",
-    borderWidth: 1,
     borderColor: "#FDE68A",
   },
   milestoneLine: {
@@ -945,312 +1686,329 @@ const styles = StyleSheet.create({
     marginLeft: 22,
   },
   milestoneIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.line,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-  },
-  milestoneIconBoxDone: {
-    backgroundColor: "#ECFDF5",
     borderWidth: 1,
+    borderColor: colors.line,
+  },
+  milestoneIconDone: {
+    backgroundColor: "#ECFDF5",
     borderColor: "#6EE7B7",
   },
-  milestoneIconBoxCurrent: {
+  milestoneIconCurrent: {
     backgroundColor: "#FFFBEB",
-    borderWidth: 1,
     borderColor: "#FDE68A",
   },
-  milestoneIcon: {
-    fontSize: 20,
-  },
-  milestoneLabel: {
+  milestonePoin: {
     color: colors.muted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   milestoneTitle: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
-    marginTop: 2,
+    marginTop: 1,
   },
   milestoneTitleLocked: {
     color: colors.muted,
   },
   milestoneStatePill: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: colors.background,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: "#F3F4F6",
     borderWidth: 1,
     borderColor: colors.line,
   },
-  milestoneStatePillDone: {
+  milestoneStateDone: {
     backgroundColor: "#ECFDF5",
     borderColor: "#6EE7B7",
   },
-  milestoneStatePillCurrent: {
+  milestoneStateCurrent: {
     backgroundColor: "#FFFBEB",
     borderColor: "#FDE68A",
   },
   milestoneStateText: {
     color: colors.muted,
-    fontSize: 11,
-    fontWeight: "900",
-  },
-  milestoneStateTextDone: {
-    color: "#059669",
-  },
-  milestoneStateTextCurrent: {
-    color: "#D97706",
-  },
-
-  // ── Task Card ──
-  taskCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    gap: 10,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    ...shadows.card,
-  },
-  taskRow: {
-    borderRadius: radii.md,
-    padding: 14,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  taskRowLive: {
-    backgroundColor: "#F0FDF9",
-    borderWidth: 1.5,
-    borderColor: colors.turquoise,
-  },
-  taskRowDone: {
-    backgroundColor: "#F0FDF9",
-    borderWidth: 1.5,
-    borderColor: "#6EE7B7",
-    opacity: 0.85,
-  },
-  taskCompletedBadge: {
-    alignSelf: "flex-end",
-    marginBottom: 8,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    backgroundColor: "#ECFDF5",
-    borderWidth: 1,
-    borderColor: "#6EE7B7",
-  },
-  taskCompletedText: {
-    color: "#059669",
     fontSize: 10,
     fontWeight: "900",
   },
-  taskTopline: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
+  milestoneStateDoneText: {
+    color: "#059669",
   },
-  taskIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    backgroundColor: colors.white,
+  milestoneStateCurrentText: {
+    color: "#D97706",
+  },
+
+  // ── Live Mission Card (primary — full width green promo) ──
+  liveMissionCard: {
+    borderRadius: 18,
+    padding: 16,
+    marginHorizontal: 2,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.2)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  liveMissionTop: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  liveMissionTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: "rgba(255,255,255,0.24)",
   },
-  taskIconBoxLive: {
-    backgroundColor: colors.teal,
-    borderColor: colors.tealDark,
+  liveMissionTagText: {
+    color: colors.white,
+    fontSize: 9,
+    fontWeight: "900",
   },
-  taskIcon: {
-    fontSize: 20,
-  },
-  taskTitleRow: {
+  livePill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  taskTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "900",
-    flex: 1,
-  },
-  taskTitleDone: {
-    textDecorationLine: "line-through",
-    color: colors.muted,
-  },
-  taskLivePill: {
+    gap: 4,
     borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    backgroundColor: colors.teal,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: "#EF4444",
   },
-  taskLivePillText: {
+  livePillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#FFFFFF",
+  },
+  livePillText: {
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
-  taskCopy: {
-    color: colors.muted,
+  liveMissionBody: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  liveMissionLeft: {
+    flex: 1,
+  },
+  liveMissionTitle: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  liveMissionDesc: {
+    color: "rgba(255,255,255,0.76)",
     fontSize: 12,
     lineHeight: 17,
-    fontWeight: "700",
-    marginTop: 3,
+    fontWeight: "600",
+    marginBottom: 10,
   },
-  taskPointsBubble: {
-    alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.line,
-    minWidth: 48,
-  },
-  taskPointsBubbleLive: {
-    backgroundColor: colors.gold,
-    borderColor: "#E5A800",
-  },
-  taskPoints: {
-    color: colors.teal,
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  taskPointsLive: {
-    color: "#FFFFFF",
-  },
-  taskPointsUnit: {
-    color: colors.muted,
-    fontSize: 9,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  taskPointsUnitLive: {
-    color: "rgba(255,255,255,0.7)",
-  },
-  taskTrack: {
+  missionProgressTrack: {
     height: 6,
     borderRadius: 999,
-    backgroundColor: "rgba(0,0,0,0.06)",
+    backgroundColor: "rgba(255,255,255,0.2)",
     overflow: "hidden",
-    marginTop: 12,
+    marginBottom: 5,
   },
-  taskFill: {
+  missionProgressFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: colors.lineStrong,
   },
-  taskFillLive: {
-    backgroundColor: colors.turquoise,
-  },
-  taskFillDone: {
-    backgroundColor: "#34D399",
-  },
-  taskFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 6,
-  },
-  taskMeta: {
-    color: colors.muted,
+  missionProgressText: {
+    color: "rgba(255,255,255,0.7)",
     fontSize: 11,
     fontWeight: "700",
   },
-  taskPercent: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "900",
-  },
-  taskPercentDone: {
-    color: "#059669",
-  },
-
-  // ── Join Gate ──
-  joinGate: {
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    backgroundColor: "#FFFBEB",
-    borderWidth: 1.5,
-    borderColor: "#FDE68A",
+  liveMissionRight: {
     alignItems: "center",
   },
-  joinIconRow: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#FEF3C7",
+  liveMissionPointBox: {
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    gap: 2,
+  },
+  liveMissionPoints: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  liveMissionPointsUnit: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 9,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+
+  // ── Secondary Mission Cards (2-col carousel) ──
+  secondaryMissionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginHorizontal: 2,
+  },
+  secondaryCard: {
+    width: (SCREEN_WIDTH - 32 - 12) / 2,
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.line,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  secondaryCardDone: {
+    borderColor: "#A7F3D0",
+  },
+  secondaryCardHeader: {
+    height: 80,
+  },
+  secondaryGraphic: {
+    height: 80,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    position: "relative",
+  },
+  secondaryPointsBadge: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: colors.white,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderWidth: 1,
-    borderColor: "#FDE68A",
   },
-  joinIcon: {
-    fontSize: 28,
+  secondaryPointsText: {
+    fontSize: 10,
+    fontWeight: "900",
   },
-  joinTitle: {
+  secondaryCardBody: {
+    padding: 12,
+  },
+  secondaryTag: {
+    fontSize: 9,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  secondaryTitle: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-  joinCopy: {
-    color: colors.muted,
     fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "700",
-    marginTop: 6,
-    textAlign: "center",
-  },
-  joinButton: {
-    marginTop: spacing.md,
-    borderRadius: radii.md,
-    paddingVertical: 15,
-    paddingHorizontal: spacing.lg,
-    alignItems: "center",
-    backgroundColor: colors.teal,
-    ...shadows.card,
-  },
-  joinButtonText: {
-    color: colors.white,
-    fontSize: 14,
     fontWeight: "900",
+    marginBottom: 8,
+    lineHeight: 17,
+  },
+  secondaryTrack: {
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "#F0F4F3",
+    overflow: "hidden",
+    marginBottom: 5,
+  },
+  secondaryFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
+  secondaryMeta: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "700",
   },
 
-  // ── Impact Card ──
-  impactCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    ...shadows.card,
-  },
-  impactCardDone: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: colors.teal,
-    borderWidth: 0,
-    ...shadows.card,
-  },
-  impactHeaderRow: {
+  // ── Join Team Card (green promo style) ──
+  joinCard: {
+    backgroundColor: "#00AA13",
+    borderRadius: 18,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginTop: 6,
+    marginHorizontal: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  joinLeft: {
+    flex: 1,
+  },
+  joinTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  joinTagText: {
+    color: colors.white,
+    fontSize: 9,
+    fontWeight: "900",
+  },
+  joinTitle: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  joinSub: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+  },
+  joinRight: {
+    paddingLeft: 12,
+  },
+  joinChevron: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // ── Impact Cards ──
+  impactCardDone: {
+    borderRadius: 18,
+    padding: 16,
+    marginHorizontal: 2,
+  },
+  impactTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
   impactKickerDone: {
     color: "rgba(255,255,255,0.8)",
@@ -1260,9 +2018,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   impactSuccessPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
     backgroundColor: "rgba(255,255,255,0.18)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
@@ -1275,131 +2036,140 @@ const styles = StyleSheet.create({
   impactGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.sm,
+    gap: 8,
   },
-  impactStat: {
+  impactCell: {
     minWidth: "47%",
     flex: 1,
-    borderRadius: radii.md,
-    padding: spacing.sm,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: "rgba(255,255,255,0.10)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.14)",
+    gap: 3,
   },
-  impactStatIcon: {
-    fontSize: 18,
-    marginBottom: 4,
-  },
-  impactLabel: {
-    color: "rgba(255,255,255,0.65)",
+  impactCellLabel: {
+    color: "rgba(255,255,255,0.6)",
     fontSize: 10,
     fontWeight: "900",
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
-  impactValue: {
+  impactCellValue: {
     color: colors.white,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
     fontWeight: "900",
-    marginTop: 2,
+    lineHeight: 17,
   },
-
-  // ── Share Card ──
-  shareCard: {
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    backgroundColor: "#F0FDF9",
-    borderWidth: 1.5,
-    borderColor: "#A7F3D0",
+  impactCardPending: {
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 14,
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
-  shareIconRow: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.teal,
+  impactPendingRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  impactPendingIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.tealDark,
+    borderColor: colors.line,
   },
-  shareIconEmoji: {
-    fontSize: 24,
-  },
-  shareTitle: {
+  impactPendingTitle: {
     color: colors.text,
-    fontSize: 20,
-    lineHeight: 27,
+    fontSize: 13,
     fontWeight: "900",
-    marginTop: 4,
-  },
-  shareButton: {
-    marginTop: spacing.md,
-    borderRadius: radii.md,
-    paddingVertical: 15,
-    alignItems: "center",
-    backgroundColor: colors.teal,
-    ...shadows.card,
-  },
-  shareButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "900",
-  },
-
-  // ── Shared ──
-  cardHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
     marginBottom: 4,
   },
-  cardKicker: {
-    color: colors.teal,
+  impactPendingText: {
+    color: colors.muted,
     fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    lineHeight: 17,
+    fontWeight: "600",
   },
-  cardTitle: {
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "900",
-    marginTop: 3,
-  },
-  cardCopy: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "700",
-    marginTop: spacing.xs,
-  },
-  percentBubble: {
-    alignItems: "center",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.surfaceGold,
+
+  // ── Share Banner (Flash banner style from Home) ──
+  shareBanner: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#BFDBFE",
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderRadius: 18,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+    marginBottom: 8,
+    marginHorizontal: 2,
+    shadowColor: "#24413D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  percentValue: {
-    color: colors.gold,
-    fontSize: 22,
+  shareBannerLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  shareIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  shareInfo: {
+    flex: 1,
+  },
+  shareRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  shareKicker: {
+    color: "#1D4ED8",
+    fontSize: 13,
     fontWeight: "900",
-    lineHeight: 26,
+    marginRight: 8,
   },
-  percentLabel: {
-    color: colors.muted,
+  shareSuccessBadge: {
+    backgroundColor: colors.teal,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  shareSuccessText: {
+    color: colors.white,
     fontSize: 9,
     fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
   },
-  flexOne: {
-    flex: 1,
+  shareDesc: {
+    color: "#1E40AF",
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 15,
+  },
+  shareBannerRight: {
+    paddingLeft: 8,
+  },
+  shareArrowBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#BFDBFE",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

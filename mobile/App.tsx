@@ -380,13 +380,18 @@ export default function App() {
           onJoinTeam={handleJoinTeam}
           onManualCodeChange={setManualCode}
           onOpenCommunity={() => setActiveTab("community")}
+          onOpenProfile={() => setActiveTab("profile")}
           onOpenRedeem={() => setActiveTab("redeem")}
           onScanCode={handleScannedCode}
           onSubmitMission={handleSubmitMission}
+          onVote={handleSubmitVote}
           scanCompleted={demoState.scanCompleted}
           team={demoState.team}
           user={demoState.user}
+          userVote={demoState.userVote}
           usedQrCodes={demoState.usedQrCodes}
+          voteFeedback={voteFeedback}
+          votePoll={demoState.votePoll}
           verificationLogs={demoState.verificationLogs}
         />
       );
