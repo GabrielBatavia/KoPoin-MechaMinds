@@ -4,7 +4,7 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_SERVER_API_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NSERVER_API ||
-  "http://localhost:8080"
+  "https://kopoin-server.vercel.app"
 ).replace(/\/$/, "");
 
 const getLocal = (key: string) =>
