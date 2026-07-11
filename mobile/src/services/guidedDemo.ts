@@ -64,7 +64,7 @@ export const guidedDemoCheckpoints: readonly GuidedCheckpoint[] = [
     targetKey: "home.join-team",
     requiredAction: "join_team",
     placement: "top",
-    scrollY: 480,
+    scrollY: 300,
     actionHint: "Tekan kartu yang disorot untuk bergabung.",
     isCompleted: (appState) => appState.hasJoinedTeam && appState.user.teamId === appState.team.id
   },
@@ -89,7 +89,7 @@ export const guidedDemoCheckpoints: readonly GuidedCheckpoint[] = [
     targetKey: "mission.scan",
     requiredAction: "scan_demo_code",
     placement: "top",
-    scrollY: 3000,
+    scrollY: 2600,
     actionHint: "Tekan Scan Kode Demo pada area yang disorot.",
     isCompleted: (appState) =>
       appState.scanCompleted && appState.verificationLogs.some((log) => log.status === "verified")
@@ -103,7 +103,7 @@ export const guidedDemoCheckpoints: readonly GuidedCheckpoint[] = [
     targetKey: "mission.impact",
     requiredAction: null,
     placement: "top",
-    scrollY: 3520,
+    scrollY: 3050,
     isCompleted: () => true
   },
   {
@@ -115,7 +115,7 @@ export const guidedDemoCheckpoints: readonly GuidedCheckpoint[] = [
     targetKey: "mission.reward",
     requiredAction: null,
     placement: "top",
-    scrollY: 900,
+    scrollY: 600,
     isCompleted: () => true
   },
   {
@@ -127,7 +127,7 @@ export const guidedDemoCheckpoints: readonly GuidedCheckpoint[] = [
     targetKey: "mission.vote",
     requiredAction: "submit_vote",
     placement: "top",
-    scrollY: 1250,
+    scrollY: 850,
     actionHint: "Pilih satu opsi voting pada kartu yang disorot.",
     isCompleted: (appState) => Boolean(appState.userVote)
   },

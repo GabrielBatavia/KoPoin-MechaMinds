@@ -43,7 +43,7 @@ type SpotlightTargetProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-type GuidedOverlayProps = {
+type GuidedTooltipProps = {
   checkpoint: number;
   total: number;
   title: string;
@@ -85,6 +85,7 @@ export function GuidedTargetProvider({ activeTargetKey, onTargetLayout, children
 
 export function SpotlightTarget({ targetKey, children, style }: SpotlightTargetProps) {
   const targetRef = useRef<View>(null);
+  const lastRectRef = useRef<SpotlightRect | null>(null);
   const { activeTargetKey, registerTarget } = useContext(GuidedTargetContext);
   const isActive = activeTargetKey === targetKey;
 
@@ -96,7 +97,19 @@ export function SpotlightTarget({ targetKey, children, style }: SpotlightTargetP
     requestAnimationFrame(() => {
       targetRef.current?.measureInWindow((x, y, width, height) => {
         if (width > 0 && height > 0) {
-          registerTarget(targetKey, { x, y, width, height });
+          const nextRect = { x, y, width, height };
+          const previousRect = lastRectRef.current;
+          const hasMoved =
+            !previousRect ||
+            Math.abs(previousRect.x - x) > 1 ||
+            Math.abs(previousRect.y - y) > 1 ||
+            Math.abs(previousRect.width - width) > 1 ||
+            Math.abs(previousRect.height - height) > 1;
+
+          if (hasMoved) {
+            lastRectRef.current = nextRect;
+            registerTarget(targetKey, nextRect);
+          }
         }
       });
     });
@@ -104,11 +117,13 @@ export function SpotlightTarget({ targetKey, children, style }: SpotlightTargetP
 
   useEffect(() => {
     if (!isActive) {
+      lastRectRef.current = null;
       return;
     }
 
-    const timeout = setTimeout(measureTarget, 520);
-    return () => clearTimeout(timeout);
+    measureTarget();
+    const interval = setInterval(measureTarget, 320);
+    return () => clearInterval(interval);
   }, [isActive, measureTarget]);
 
   function handleLayout(_: LayoutChangeEvent) {
@@ -122,7 +137,7 @@ export function SpotlightTarget({ targetKey, children, style }: SpotlightTargetP
   );
 }
 
-export function GuidedOverlay({
+export function GuidedTooltip({
   checkpoint,
   total,
   title,
@@ -136,7 +151,7 @@ export function GuidedOverlay({
   onBack,
   onClose,
   onNext
-}: GuidedOverlayProps) {
+}: GuidedTooltipProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const reduceMotion = useReduceMotion();
   const motion = getGuidedMotionConfig(reduceMotion);
@@ -180,6 +195,10 @@ export function GuidedOverlay({
   }, [motion.allowPulse, motion.spotlightDuration, pulse, targetRect]);
 
   const cutout = targetRect ? normalizeRect(targetRect, screenWidth, screenHeight) : null;
+  const tooltipWidth = Math.min(screenWidth - spacing.md * 2, 360);
+  const tooltipLeft = (screenWidth - tooltipWidth) / 2;
+  const targetCenterX = cutout ? cutout.x + cutout.width / 2 : screenWidth / 2;
+  const caretLeft = Math.min(tooltipWidth - 34, Math.max(22, targetCenterX - tooltipLeft - 9));
   const cardStyle =
     placement === "top"
       ? styles.cardTop
@@ -222,9 +241,24 @@ export function GuidedOverlay({
         style={[
           styles.card,
           cardStyle,
-          { opacity: cardOpacity, transform: [{ translateY: cardTranslate }] }
+          {
+            left: tooltipLeft,
+            width: tooltipWidth,
+            opacity: cardOpacity,
+            transform: [{ translateY: cardTranslate }]
+          }
         ]}
       >
+        {cutout && placement !== "center" ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.tooltipCaret,
+              placement === "top" ? styles.tooltipCaretBottom : styles.tooltipCaretTop,
+              { left: caretLeft }
+            ]}
+          />
+        ) : null}
         <View style={styles.cardHeader}>
           <Text style={styles.stepLabel}>{checkpoint}/{total}</Text>
           <TouchableOpacity accessibilityLabel="Tutup simulasi terpandu" onPress={onClose} style={styles.closeButton}>
@@ -303,15 +337,32 @@ const styles = StyleSheet.create({
   },
   card: {
     position: "absolute",
-    left: spacing.md,
-    right: spacing.md,
     borderRadius: radii.lg,
-    padding: spacing.lg,
+    padding: 18,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.line,
     ...shadows.card,
     zIndex: 30
+  },
+  tooltipCaret: {
+    position: "absolute",
+    width: 18,
+    height: 18,
+    backgroundColor: colors.white,
+    transform: [{ rotate: "45deg" }]
+  },
+  tooltipCaretTop: {
+    top: -8,
+    borderLeftWidth: 1,
+    borderTopWidth: 1,
+    borderColor: colors.line
+  },
+  tooltipCaretBottom: {
+    bottom: -8,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.line
   },
   cardTop: {
     top: 24
@@ -342,15 +393,15 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
-    fontSize: 21,
-    lineHeight: 27,
+    fontSize: 19,
+    lineHeight: 25,
     fontWeight: "900",
     marginTop: spacing.sm
   },
   description: {
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "600",
     marginTop: spacing.sm
   },

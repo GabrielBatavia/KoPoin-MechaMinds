@@ -24,10 +24,12 @@ Checklist ini dipakai sebelum rekam video demo, rehearsal pitch, atau handoff ke
 
 ## Demo Core Loop
 
-- [ ] App terbuka dan wizard juri tampil saat first run.
-- [ ] Wizard menjelaskan masalah, solusi, dampak, dan cara mencoba MVP.
-- [ ] Tekan `Masuk ke MVP`.
-- [ ] Beranda Kopoin tampil dengan bottom nav.
+- [ ] App terbuka di Beranda normal dan tooltip Simulasi Terpandu tampil di atasnya.
+- [ ] Spotlight meredupkan latar, menyorot fitur asli, dan caret tooltip mengarah ke target.
+- [ ] Tutup tooltip lalu pastikan Beranda dan seluruh fungsi tetap dapat dipakai normal.
+- [ ] Dari Profil, tekan `Ulangi Simulasi Terpandu` untuk kembali ke langkah pertama.
+- [ ] Selesaikan alur 12 langkah sampai Campaign Console.
+- [ ] Pada langkah aksi wajib, tombol lanjut terkunci sampai target asli ditekan.
 - [ ] Kartu anggota Gabriel tampil.
 - [ ] Koperasi Merah Putih Sukamaju tampil.
 - [ ] Tekan `Gabung Tim Pemuda Sukamaju`.

@@ -38,7 +38,7 @@ import {
 } from "./src/services/guidedDemo";
 import { createAdminDashboard } from "./src/services/adminDashboard";
 import { createTeamWrap } from "./src/services/teamWrap";
-import { GuidedOverlay, GuidedTargetProvider, type SpotlightRect } from "./src/components/guided/GuidedOverlay";
+import { GuidedTargetProvider, GuidedTooltip, type SpotlightRect } from "./src/components/guided/GuidedOverlay";
 import { CommunityHubScreen } from "./src/screens/CommunityHubScreen";
 import { CampaignConsoleDashboardScreen } from "./src/screens/CampaignConsoleDashboardScreen";
 import { HomeDashboardScreen } from "./src/screens/HomeDashboardScreen";
@@ -213,19 +213,13 @@ export default function App() {
     setActiveTab(checkpoint.targetScreen);
 
     const timer = setTimeout(() => {
-      appScrollRef.current?.scrollTo({ y: checkpoint.scrollY, animated: true });
+      appScrollRef.current?.scrollTo({ y: checkpoint.scrollY, animated: false });
     }, 80);
 
     return () => clearTimeout(timer);
   }, [guidedDemo.currentCheckpoint, guidedDemo.isActive]);
 
   function handleStartSimulation() {
-    setDemoState(resetDemoState());
-    setManualCode(validDemoCode);
-    setFeedback("Gabung tim, lalu scan QR atau pakai kode demo untuk menyelesaikan misi.");
-    setFeedbackTone("info");
-    setVoteFeedback("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
-    setActiveTab("home");
     setSpotlightRect(null);
     setGuidedDemo(startGuidedDemo());
   }
@@ -729,7 +723,7 @@ export default function App() {
       </GuidedTargetProvider>
 
       {guidedDemo.isActive && activeGuidedCheckpoint ? (
-        <GuidedOverlay
+        <GuidedTooltip
           checkpoint={activeGuidedCheckpoint.order}
           total={GUIDED_DEMO_TOTAL_CHECKPOINTS}
           title={activeGuidedCheckpoint.title}

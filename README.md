@@ -284,7 +284,7 @@ Kopoin dirancang untuk membantu koperasi:
 
 MVP hackathon saat ini berada di folder [`apps/mobile`](apps/mobile). Aplikasi memakai Expo, React Native, TypeScript, real camera QR path melalui Expo Camera, fallback kode manual, dan mock/local state yang disimpan di perangkat melalui AsyncStorage. Integrasi SIMKOPDES pada tahap ini belum terhubung ke layanan produksi; data anggota, koperasi, campaign, QR, poin, leaderboard, voting, Team Wrap, dan Campaign Console disimulasikan lewat local mock service untuk kebutuhan demo.
 
-Saat pertama dibuka, app menampilkan **wizard untuk juri** yang menjelaskan masalah, arah solusi, dampak untuk koperasi, dan cara mencoba MVP. Setelah itu juri masuk ke app dengan bottom navigation: `Beranda`, `Misi`, `Komunitas`, `Console`, dan `Profil`.
+Saat pertama dibuka, app tetap menampilkan pengalaman Kopoin yang normal dengan **tooltip Simulasi Terpandu** di atas fitur asli. Tooltip meredupkan latar, menyorot komponen yang perlu dilihat atau ditekan, dan menuntun juri melalui 12 langkah dari gabung tim hingga bukti dampak di Campaign Console. Tooltip dapat ditutup kapan saja tanpa mengubah fungsi atau state aplikasi.
 
 ### Menjalankan MVP
 
@@ -307,11 +307,11 @@ Jalur utama untuk penjurian:
 
 1. Jalankan `npm start`.
 2. Scan QR terminal memakai Expo Go di perangkat juri.
-3. Ikuti wizard pembuka.
-4. Dari `Beranda`, tekan `Gabung Tim Pemuda Sukamaju` lalu `Mulai Misi Produk Lokal`.
-5. Di tab `Misi`, izinkan kamera untuk scan QR sungguhan jika tersedia, atau tekan `Scan Kode Demo`.
-6. Lihat perubahan di `Komunitas` dan `Console`.
-7. Gunakan `Profil` -> `Reset Demo` untuk mengulang flow.
+3. Ikuti tooltip Simulasi Terpandu; tekan fitur asli yang disorot saat diminta.
+4. Selesaikan tiga aksi wajib: bergabung tim, `Scan Kode Demo`, dan memilih voting.
+5. Amati perubahan poin, progres, reward, leaderboard, Team Wrap, dan Campaign Console.
+6. Tutup tooltip kapan saja untuk mengeksplor aplikasi secara bebas.
+7. Gunakan `Profil` -> `Ulangi Simulasi Terpandu` atau `Reset Demo State` untuk mengulang flow.
 
 Alternatif run:
 
