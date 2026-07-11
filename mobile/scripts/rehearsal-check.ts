@@ -33,6 +33,7 @@ assert(state.user.teamId === state.team.id, "Gabriel teamId must match Tim Pemud
 let submitResult = submitProductMission(state, "KOPI-SUKAMAJU-001");
 assert(submitResult.status === "success", "Valid QR/manual code must verify successfully.");
 state = submitResult.state;
+const verifiedLedgerLength = state.activityLedger.length;
 
 assert(state.campaign.currentValue === 74, "Campaign progress must update to 74/100.");
 assert(state.user.kopoinBalance === 1850, "Gabriel balance must update to 1.850 Kopoin.");
@@ -40,12 +41,14 @@ assert(state.user.achievementUnlocked, "Achievement must unlock after valid QR."
 assert(state.latestActivity?.userName === "Gabriel", "Latest activity must be Gabriel.");
 assert(state.latestCompletion?.rankAfter === 2, "Completion summary must record rank #2.");
 assert(state.leaderboard.find((entry) => entry.teamId === state.team.id)?.rank === 2, "Leaderboard must show Tim Pemuda Sukamaju rank #2.");
+assert(state.campaign.targetValue - state.campaign.currentValue === 26, "Reward milestone must have 26 actions remaining.");
 
 submitResult = submitProductMission(state, "KOPI-SUKAMAJU-001");
 assert(submitResult.status === "duplicate", "Duplicate QR/manual code must be blocked by duplicate guard.");
 state = submitResult.state;
 assert(state.campaign.currentValue === 74, "Duplicate submit must not increase campaign progress.");
 assert(state.user.kopoinBalance === 1850, "Duplicate submit must not increase balance.");
+assert(state.activityLedger.length === verifiedLedgerLength, "Duplicate submit must not add a second ledger entry.");
 assert(state.verificationLogs[0]?.status === "blocked", "Duplicate submit must create blocked verification log.");
 
 const invalidBase = joinPemudaSukamajuTeam(resetDemoState());

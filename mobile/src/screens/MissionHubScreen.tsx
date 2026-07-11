@@ -41,8 +41,16 @@ import type {
   VerificationLog,
   VotePoll,
 } from "../data/kopoinSeed";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { AnimatedProgressFill } from "../components/ui/AnimatedProgressFill";
+import { MotionPressable } from "../components/ui/MotionPressable";
+import { RewardFeedback } from "../components/ui/RewardFeedback";
+import { useAppActive } from "../hooks/use-app-active";
+import { useReduceMotion } from "../hooks/use-reduce-motion";
+import { getStaggerDelay, motion } from "../motion";
 import { colors, shadows, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
+import { SpotlightTarget } from "../components/guided/GuidedOverlay";
 import { ProductionQRFeedbackTone, ProductionQRScreen } from "./ProductionQRScreen";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -102,8 +110,13 @@ export function MissionHubScreen({
   votePoll,
   verificationLogs,
 }: MissionHubScreenProps) {
+  const appActive = useAppActive();
+  const reduceMotion = useReduceMotion();
   const progressPercent = Math.round((campaign.currentValue / campaign.targetValue) * 100);
   const remainingActions = campaign.targetValue - campaign.currentValue;
+  const primaryMissionCurrent = mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0);
+  const primaryMissionTarget = mission?.target ?? 1;
+  const primaryMissionProgress = Math.min(primaryMissionCurrent / primaryMissionTarget, 1);
   const learningMission = missions.find((m) => m.actionType === "learning");
   const voteMission = missions.find((m) => m.actionType === "vote");
   const inviteMission = missions.find((m) => m.id === "comm_mission_1");
@@ -113,13 +126,20 @@ export function MissionHubScreen({
   // Pulse animation for LIVE dot
   const pulseAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    Animated.loop(
+    if (reduceMotion || !appActive) {
+      pulseAnim.setValue(1);
+      return;
+    }
+
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.5, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.35, duration: 760, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 760, useNativeDriver: true }),
       ])
-    ).start();
-  }, []);
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [appActive, pulseAnim, reduceMotion]);
 
   return (
     <View style={styles.container}>
@@ -178,12 +198,13 @@ export function MissionHubScreen({
         </View>
 
         {/* Promo image slider replaced by promo banner */}
+        <SpotlightTarget targetKey="mission.campaign">
         <View style={styles.sliderBanner}>
           <View style={styles.sliderBannerLeft}>
             <Text style={styles.sliderBannerTag}>🎯 CAMPAIGN</Text>
             <Text style={styles.sliderBannerTitle}>{campaign.title ?? "Dukung UMKM Lokal"}</Text>
             <View style={styles.sliderProgressTrack}>
-              <View style={[styles.sliderProgressFill, { width: `${progressPercent}%` }]} />
+              <AnimatedProgressFill progress={progressPercent / 100} style={styles.sliderProgressFill} />
             </View>
             <Text style={styles.sliderProgressText}>
               {campaign.currentValue}/{campaign.targetValue} Aksi · {progressPercent}% tercapai
@@ -193,6 +214,7 @@ export function MissionHubScreen({
             <Text style={styles.sliderBannerPercent}>{progressPercent}%</Text>
           </View>
         </View>
+        </SpotlightTarget>
       </LinearGradient>
 
       {/* ── 2. KoPoin Balance Card (floating overlap like Home) ── */}
@@ -203,7 +225,7 @@ export function MissionHubScreen({
           </View>
           <View style={styles.balanceInfo}>
             <Text style={styles.balanceLabel}>KoPoin Balance</Text>
-            <Text style={styles.balanceAmount}>{formatNumber(user.kopoinBalance)}</Text>
+            <AnimatedNumber formatter={formatNumber} style={styles.balanceAmount} value={user.kopoinBalance} />
           </View>
         </View>
         <View style={styles.balanceDivider} />
@@ -251,6 +273,7 @@ export function MissionHubScreen({
       </View>
 
       {/* ── 4. Leaderboard Track Card (green promo card width, upgraded) ── */}
+      <SpotlightTarget targetKey="mission.leaderboard">
       <View style={styles.leaderCard}>
         <View style={styles.leaderHeader}>
           <View>
@@ -328,19 +351,23 @@ export function MissionHubScreen({
           <Text style={styles.leaderFooterText}>Tim Pemuda Sukamaju memimpin minggu ini</Text>
         </View>
       </View>
+      </SpotlightTarget>
 
       {/* ── 5. Milestone Progress (same section title + card pattern as Home) ── */}
+      <SpotlightTarget targetKey="mission.reward">
       <Text style={styles.sectionTitle}>Milestone Reward</Text>
       <View style={styles.milestoneCard}>
         {/* Progress bar header */}
         <View style={styles.milestoneBarRow}>
           <View style={styles.milestoneBarTrack}>
-            <LinearGradient
-              colors={[colors.turquoise, colors.teal]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.milestoneBarFill, { width: `${progressPercent}%` }]}
-            />
+            <AnimatedProgressFill progress={progressPercent / 100} style={styles.milestoneBarFill}>
+              <LinearGradient
+                colors={[colors.turquoise, colors.teal]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+            </AnimatedProgressFill>
           </View>
           <Text style={styles.milestoneBarPercent}>{progressPercent}%</Text>
         </View>
@@ -369,8 +396,10 @@ export function MissionHubScreen({
           tone="locked"
         />
       </View>
+      </SpotlightTarget>
 
       {/* ── 6. Pre-mission reward vote ── */}
+      <SpotlightTarget targetKey="mission.vote">
       <Text style={styles.sectionTitle}>Pilih reward misi berikutnya</Text>
       <RewardVoteCard
         poll={votePoll}
@@ -379,6 +408,7 @@ export function MissionHubScreen({
         teamName={team.name}
         onVote={onVote}
       />
+      </SpotlightTarget>
 
       {/* ── 7. Mission Task Cards (carousel-style like Home "pilihan buat kamu") ── */}
       <Text style={styles.sectionTitle}>Tugas Misi Aktif</Text>
@@ -410,23 +440,14 @@ export function MissionHubScreen({
             </Text>
             {/* Progress bar */}
             <View style={styles.missionProgressTrack}>
-              <LinearGradient
-                colors={[colors.turquoise, colors.teal]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.missionProgressFill,
-                  {
-                    width: `${Math.min(
-                      Math.round(
-                        ((mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)) /
-                          (mission?.target ?? 1)) * 100
-                      ),
-                      100
-                    )}%`,
-                  },
-                ]}
-              />
+              <AnimatedProgressFill progress={primaryMissionProgress} style={styles.missionProgressFill}>
+                <LinearGradient
+                  colors={[colors.turquoise, colors.teal]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+              </AnimatedProgressFill>
             </View>
             <Text style={styles.missionProgressText}>
               {mission?.completed ? mission.target ?? 1 : mission?.current ?? (scanCompleted ? 1 : 0)}/
@@ -522,6 +543,8 @@ export function MissionHubScreen({
       />
 
       {/* ── 10. Impact Card ── */}
+      <SpotlightTarget targetKey="mission.impact">
+      <RewardFeedback active={scanCompleted} points={completionSummary?.pointsEarned}>
       {scanCompleted ? (
         <LinearGradient colors={[colors.teal, colors.tealDark]} style={styles.impactCardDone}>
           <View style={styles.impactTopRow}>
@@ -557,7 +580,9 @@ export function MissionHubScreen({
       )}
 
       {/* ── 11. Share / Leaderboard Card (Flash banner style) ── */}
-      <TouchableOpacity style={styles.shareBanner} onPress={onOpenCommunity} activeOpacity={0.85}>
+      </RewardFeedback>
+      </SpotlightTarget>
+      <MotionPressable style={styles.shareBanner} onPress={onOpenCommunity}>
         <View style={styles.shareBannerLeft}>
           <View style={styles.shareIconBox}>
             <Share2 size={16} color="#FFFFFF" />
@@ -583,7 +608,7 @@ export function MissionHubScreen({
             <ArrowRight size={14} color={colors.teal} />
           </View>
         </View>
-      </TouchableOpacity>
+      </MotionPressable>
     </View>
   );
 }
@@ -713,18 +738,25 @@ function RewardVoteCard({
   teamName: string;
   onVote: (optionId: string) => void;
 }) {
+  const reduceMotion = useReduceMotion();
   const cardReveal = useRef(new Animated.Value(0)).current;
   const totalVotes = poll.options.reduce((total, option) => total + option.votes, 0);
   const hasVoted = Boolean(selectedOptionId);
 
   useEffect(() => {
-    Animated.spring(cardReveal, {
+    if (reduceMotion) {
+      cardReveal.setValue(1);
+      return;
+    }
+
+    const animation = Animated.spring(cardReveal, {
       toValue: 1,
-      friction: 8,
-      tension: 42,
+      ...motion.spring,
       useNativeDriver: true,
-    }).start();
-  }, [cardReveal]);
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [cardReveal, reduceMotion]);
 
   return (
     <Animated.View
@@ -802,21 +834,34 @@ function RewardVoteOption({
   isSelected: boolean;
   onVote: (optionId: string) => void;
 }) {
+  const reduceMotion = useReduceMotion();
   const entry = useRef(new Animated.Value(0)).current;
   const pressScale = useRef(new Animated.Value(1)).current;
   const accent = [colors.gold, colors.turquoise, "#8B5CF6"][index % 3];
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.delay(index * 90),
-      Animated.spring(entry, { toValue: 1, friction: 8, tension: 48, useNativeDriver: true }),
-    ]).start();
-  }, [entry, index]);
+    if (reduceMotion) {
+      entry.setValue(1);
+      return;
+    }
+
+    const animation = Animated.sequence([
+      Animated.delay(getStaggerDelay(index)),
+      Animated.spring(entry, { toValue: 1, ...motion.spring, useNativeDriver: true }),
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [entry, index, reduceMotion]);
 
   function handlePress() {
+    if (reduceMotion) {
+      onVote(option.id);
+      return;
+    }
+
     Animated.sequence([
-      Animated.timing(pressScale, { toValue: 0.985, duration: 70, useNativeDriver: true }),
-      Animated.spring(pressScale, { toValue: 1, friction: 5, tension: 180, useNativeDriver: true }),
+      Animated.timing(pressScale, { toValue: motion.scale.press, duration: motion.duration.instant, useNativeDriver: true }),
+      Animated.spring(pressScale, { toValue: 1, ...motion.spring, useNativeDriver: true }),
     ]).start();
     onVote(option.id);
   }
@@ -847,11 +892,9 @@ function RewardVoteOption({
           <Text style={styles.rewardVotePercent}>{option.percent}%</Text>
         </View>
         <View style={styles.rewardVoteTrack}>
-          <Animated.View
-            style={[
-              styles.rewardVoteFill,
-              { width: `${Math.min(option.percent, 100)}%`, backgroundColor: isSelected ? colors.teal : accent },
-            ]}
+          <AnimatedProgressFill
+            progress={option.percent / 100}
+            style={[styles.rewardVoteFill, { backgroundColor: isSelected ? colors.teal : accent }]}
           />
         </View>
         <View style={styles.rewardVoteOptionFooter}>

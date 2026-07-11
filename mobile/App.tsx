@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Platform, StatusBar as RNStatusBar } from "react-native";
+import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Platform, StatusBar as RNStatusBar } from "react-native";
 import { useFonts, Geist_900Black } from "@expo-google-fonts/geist";
 
 import { DemoState, mainMissionId } from "./src/data/kopoinSeed";
-import { createTeamWrap } from "./src/services/teamWrap";
 import {
   getInitialDemoState,
   joinPemudaSukamajuTeam,
@@ -24,9 +24,24 @@ import {
   submitVoteRemote
 } from "./src/services/mobileApi";
 import type { MemberCheckoutRequest, MemberCheckoutResult } from "./src/services/mobileApi";
+import {
+  advanceGuidedDemo,
+  createInitialGuidedDemoState,
+  exitGuidedDemo,
+  finishGuidedDemo,
+  getGuidedCheckpoint,
+  goBackGuidedDemo,
+  GUIDED_DEMO_TOTAL_CHECKPOINTS,
+  normalizeGuidedDemoState,
+  startGuidedDemo,
+  syncGuidedDemoState
+} from "./src/services/guidedDemo";
+import { createAdminDashboard } from "./src/services/adminDashboard";
+import { createTeamWrap } from "./src/services/teamWrap";
+import { GuidedOverlay, GuidedTargetProvider, type SpotlightRect } from "./src/components/guided/GuidedOverlay";
 import { CommunityHubScreen } from "./src/screens/CommunityHubScreen";
+import { CampaignConsoleDashboardScreen } from "./src/screens/CampaignConsoleDashboardScreen";
 import { HomeDashboardScreen } from "./src/screens/HomeDashboardScreen";
-import { JudgeWizardScreen } from "./src/screens/JudgeWizardScreen";
 import { MissionHubScreen } from "./src/screens/MissionHubScreen";
 import { HistorysScreen } from "./src/screens/HistorysScreen";
 import { ProductionQRFeedbackTone } from "./src/screens/ProductionQRScreen";
@@ -36,13 +51,18 @@ import { RedeemPointsScreen } from "./src/screens/RedeemPointsScreen";
 import { QRCodeMemberScreen } from "./src/screens/QRCodeMemberScreen";
 import { ReferralPromoScreen } from "./src/screens/ReferralPromoScreen";
 import { GroceryScreen } from "./src/screens/GroceryScreen";
+import { TeamWrapScreen } from "./src/screens/TeamWrapScreen";
+import { MotionPressable } from "./src/components/ui/MotionPressable";
+import { Reveal } from "./src/components/ui/Reveal";
+import { useReduceMotion } from "./src/hooks/use-reduce-motion";
+import { motion } from "./src/motion";
 import { Home, Target, Scan, TrendingUp, User } from "lucide-react-native";
 import { colors, spacing } from "./src/theme";
 
-type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "redeem" | "referral" | "grocery" | "community_hub";
+type TabId = "home" | "mission" | "community" | "notifications" | "profile" | "redeem" | "referral" | "grocery" | "community_hub" | "team_wrap" | "console";
 
 const demoStateStorageKey = "kopoin-demo-state-v2";
-const wizardSeenStorageKey = "kopoin-wizard-seen-v2";
+const guidedDemoStorageKey = "kopoin-guided-overlay-v1";
 const validDemoCode = "KOPI-SUKAMAJU-001";
 const defaultDemoUserId = "00000000-0000-4000-8000-000000000001";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -65,13 +85,17 @@ export default function App() {
   const [feedbackTone, setFeedbackTone] = useState<ProductionQRFeedbackTone>("info");
   const [isHydrated, setIsHydrated] = useState(false);
   const [manualCode, setManualCode] = useState(validDemoCode);
-  const [showWizard, setShowWizard] = useState(true);
+  const [guidedDemo, setGuidedDemo] = useState(() => createInitialGuidedDemoState());
   const [showAuth, setShowAuth] = useState(false);
+  const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
   const [voteFeedback, setVoteFeedback] = useState("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
+  const appScrollRef = useRef<ScrollView>(null);
 
   const mainMission = demoState.missions.find((mission) => mission.id === mainMissionId);
   const pemudaRank = demoState.leaderboard.find((entry) => entry.teamId === demoState.team.id)?.rank ?? 3;
+  const activeGuidedCheckpoint = getGuidedCheckpoint(guidedDemo.currentCheckpoint);
   const teamWrap = createTeamWrap(demoState);
+  const adminDashboard = createAdminDashboard(demoState);
 
   function getCurrentUserId() {
     return uuidPattern.test(demoState.user.id) ? demoState.user.id : defaultDemoUserId;
@@ -82,9 +106,9 @@ export default function App() {
 
     async function hydrate() {
       try {
-        const [storedState, wizardSeen, loggedIn, dbUserData] = await Promise.all([
+        const [storedState, storedGuidedDemo, loggedIn, dbUserData] = await Promise.all([
           AsyncStorage.getItem(demoStateStorageKey),
-          AsyncStorage.getItem(wizardSeenStorageKey),
+          AsyncStorage.getItem(guidedDemoStorageKey),
           AsyncStorage.getItem("kopoin-logged-in-v2"),
           AsyncStorage.getItem("kopoin-user-data")
         ]);
@@ -94,6 +118,15 @@ export default function App() {
         }
 
         let parsedState: DemoState = getInitialDemoState();
+        let parsedGuidedDemo = storedGuidedDemo
+          ? normalizeGuidedDemoState(JSON.parse(storedGuidedDemo))
+          : createInitialGuidedDemoState();
+        const hasLoggedIn = loggedIn === "true";
+
+        if (!storedGuidedDemo && hasLoggedIn) {
+          parsedGuidedDemo = startGuidedDemo();
+        }
+
         if (storedState) {
           parsedState = JSON.parse(storedState) as DemoState;
         }
@@ -108,26 +141,24 @@ export default function App() {
           };
         }
 
-        const remoteUserId = uuidPattern.test(parsedState.user.id) ? parsedState.user.id : defaultDemoUserId;
+        if (hasLoggedIn) {
+          const remoteUserId = uuidPattern.test(parsedState.user.id) ? parsedState.user.id : defaultDemoUserId;
 
-        try {
-          const remoteState = await fetchMobileState(remoteUserId);
-          parsedState = remoteState;
-        } catch {
-          // Keep local demo state when backend is not ready.
+          try {
+            const remoteState = await fetchMobileState(remoteUserId);
+            parsedState = remoteState;
+          } catch {
+            // Keep local demo state when backend is not ready.
+          }
         }
 
         setDemoState(parsedState);
-
-        const hasSeenWizard = wizardSeen === "true";
-        const hasLoggedIn = loggedIn === "true";
-
-        setShowWizard(!hasSeenWizard);
+        setGuidedDemo(parsedGuidedDemo);
         setShowAuth(!hasLoggedIn);
       } catch {
         if (isMounted) {
           setDemoState(getInitialDemoState());
-          setShowWizard(true);
+          setGuidedDemo(createInitialGuidedDemoState());
           setShowAuth(true);
         }
       } finally {
@@ -157,12 +188,69 @@ export default function App() {
       return;
     }
 
-    AsyncStorage.setItem(wizardSeenStorageKey, showWizard ? "false" : "true").catch(() => undefined);
-  }, [isHydrated, showWizard]);
+    AsyncStorage.setItem(guidedDemoStorageKey, JSON.stringify(guidedDemo)).catch(() => undefined);
+  }, [guidedDemo, isHydrated]);
 
-  function handleFinishWizard() {
-    setShowWizard(false);
-    setShowAuth(true);
+  useEffect(() => {
+    if (!guidedDemo.isActive) {
+      return;
+    }
+
+    setGuidedDemo((current) => syncGuidedDemoState(current, demoState));
+  }, [demoState, guidedDemo.isActive]);
+
+  useEffect(() => {
+    if (!guidedDemo.isActive) {
+      return;
+    }
+
+    const checkpoint = getGuidedCheckpoint(guidedDemo.currentCheckpoint);
+    if (!checkpoint) {
+      return;
+    }
+
+    setSpotlightRect(null);
+    setActiveTab(checkpoint.targetScreen);
+
+    const timer = setTimeout(() => {
+      appScrollRef.current?.scrollTo({ y: checkpoint.scrollY, animated: true });
+    }, 80);
+
+    return () => clearTimeout(timer);
+  }, [guidedDemo.currentCheckpoint, guidedDemo.isActive]);
+
+  function handleStartSimulation() {
+    setDemoState(resetDemoState());
+    setManualCode(validDemoCode);
+    setFeedback("Gabung tim, lalu scan QR atau pakai kode demo untuk menyelesaikan misi.");
+    setFeedbackTone("info");
+    setVoteFeedback("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
+    setActiveTab("home");
+    setSpotlightRect(null);
+    setGuidedDemo(startGuidedDemo());
+  }
+
+  function handleExitSimulation() {
+    setGuidedDemo((current) => exitGuidedDemo(current));
+    setSpotlightRect(null);
+    if (activeTab === "team_wrap" || activeTab === "console") {
+      setActiveTab("home");
+    }
+  }
+
+  function handleAdvanceSimulation() {
+    setGuidedDemo((current) => advanceGuidedDemo(current, demoState));
+  }
+
+  function handleBackSimulation() {
+    setGuidedDemo((current) => goBackGuidedDemo(current, demoState));
+  }
+
+  function handleFinishSimulation() {
+    setGuidedDemo((current) => finishGuidedDemo(current));
+    setSpotlightRect(null);
+    setActiveTab("home");
+    appScrollRef.current?.scrollTo({ y: 0, animated: false });
   }
 
   function handleAuthSuccess() {
@@ -189,6 +277,8 @@ export default function App() {
     }).catch(() => undefined);
 
     setActiveTab("home");
+    setSpotlightRect(null);
+    setGuidedDemo(startGuidedDemo());
   }
 
   async function handleJoinTeam() {
@@ -241,10 +331,12 @@ export default function App() {
 
   function handleResetDemo() {
     setDemoState(resetDemoState());
+    setGuidedDemo(createInitialGuidedDemoState());
     setManualCode(validDemoCode);
     setFeedback("State demo kembali ke awal: progress 73/100, saldo 1.730, rank 3.");
     setFeedbackTone("info");
     setVoteFeedback("Pilih reward berikutnya agar suara anggota muda terlihat di Campaign Console.");
+    setSpotlightRect(null);
     AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
     AsyncStorage.removeItem("kopoin-user-token").catch(() => undefined);
     AsyncStorage.removeItem("kopoin-user-refresh-token").catch(() => undefined);
@@ -427,19 +519,20 @@ export default function App() {
       );
     }
 
+    if (activeTab === "team_wrap") {
+      return <TeamWrapScreen wrap={teamWrap} />;
+    }
+
+    if (activeTab === "console") {
+      return <CampaignConsoleDashboardScreen dashboard={adminDashboard} compact />;
+    }
+
     return (
       <ProfileControlScreen
         completionSummary={demoState.latestCompletion}
         cooperative={demoState.cooperative}
         hasJoinedTeam={demoState.hasJoinedTeam}
-        onReplayWizard={() => {
-          AsyncStorage.removeItem("kopoin-logged-in-v2").catch(() => undefined);
-          AsyncStorage.removeItem("kopoin-user-token").catch(() => undefined);
-          AsyncStorage.removeItem("kopoin-user-refresh-token").catch(() => undefined);
-          AsyncStorage.removeItem("kopoin-user-data").catch(() => undefined);
-          setShowAuth(true);
-          setShowWizard(true);
-        }}
+        onReplayWizard={handleStartSimulation}
         onResetDemo={handleResetDemo}
         persisted={isHydrated}
         scanCompleted={demoState.scanCompleted}
@@ -459,43 +552,45 @@ export default function App() {
           
           if (tab.id === "community") {
             return (
-              <TouchableOpacity
+              <MotionPressable
                 key={tab.id}
                 onPress={() => setActiveTab(tab.id)}
                 style={styles.navFabContainer}
-                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Buka QR Code"
+                pressedScale={0.96}
               >
                 <View style={styles.navFabCircle}>
                   <Scan size={26} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-              </TouchableOpacity>
+              </MotionPressable>
             );
           }
 
           return (
-            <TouchableOpacity
+            <BottomNavItem
               key={tab.id}
+              isActive={isActive}
+              label={tab.label}
               onPress={() => setActiveTab(tab.id)}
-              style={styles.navItem}
-              activeOpacity={0.7}
+              icon={
+                <>
+                  {tab.id === "home" && (
+                    <Home size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} />
+                  )}
+                  {tab.id === "mission" && (
+                    <Target size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} />
+                  )}
+                  {tab.id === "notifications" && (
+                    <TrendingUp size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} />
+                  )}
+                  {tab.id === "profile" && (
+                    <User size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} />
+                  )}
+                </>
+              }
             >
-              {tab.id === "home" && (
-                <Home size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
-              )}
-              {tab.id === "mission" && (
-                <Target size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
-              )}
-              {tab.id === "notifications" && (
-                <TrendingUp size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
-              )}
-              {tab.id === "profile" && (
-                <User size={22} color={isActive ? colors.teal : colors.muted} strokeWidth={isActive ? 2.5 : 2} style={styles.navIcon} />
-              )}
-
-              <Text style={isActive ? styles.navLabelActive : styles.navLabel}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
+            </BottomNavItem>
           );
         })}
       </View>
@@ -512,14 +607,11 @@ export default function App() {
     );
   }
 
-  if (showWizard) {
-    return <JudgeWizardScreen onFinish={handleFinishWizard} onSkip={handleFinishWizard} />;
-  }
-
   if (showAuth) {
     return <AuthScreen onSuccess={handleAuthSuccess} />;
   }
 
+  function renderAppShell() {
   if (activeTab === "redeem") {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -610,15 +702,127 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        {renderActiveScreen()}
+      <ScrollView
+        ref={appScrollRef}
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Reveal key={activeTab} distance={8} style={styles.screenReveal}>
+          {renderActiveScreen()}
+        </Reveal>
       </ScrollView>
-      {renderBottomNav()}
+      {activeTab === "team_wrap" || activeTab === "console" ? null : renderBottomNav()}
     </SafeAreaView>
+  );
+  }
+
+  const appShell = renderAppShell();
+
+  return (
+    <View style={styles.appRoot}>
+      <GuidedTargetProvider
+        activeTargetKey={guidedDemo.isActive ? activeGuidedCheckpoint?.targetKey ?? null : null}
+        onTargetLayout={setSpotlightRect}
+      >
+        {appShell}
+      </GuidedTargetProvider>
+
+      {guidedDemo.isActive && activeGuidedCheckpoint ? (
+        <GuidedOverlay
+          checkpoint={activeGuidedCheckpoint.order}
+          total={GUIDED_DEMO_TOTAL_CHECKPOINTS}
+          title={activeGuidedCheckpoint.title}
+          description={activeGuidedCheckpoint.description}
+          actionHint={activeGuidedCheckpoint.actionHint}
+          placement={activeGuidedCheckpoint.placement}
+          targetRect={spotlightRect}
+          canGoBack={activeGuidedCheckpoint.order > 1}
+          canAdvance={guidedDemo.isRequiredActionCompleted}
+          isLast={activeGuidedCheckpoint.order === GUIDED_DEMO_TOTAL_CHECKPOINTS}
+          onBack={handleBackSimulation}
+          onClose={handleExitSimulation}
+          onNext={
+            activeGuidedCheckpoint.order === GUIDED_DEMO_TOTAL_CHECKPOINTS
+              ? handleFinishSimulation
+              : handleAdvanceSimulation
+          }
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function BottomNavItem({
+  icon,
+  isActive,
+  label,
+  onPress,
+}: {
+  icon: ReactNode;
+  isActive: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  const reduceMotion = useReduceMotion();
+  const activeProgress = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+
+  useEffect(() => {
+    activeProgress.stopAnimation();
+    if (reduceMotion) {
+      activeProgress.setValue(isActive ? 1 : 0);
+      return;
+    }
+
+    const animation = Animated.timing(activeProgress, {
+      toValue: isActive ? 1 : 0,
+      duration: motion.duration.fast,
+      easing: motion.easing.enter,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [activeProgress, isActive, reduceMotion]);
+
+  return (
+    <MotionPressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      onPress={onPress}
+      style={styles.navItem}
+    >
+      <Animated.View
+        style={[
+          styles.navIcon,
+          {
+            transform: [
+              { translateY: activeProgress.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) },
+              { scale: activeProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) },
+            ],
+          },
+        ]}
+      >
+        {icon}
+      </Animated.View>
+      <Text style={isActive ? styles.navLabelActive : styles.navLabel}>{label}</Text>
+      <Animated.View
+        style={[
+          styles.navActiveDot,
+          {
+            opacity: activeProgress,
+            transform: [{ scaleX: activeProgress }],
+          },
+        ]}
+      />
+    </MotionPressable>
   );
 }
 
 const styles = StyleSheet.create({
+  appRoot: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -627,6 +831,9 @@ const styles = StyleSheet.create({
   page: {
     padding: spacing.md,
     paddingBottom: 112
+  },
+  screenReveal: {
+    width: "100%"
   },
   loadingScreen: {
     flex: 1,
@@ -668,6 +875,13 @@ const styles = StyleSheet.create({
   },
   navIcon: {
     marginBottom: 2
+  },
+  navActiveDot: {
+    width: 14,
+    height: 2,
+    marginTop: 1,
+    borderRadius: 999,
+    backgroundColor: colors.turquoise
   },
   navLabelActive: {
     color: colors.teal,

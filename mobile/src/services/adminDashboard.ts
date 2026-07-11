@@ -51,14 +51,29 @@ export function createAdminDashboard(state: DemoState): AdminDashboardData {
   return {
     kpis: [
       {
+        label: "Progress Campaign",
+        value: `${state.campaign.currentValue}/${state.campaign.targetValue}`,
+        helper: `${progressPercent}% menuju reward bersama.`
+      },
+      {
+        label: "Aksi Terverifikasi",
+        value: String(verifiedLogCount),
+        helper: "Kontribusi Gabriel yang lolos validasi."
+      },
+      {
         label: "Anggota Aktif",
         value: String(activeMembers),
         helper: "User unik dengan aktivitas ledger."
       },
       {
-        label: "Misi Selesai",
+        label: "Partisipasi Voting",
+        value: String(votingParticipation),
+        helper: state.userVote ? `Gabriel memilih ${state.userVote.optionLabel}.` : "Belum ada voting dari Gabriel."
+      },
+      {
+        label: "Aksi Tercatat",
         value: String(missionCompletions),
-        helper: "Semua aksi verified di activity ledger."
+        helper: "Semua aktivitas verified di ledger."
       },
       {
         label: "Kopoin Dibagikan",
@@ -66,24 +81,9 @@ export function createAdminDashboard(state: DemoState): AdminDashboardData {
         helper: "Total poin dari aksi verified."
       },
       {
-        label: "Progress Campaign",
-        value: `${state.campaign.currentValue}/${state.campaign.targetValue}`,
-        helper: `${progressPercent}% menuju reward bersama.`
-      },
-      {
-        label: "Log Valid",
-        value: String(verifiedLogCount),
-        helper: "Percobaan Gabriel yang lolos validasi."
-      },
-      {
         label: "Guard Aktif",
         value: `${blockedLogCount}/${rejectedLogCount}`,
         helper: "Blocked/rejected dari duplicate atau invalid."
-      },
-      {
-        label: "Partisipasi Voting",
-        value: String(votingParticipation),
-        helper: state.userVote ? `Gabriel memilih ${state.userVote.optionLabel}.` : "Belum ada voting dari Gabriel."
       }
     ],
     campaignTitle: state.campaign.title,

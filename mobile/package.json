@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "rehearse": "npx --yes tsx scripts/rehearsal-check.ts"
+    "rehearse": "npx --yes tsx scripts/rehearsal-check.ts",
+    "test:guided": "npx --yes tsx scripts/guided-demo-check.ts"
   },
   "dependencies": {
     "@expo-google-fonts/geist": "^0.4.2",

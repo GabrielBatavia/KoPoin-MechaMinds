@@ -5,14 +5,20 @@ import { Section } from "../components/ui/Section";
 import type { AdminDashboardData } from "../services/adminDashboard";
 import { colors, radii, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
+import { SpotlightTarget } from "../components/guided/GuidedOverlay";
 
 type CampaignConsoleDashboardScreenProps = {
   dashboard: AdminDashboardData;
+  compact?: boolean;
 };
 
-export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDashboardScreenProps) {
+export function CampaignConsoleDashboardScreen({ dashboard, compact = false }: CampaignConsoleDashboardScreenProps) {
+  const visibleKpis = compact ? dashboard.kpis.slice(0, 4) : dashboard.kpis;
+  const visibleActivities = compact ? dashboard.activityFeed.slice(0, 2) : dashboard.activityFeed;
+  const visibleVerificationLogs = compact ? dashboard.verificationLogs.slice(0, 2) : dashboard.verificationLogs;
+
   return (
-    <Section title="Campaign Console" eyebrow="Sprint 2 P0">
+    <Section title="Campaign Console" eyebrow={compact ? "State simulasi yang sama" : "Sprint 2 P0"}>
       <View style={styles.adminHeader}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Mock API SIMKOPDES</Text>
@@ -24,15 +30,17 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
         </View>
       </View>
 
+      <SpotlightTarget targetKey="console.kpis">
       <View style={styles.kpiGrid}>
-        {dashboard.kpis.map((kpi) => (
-          <View key={kpi.label} style={styles.kpiCard}>
+        {visibleKpis.map((kpi, index) => (
+          <View key={kpi.label} style={[styles.kpiCard, compact && index < 2 && styles.kpiCardHighlighted]}>
             <Text style={styles.kpiLabel}>{kpi.label}</Text>
             <Text style={styles.kpiValue}>{kpi.value}</Text>
             <Text style={styles.kpiHelper}>{kpi.helper}</Text>
           </View>
         ))}
       </View>
+      </SpotlightTarget>
 
       <View style={styles.progressPanel}>
         <View style={styles.progressTopline}>
@@ -50,7 +58,7 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
 
       <View style={styles.feedPanel}>
         <Text style={styles.panelTitle}>Performa tim</Text>
-        {dashboard.teamPerformance.map((team) => (
+        {(compact ? dashboard.teamPerformance.slice(0, 3) : dashboard.teamPerformance).map((team) => (
           <View key={team.teamId} style={team.isCurrentTeam ? styles.teamRowActive : styles.teamRow}>
             <Text style={styles.rankText}>#{team.rank}</Text>
             <View style={styles.rowBody}>
@@ -62,7 +70,8 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
         ))}
       </View>
 
-      <View style={styles.feedPanel}>
+      {!compact ? (
+        <View style={styles.feedPanel}>
         <Text style={styles.panelTitle}>Kinerja misi</Text>
         {dashboard.missionPerformance.map((mission) => (
           <View key={mission.missionTitle} style={styles.missionRow}>
@@ -73,11 +82,13 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
             <Text style={styles.scoreText}>{mission.completions}x · {formatNumber(mission.pointsIssued)}</Text>
           </View>
         ))}
-      </View>
+        </View>
+      ) : null}
 
+      <SpotlightTarget targetKey="console.activity">
       <View style={styles.feedPanel}>
         <Text style={styles.panelTitle}>Activity ledger</Text>
-        {dashboard.activityFeed.map((activity) => (
+        {visibleActivities.map((activity) => (
           <View key={activity.id} style={activity.userName === "Gabriel" ? styles.activityRowActive : styles.activityRow}>
             <View style={styles.activityHeader}>
               <Text style={styles.cardTitle}>{activity.userName} · {activity.status}</Text>
@@ -92,8 +103,8 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
 
       <View style={styles.feedPanel}>
         <Text style={styles.panelTitle}>QR verification log</Text>
-        {dashboard.verificationLogs.length > 0 ? (
-          dashboard.verificationLogs.map((log) => (
+        {visibleVerificationLogs.length > 0 ? (
+          visibleVerificationLogs.map((log) => (
             <View key={log.id} style={styles.verificationRow}>
               <Text style={statusStyles[log.status]}>{log.status.toUpperCase()}</Text>
               <View style={styles.rowBody}>
@@ -106,6 +117,7 @@ export function CampaignConsoleDashboardScreen({ dashboard }: CampaignConsoleDas
           <Text style={styles.bodyText}>Belum ada percobaan QR.</Text>
         )}
       </View>
+      </SpotlightTarget>
 
       <View style={styles.syncNote}>
         <Text style={styles.syncText}>{dashboard.syncNote}</Text>
@@ -173,6 +185,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cream,
     borderWidth: 1,
     borderColor: colors.creamStrong
+  },
+  kpiCardHighlighted: {
+    backgroundColor: "#ECFFFA",
+    borderColor: "#9EDFD1"
   },
   kpiLabel: {
     color: colors.muted,

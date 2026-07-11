@@ -7,6 +7,9 @@ import * as Location from "expo-location";
 import type { NearbyTeam } from "../data/kopoinSeed";
 import type { CompleteOnboardingInput } from "../services/demoState";
 import { OpenStreetMapViewer } from "../components/OpenStreetMapViewer";
+import { useAppActive } from "../hooks/use-app-active";
+import { useReduceMotion } from "../hooks/use-reduce-motion";
+import { motion } from "../motion";
 import { colors, radii, shadows, spacing } from "../theme";
 
 type ActivationStep = "account" | "address" | "scan" | "join" | "success";
@@ -25,6 +28,8 @@ const activationSteps: { id: ActivationStep; label: string }[] = [
 ];
 
 export function ActivationOnboardingScreen({ nearbyTeams, onComplete }: ActivationOnboardingScreenProps) {
+  const appActive = useAppActive();
+  const reduceMotion = useReduceMotion();
   const [step, setStep] = useState<ActivationStep>("account");
   const [fullName, setFullName] = useState("Gabriel Batavia");
   const [email, setEmail] = useState("gabriel@kopoin.id");
@@ -52,17 +57,24 @@ export function ActivationOnboardingScreen({ nearbyTeams, onComplete }: Activati
       return;
     }
 
+    if (reduceMotion || !appActive) {
+      setScanRevealed(true);
+      radarScale.setValue(1);
+      radarOpacity.setValue(0.5);
+      return;
+    }
+
     setScanRevealed(false);
-    const revealTimer = setTimeout(() => setScanRevealed(true), 850);
+    const revealTimer = setTimeout(() => setScanRevealed(true), motion.duration.slow);
     const loop = Animated.loop(
       Animated.parallel([
         Animated.sequence([
-          Animated.timing(radarScale, { duration: 900, toValue: 1.12, useNativeDriver: true }),
-          Animated.timing(radarScale, { duration: 900, toValue: 0.72, useNativeDriver: true })
+          Animated.timing(radarScale, { duration: motion.duration.celebration, toValue: 1.08, useNativeDriver: true }),
+          Animated.timing(radarScale, { duration: motion.duration.celebration, toValue: 0.76, useNativeDriver: true })
         ]),
         Animated.sequence([
-          Animated.timing(radarOpacity, { duration: 900, toValue: 0.28, useNativeDriver: true }),
-          Animated.timing(radarOpacity, { duration: 900, toValue: 0.92, useNativeDriver: true })
+          Animated.timing(radarOpacity, { duration: motion.duration.celebration, toValue: 0.3, useNativeDriver: true }),
+          Animated.timing(radarOpacity, { duration: motion.duration.celebration, toValue: 0.82, useNativeDriver: true })
         ])
       ])
     );
@@ -73,7 +85,7 @@ export function ActivationOnboardingScreen({ nearbyTeams, onComplete }: Activati
       clearTimeout(revealTimer);
       loop.stop();
     };
-  }, [radarOpacity, radarScale, step]);
+  }, [appActive, radarOpacity, radarScale, reduceMotion, step]);
 
   function goNext() {
     if (step === "account") {

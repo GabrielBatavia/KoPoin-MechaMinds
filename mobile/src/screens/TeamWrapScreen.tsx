@@ -5,6 +5,7 @@ import { Section } from "../components/ui/Section";
 import type { TeamWrapData } from "../services/teamWrap";
 import { colors, radii, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
+import { SpotlightTarget } from "../components/guided/GuidedOverlay";
 
 type TeamWrapScreenProps = {
   wrap: TeamWrapData;
@@ -13,6 +14,7 @@ type TeamWrapScreenProps = {
 export function TeamWrapScreen({ wrap }: TeamWrapScreenProps) {
   return (
     <Section title="Team Wrap" eyebrow="Sprint 2 P1">
+      <SpotlightTarget targetKey="team-wrap.card">
       <View style={styles.wrapFrame}>
         <View style={styles.orbLarge} />
         <View style={styles.orbSmall} />
@@ -56,6 +58,7 @@ export function TeamWrapScreen({ wrap }: TeamWrapScreenProps) {
           <Text style={styles.footerBrand}>Kopoin · Setiap Aksi Punya Nilai</Text>
         </View>
       </View>
+      </SpotlightTarget>
 
       <View style={styles.noteBox}>
         <Text style={styles.noteText}>Card ini screenshot-ready untuk demo. Native share bisa ditambahkan setelah core loop tetap stabil.</Text>

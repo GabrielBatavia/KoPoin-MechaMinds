@@ -38,101 +38,11 @@ import {
   Globe
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
+import { MotionPressable } from "../components/ui/MotionPressable";
+import { useReduceMotion } from "../hooks/use-reduce-motion";
+import { motion } from "../motion";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_ROOT_URL } from "../config/api";
-
-const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get("window");
-
-const CONFETTI_COLORS = ["#FFD700", "#FF4500", "#1E90FF", "#32CD32", "#FF69B4", "#8A2BE2", "#00FFFF"];
-
-type ConfettiPieceProps = {
-  delay: number;
-};
-
-function ConfettiPiece({ delay }: ConfettiPieceProps) {
-  const fallAnim = useRef(new Animated.Value(-50)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const swingAnim = useRef(new Animated.Value(0)).current;
-
-  const randomLeft = useRef(Math.random() * (WINDOW_WIDTH - 20)).current;
-  const randomSize = useRef(Math.random() * 8 + 6).current;
-  const randomColor = useRef(CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]).current;
-  const randomDuration = useRef(Math.random() * 2000 + 2500).current;
-  const randomRotate = useRef((Math.random() * 360).toString() + "deg").current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          Animated.timing(fallAnim, {
-            toValue: WINDOW_HEIGHT,
-            duration: randomDuration,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: randomDuration,
-            useNativeDriver: true,
-          }),
-          Animated.timing(swingAnim, {
-            toValue: 1,
-            duration: randomDuration * 0.5,
-            useNativeDriver: true,
-          })
-        ])
-      ])
-    ).start();
-  }, []);
-
-  const rotateValue = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [randomRotate, "720deg"]
-  });
-
-  const translateX = swingAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, Math.random() * 30 - 15, 0]
-  });
-
-  return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        left: randomLeft,
-        top: 0,
-        width: randomSize,
-        height: randomSize * (Math.random() > 0.5 ? 1.5 : 1),
-        backgroundColor: randomColor,
-        borderRadius: Math.random() > 0.7 ? 999 : 0,
-        transform: [
-          { translateY: fallAnim },
-          { rotate: rotateValue },
-          { translateX: translateX }
-        ],
-        opacity: 0.8,
-        zIndex: 99
-      }}
-    />
-  );
-}
-
-function ConfettiRain() {
-  const pieces = useRef(
-    Array.from({ length: 45 }).map((_, i) => ({
-      id: i,
-      delay: Math.random() * 3000
-    }))
-  ).current;
-
-  return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-      {pieces.map((piece) => (
-        <ConfettiPiece key={piece.id} delay={piece.delay} />
-      ))}
-    </View>
-  );
-}
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -143,33 +53,29 @@ type AuthScreenProps = {
 const API_URL = API_ROOT_URL;
 
 export function AuthScreen({ onSuccess }: AuthScreenProps) {
+  const reduceMotion = useReduceMotion();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [registerStep, setRegisterStep] = useState(1);
   const [isRegistered, setIsRegistered] = useState(false);
 
-  // Floating animation for mascot
+  // One-shot success entrance; no decorative loop remains active.
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (isRegistered) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(floatAnim, {
-            toValue: -12,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(floatAnim, {
-            toValue: 0,
-            duration: 1500,
-            useNativeDriver: true,
-          })
-        ])
-      ).start();
-    } else {
+    if (!isRegistered || reduceMotion) {
       floatAnim.setValue(0);
+      return;
     }
-  }, [isRegistered]);
+
+    floatAnim.setValue(14);
+    const animation = Animated.spring(floatAnim, {
+      toValue: 0,
+      ...motion.spring,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [floatAnim, isRegistered, reduceMotion]);
 
   // Dev Easter Egg Tap trigger
   const [logoTapCount, setLogoTapCount] = useState(0);
@@ -313,9 +219,6 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
     return (
       <SafeAreaView style={styles.successScreen}>
         <StatusBar style="dark" />
-        {/* Falling Confetti Rain animation */}
-        <ConfettiRain />
-
         <View style={styles.successContent}>
           <Animated.Image
             source={require("../assets/images/maskot-1.png")}
@@ -330,13 +233,12 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
           <Text style={styles.successSubtitle}>Selamat menikmati layanan Kopoin. Mari bersama majukan Koperasi Desa!</Text>
         </View>
 
-        <TouchableOpacity
+        <MotionPressable
           style={styles.successBtn}
           onPress={onSuccess}
-          activeOpacity={0.8}
         >
           <Text style={styles.successBtnText}>SELESAI</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </SafeAreaView>
     );
   }

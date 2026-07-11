@@ -371,7 +371,7 @@ export function ProfileControlScreen({
             <RotateCcw size={16} color={colors.muted} />
           </View>
           <View style={styles.controlInfo}>
-            <Text style={styles.controlTitle}>Kontrol Demo</Text>
+            <Text style={styles.controlTitle}>Kontrol Simulasi</Text>
             <Text style={styles.controlSub}>
               State {persisted ? "tersimpan" : "memuat"} · Reset ke progress 73/100, saldo 1.730, rank #3
             </Text>
@@ -380,11 +380,11 @@ export function ProfileControlScreen({
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.primaryButton} onPress={onResetDemo} activeOpacity={0.8}>
             <RotateCcw size={14} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Reset Demo</Text>
+            <Text style={styles.primaryButtonText}>Reset Demo State</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryButton} onPress={onReplayWizard} activeOpacity={0.8}>
             <Play size={14} color={colors.teal} />
-            <Text style={styles.secondaryButtonText}>Replay Wizard</Text>
+            <Text style={styles.secondaryButtonText}>Ulangi Simulasi Terpandu</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.controlNote}>
@@ -1165,7 +1165,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   buttonRow: {
-    flexDirection: "row",
     gap: spacing.sm,
   },
   primaryButton: {

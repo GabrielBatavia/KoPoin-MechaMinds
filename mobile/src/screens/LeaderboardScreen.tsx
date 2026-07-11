@@ -2,7 +2,10 @@ import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 
 import { Section } from "../components/ui/Section";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import type { CompletionSummary, LeaderboardEntry } from "../data/kopoinSeed";
+import { useReduceMotion } from "../hooks/use-reduce-motion";
+import { motion } from "../motion";
 import { colors, radii, spacing } from "../theme";
 import { formatNumber } from "../utils/formatters";
 
@@ -59,16 +62,23 @@ function LeaderboardRow({
   isCurrentTeam: boolean;
   scanCompleted: boolean;
 }) {
+  const reduceMotion = useReduceMotion();
   const rowAnim = useRef(new Animated.Value(isCurrentTeam && scanCompleted ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(rowAnim, {
+    if (reduceMotion) {
+      rowAnim.setValue(isCurrentTeam && scanCompleted ? 1 : 0);
+      return;
+    }
+
+    const animation = Animated.spring(rowAnim, {
       toValue: isCurrentTeam && scanCompleted ? 1 : 0,
-      friction: 8,
-      tension: 95,
+      ...motion.spring,
       useNativeDriver: true
-    }).start();
-  }, [isCurrentTeam, rowAnim, scanCompleted]);
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [isCurrentTeam, reduceMotion, rowAnim, scanCompleted]);
 
   const rowStyle = isCurrentTeam ? styles.leaderboardRowActive : styles.leaderboardRow;
   const animatedRowStyle = {
@@ -95,7 +105,7 @@ function LeaderboardRow({
         </Text>
       </View>
       <View style={styles.scoreBlock}>
-        <Text style={styles.scoreText}>{formatNumber(entry.score)}</Text>
+        <AnimatedNumber formatter={formatNumber} style={styles.scoreText} value={entry.score} />
         {isCurrentTeam && completionSummary ? (
           <Text style={styles.scoreDelta}>+{formatNumber(completionSummary.scoreAfter - completionSummary.scoreBefore)}</Text>
         ) : null}

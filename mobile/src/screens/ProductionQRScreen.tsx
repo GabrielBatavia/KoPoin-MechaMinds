@@ -1,9 +1,14 @@
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, Text, TextInput, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import type { BarcodeScanningResult } from "expo-camera";
 
 import type { VerificationLog } from "../data/kopoinSeed";
+import { MotionPressable } from "../components/ui/MotionPressable";
+import { SpotlightTarget } from "../components/guided/GuidedOverlay";
+import { useAppActive } from "../hooks/use-app-active";
+import { useReduceMotion } from "../hooks/use-reduce-motion";
+import { motion } from "../motion";
 import { colors, radii, spacing } from "../theme";
 
 export type ProductionQRFeedbackTone = "info" | "success" | "warning" | "error";
@@ -33,10 +38,48 @@ export function ProductionQRScreen({
   usedQrCodes,
   verificationLogs
 }: ProductionQRScreenProps) {
+  const appActive = useAppActive();
+  const reduceMotion = useReduceMotion();
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraOpen, setCameraOpen] = useState(false);
   const [scanLocked, setScanLocked] = useState(false);
+  const scanLine = useRef(new Animated.Value(0)).current;
+  const unlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recentLogs = verificationLogs.slice(0, 3);
+  const canShowCamera = cameraOpen && permission?.granted;
+
+  useEffect(() => {
+    if (!appActive || !canShowCamera || scanCompleted || reduceMotion) {
+      scanLine.stopAnimation();
+      scanLine.setValue(0);
+      return;
+    }
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanLine, {
+          toValue: 1,
+          duration: motion.duration.celebration,
+          easing: motion.easing.enter,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scanLine, {
+          toValue: 0,
+          duration: motion.duration.celebration,
+          easing: motion.easing.exit,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [appActive, canShowCamera, reduceMotion, scanCompleted, scanLine]);
+
+  useEffect(() => () => {
+    if (unlockTimer.current) {
+      clearTimeout(unlockTimer.current);
+    }
+  }, []);
 
   function handleBarcodeScanned(result: BarcodeScanningResult) {
     if (scanLocked || scanCompleted) {
@@ -45,10 +88,11 @@ export function ProductionQRScreen({
 
     setScanLocked(true);
     onScanCode(result.data);
-    setTimeout(() => setScanLocked(false), 1600);
+    if (unlockTimer.current) {
+      clearTimeout(unlockTimer.current);
+    }
+    unlockTimer.current = setTimeout(() => setScanLocked(false), 1600);
   }
-
-  const canShowCamera = cameraOpen && permission?.granted;
 
   return (
     <View style={styles.card}>
@@ -73,7 +117,20 @@ export function ProductionQRScreen({
             onBarcodeScanned={handleBarcodeScanned}
             style={styles.camera}
           />
-          <View style={styles.scanFrame} />
+          <View style={[styles.scanFrame, scanCompleted && styles.scanFrameDone]} />
+          {!scanCompleted && !reduceMotion ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.scanLine,
+                {
+                  transform: [
+                    { translateY: scanLine.interpolate({ inputRange: [0, 1], outputRange: [0, 160] }) },
+                  ],
+                },
+              ]}
+            />
+          ) : null}
           <Text style={styles.cameraHint}>Arahkan kamera ke QR Kopoin</Text>
         </View>
       ) : (
@@ -87,17 +144,19 @@ export function ProductionQRScreen({
 
       <View style={styles.actionGrid}>
         {permission?.granted ? (
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => setCameraOpen((current) => !current)}>
+          <MotionPressable style={styles.secondaryButton} onPress={() => setCameraOpen((current) => !current)}>
             <Text style={styles.secondaryButtonText}>{cameraOpen ? "Tutup Kamera" : "Buka Kamera"}</Text>
-          </TouchableOpacity>
+          </MotionPressable>
         ) : (
-          <TouchableOpacity style={styles.secondaryButton} onPress={requestPermission}>
+          <MotionPressable style={styles.secondaryButton} onPress={requestPermission}>
             <Text style={styles.secondaryButtonText}>Izinkan Kamera</Text>
-          </TouchableOpacity>
+          </MotionPressable>
         )}
-        <TouchableOpacity style={styles.primaryButton} onPress={onDemoScan}>
-          <Text style={styles.primaryButtonText}>Scan Kode Demo</Text>
-        </TouchableOpacity>
+        <SpotlightTarget targetKey="mission.scan" style={styles.actionTarget}>
+          <MotionPressable style={styles.primaryButton} onPress={onDemoScan}>
+            <Text style={styles.primaryButtonText}>Scan Kode Demo</Text>
+          </MotionPressable>
+        </SpotlightTarget>
       </View>
 
       <View style={styles.manualBox}>
@@ -111,9 +170,9 @@ export function ProductionQRScreen({
           style={styles.input}
           value={manualCode}
         />
-        <TouchableOpacity style={styles.submitButton} onPress={onSubmitMission}>
+        <MotionPressable style={styles.submitButton} onPress={onSubmitMission}>
           <Text style={styles.submitButtonText}>Validasi Kode Manual</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <View style={[styles.feedbackBox, feedbackToneStyles[feedbackTone]]}>
@@ -225,6 +284,24 @@ const styles = StyleSheet.create({
     borderColor: colors.turquoise,
     backgroundColor: "rgba(25,168,142,0.08)"
   },
+  scanFrameDone: {
+    borderColor: colors.success,
+    backgroundColor: "rgba(18,128,92,0.16)"
+  },
+  scanLine: {
+    position: "absolute",
+    left: "20%",
+    right: "20%",
+    top: 66,
+    height: 2,
+    borderRadius: 999,
+    backgroundColor: colors.gold,
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 6,
+    elevation: 3
+  },
   cameraHint: {
     position: "absolute",
     alignSelf: "center",
@@ -257,6 +334,9 @@ const styles = StyleSheet.create({
   actionGrid: {
     flexDirection: "row",
     gap: spacing.sm
+  },
+  actionTarget: {
+    flex: 1
   },
   primaryButton: {
     flex: 1,

@@ -112,8 +112,12 @@ function CustomIcon({ name, size = 24, color, style }: CustomIconProps) {
 }
 
 import type { Campaign, CompletionSummary, Cooperative, Team, User, UserVote } from "../data/kopoinSeed";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { AnimatedProgressFill } from "../components/ui/AnimatedProgressFill";
+import { MotionPressable } from "../components/ui/MotionPressable";
 import { colors, radii, shadows, spacing } from "../theme";
 import { formatKopoin, formatRupiah } from "../utils/formatters";
+import { SpotlightTarget } from "../components/guided/GuidedOverlay";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -341,6 +345,7 @@ export function HomeDashboardScreen({
       </LinearGradient>
 
       {/* 2. GoPay-style Balance Card (Floating overlapping) */}
+      <SpotlightTarget targetKey="home.balance">
       <View style={styles.balanceCard}>
         <View style={styles.balanceLeft}>
           <View style={styles.walletIconBox}>
@@ -353,19 +358,24 @@ export function HomeDashboardScreen({
                 <CustomIcon name="add-circle" size={18} color={colors.teal} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.coinsAmount}>{formatKopoin(user.kopoinBalance)} coins</Text>
+            <AnimatedNumber
+              formatter={formatKopoin}
+              style={styles.coinsAmount}
+              suffix=" coins"
+              value={user.kopoinBalance}
+            />
           </View>
         </View>
       </View>
+      </SpotlightTarget>
 
       {/* 3. Service Grid (8 elements arranged beautifully) */}
       <View style={styles.gridContainer}>
         {services.map((svc) => (
-          <TouchableOpacity
+          <MotionPressable
             key={svc.id}
             style={styles.gridItem}
             onPress={svc.action}
-            activeOpacity={0.7}
           >
             <View style={styles.iconBoxContainer}>
               <View style={[styles.iconBox, { backgroundColor: svc.bg }]}>
@@ -384,15 +394,15 @@ export function HomeDashboardScreen({
             <Text style={styles.gridLabel} numberOfLines={1}>
               {svc.label}
             </Text>
-          </TouchableOpacity>
+          </MotionPressable>
         ))}
       </View>
 
       {/* 4. Bright Green Promo Card (Kojek7an-style) */}
-      <TouchableOpacity
+      <SpotlightTarget targetKey="home.join-team">
+      <MotionPressable
         style={styles.greenPromoCard}
         onPress={!hasJoinedTeam ? onJoinTeam : onOpenMission}
-        activeOpacity={0.8}
       >
         <View style={styles.greenPromoLeft}>
           <View style={styles.promoGreenTag}>
@@ -406,7 +416,7 @@ export function HomeDashboardScreen({
           </Text>
           <View style={styles.greenProgressWrapper}>
             <View style={styles.greenProgressTrack}>
-              <View style={[styles.greenProgressFill, { width: `${progressPercent}%` }]} />
+              <AnimatedProgressFill progress={progressPercent / 100} style={styles.greenProgressFill} />
             </View>
             <Text style={styles.greenProgressText}>
               {campaign.currentValue}/{campaign.targetValue} Aksi ({progressPercent}%)
@@ -418,7 +428,8 @@ export function HomeDashboardScreen({
             <CustomIcon name="chevron-right" size={20} color="#00AA13" />
           </View>
         </View>
-      </TouchableOpacity>
+      </MotionPressable>
+      </SpotlightTarget>
 
       {/* 5. Horizontal Carousel ("Pilihan buat kamu") */}
       <View style={styles.carouselSection}>
