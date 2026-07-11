@@ -107,7 +107,7 @@ export function ProductionQRScreen({
       </View>
 
       <Text style={styles.copy}>
-        Kamera dipakai jika tersedia di Expo Go. Untuk demo juri yang stabil, tombol Scan Kode Demo tetap menjalankan validasi yang sama.
+        Kamera dipakai jika tersedia di Expo Go. Untuk simulasi terpandu yang stabil, tombol Scan Kode Demo tetap menjalankan validasi yang sama.
       </Text>
 
       {canShowCamera ? (
@@ -137,7 +137,7 @@ export function ProductionQRScreen({
         <View style={styles.cameraPlaceholder}>
           <Text style={styles.placeholderTitle}>Camera-ready path</Text>
           <Text style={styles.placeholderCopy}>
-            Beri izin kamera untuk scan QR sungguhan, atau gunakan kode demo jika device juri tidak memberi izin.
+            Beri izin kamera untuk scan QR sungguhan, atau gunakan kode demo jika perangkat tidak memberi izin.
           </Text>
         </View>
       )}

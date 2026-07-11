@@ -598,7 +598,7 @@ export function MissionHubScreen({
             </View>
             <Text style={styles.shareDesc}>
               {scanCompleted
-                ? "Tim Pemuda Sukamaju naik ke #2! Bagikan ke juri sekarang."
+                ? "Tim Pemuda Sukamaju naik ke #2! Bagikan pencapaian ini sekarang."
                 : "Selesaikan validasi untuk membuka team wrap eksklusif."}
             </Text>
           </View>
