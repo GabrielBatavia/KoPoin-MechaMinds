@@ -7,3 +7,5 @@ web-build/
 *.log
 .env
 .env.*
+*.apk
+

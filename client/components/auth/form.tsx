@@ -45,8 +45,8 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div className="grid gap-2 text-left">
           <div className="flex items-center gap-2 mb-2 h-18 bg-gray-100 rounded-lg p-2 w-36">
             <Image
-              src="/kopoin.png"
-              alt="kopoin Logo"
+              src="/logo.png"
+              alt="Kopoin Logo"
               width={120}
               height={30}
               className="w-32 h-auto"

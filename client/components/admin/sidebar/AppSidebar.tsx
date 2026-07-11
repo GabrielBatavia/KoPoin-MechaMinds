@@ -46,8 +46,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {state === "expanded" ? (
           <div className="px-2 w-full flex items-center">
             <Image
-              src="/simkopdes.png"
-              alt="Simkopdes Logo"
+              src="/logo.png"
+              alt="Kopoin Logo"
               width={180}
               height={45}
               className="h-10 w-auto object-contain"
@@ -57,8 +57,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ) : (
           <div className="flex h-8 w-8 items-center justify-center">
             <Image
-              src="/simkopdes-symbol.png"
-              alt="Simkopdes Symbol"
+              src="/icon.svg"
+              alt="Kopoin Icon"
               width={32}
               height={32}
               className="h-7 w-7 object-contain"

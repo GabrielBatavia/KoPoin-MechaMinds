@@ -107,14 +107,13 @@ export default function Header() {
           href="/"
         >
           <Image
-            src="/simkopdes.png"
-            alt="Simkopdes Logo"
+            src={isHome && !scrolled ? "/white-logo.png" : "/logo.png"}
+            alt="Kopoin Logo"
             width={120}
             height={32}
             className="w-auto object-contain transition-all duration-300"
             style={{ 
-              height: (isHome && !scrolled) ? "32px" : "24px",
-              filter: (isHome && !scrolled) ? "brightness(0) invert(1)" : "none" 
+              height: (isHome && !scrolled) ? "32px" : "24px"
             }}
           />
         </Link>

@@ -64,7 +64,11 @@ export default function DownloadPage() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
               <a
-                href="/kopoin.apk"
+                href={
+                  process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL && process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL.trim() !== ""
+                    ? process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL
+                    : "https://github.com/GabrielBatavia/KoPoin-MechaMinds/releases/latest/download/kopoin.apk"
+                }
                 download="kopoin.apk"
                 className="group flex items-center gap-2 rounded-full bg-[#0F6B63] px-6 py-3 text-sm font-medium text-white shadow-md hover:bg-[#0c5c55] transition-all duration-200 hover:shadow-lg"
               >

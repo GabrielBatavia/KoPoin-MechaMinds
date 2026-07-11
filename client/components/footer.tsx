@@ -12,15 +12,15 @@ export default function Footer() {
           <div className="col-span-6 flex flex-col gap-4 pt-5 md:col-span-4">
             <a className="w-max flex items-center" href="/">
               <Image
-                src="/simkopdes.png"
-                alt="Simkopdes Logo"
+                src="/logo.png"
+                alt="Kopoin Logo"
                 width={130}
                 height={35}
                 className="h-9 w-auto object-contain"
               />
             </a>
             <p className="max-w-sm text-balance text-xs leading-relaxed text-slate-500">
-              Sistem Informasi Manajemen Koperasi Desa Merah Putih. Mewujudkan kemandirian ekonomi warga berasaskan gotong royong.
+              Kopoin - Sistem Loyalitas & Aktivasi Anggota Koperasi Desa Merah Putih. Mewujudkan kemandirian ekonomi warga berasaskan gotong royong.
             </p>
             <div className="flex gap-2">
               {socialLinks.map((item, index) => (
