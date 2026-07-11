@@ -1,50 +1,52 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-import authRouter from './routes/auth';
-import mobileRouter from './routes/mobile';
-import adminRouter from './routes/admin';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import authRouter from "./routes/auth";
+import mobileRouter from "./routes/mobile";
+import adminRouter from "./routes/admin";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
 
-// Auth routes
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/mobile', mobileRouter);
-app.use('/api/v1/admin', adminRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/mobile", mobileRouter);
+app.use("/api/v1/admin", adminRouter);
 
-// Basic welcome route
-app.get('/', (req, res) => {
+app.get("/", (_req, res) => {
   res.json({
-    message: 'Welcome to Koperasi-Point API server!',
-    status: 'Running',
+    message: "Welcome to Koperasi-Point API server!",
+    status: "Running",
     timestamp: new Date().toISOString(),
   });
 });
 
-// Health check route
-app.get('/health', (req, res) => {
+app.get("/health", (_req, res) => {
   res.json({
-    status: 'OK',
+    status: "OK",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`=================================`);
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`👉 http://localhost:${PORT}`);
-  console.log(`=================================`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log("=================================");
+    console.log(`Server running on port ${PORT}`);
+    console.log(`http://localhost:${PORT}`);
+    console.log("=================================");
+  });
+}
+
+export default app;

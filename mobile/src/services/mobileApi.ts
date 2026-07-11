@@ -1,11 +1,5 @@
-import { Platform } from "react-native";
 import type { DemoState } from "../data/kopoinSeed";
-
-const API_BASE_URL = Platform.select({
-  android: "http://10.0.2.2:8080/api/v1/mobile",
-  ios: "http://localhost:8080/api/v1/mobile",
-  default: "http://localhost:8080/api/v1/mobile",
-});
+import { MOBILE_API_BASE_URL } from "../config/api";
 
 type ApiPayload = {
   success: boolean;
@@ -37,7 +31,7 @@ export type MemberCheckoutResult = {
 };
 
 async function requestState(path: string, body?: Record<string, unknown>): Promise<ApiPayload> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${MOBILE_API_BASE_URL}${path}`, {
     method: body ? "POST" : "GET",
     headers: {
       "Content-Type": "application/json",

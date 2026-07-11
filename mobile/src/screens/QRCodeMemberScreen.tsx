@@ -138,6 +138,12 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral, onSubmitMemb
           <Text style={styles.qrDescription}>
             Tunjukkan QR Code ke kasir sebelum transaksi untuk mendapatkan semua promo khusus member Koperasi.
           </Text>
+
+          {checkoutStage === "qr" && (
+            <TouchableOpacity style={styles.scanInlineBtn} onPress={handlePay} activeOpacity={0.85}>
+              <Text style={styles.scanInlineBtnText}>SIMULASIKAN KASIR SCAN QR</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {checkoutStage === "checkout" && (
@@ -335,29 +341,27 @@ export function QRCodeMemberScreen({ user, onClose, onOpenReferral, onSubmitMemb
         </View>
       </ScrollView>
 
-      {/* 5. Footer (Edge-to-edge blue pay button) */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.payBtn, canPay || checkoutStage === "qr" ? styles.payBtnActive : styles.payBtnDisabled]}
-          disabled={(checkoutStage === "checkout" && (!canPay || Boolean(checkoutResult))) || isSubmittingCheckout}
-          onPress={handlePay}
-        >
-          {isSubmittingCheckout ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={[styles.payBtnText, canPay || checkoutStage === "qr" ? styles.payBtnTextActive : styles.payBtnTextDisabled]}>
-              {checkoutStage === "qr"
-                ? "SIMULASIKAN KASIR SCAN QR"
-                : checkoutResult
-                  ? "TRANSAKSI SELESAI"
-                  : `BAYAR ${formatRupiah(checkoutTotal)}`}
-            </Text>
-          )}
-        </TouchableOpacity>
-        {checkoutStage === "checkout" && !canPay ? (
-          <Text style={styles.footerHint}>Aktifkan atau hubungkan salah satu metode pembayaran.</Text>
-        ) : null}
-      </View>
+      {/* 5. Footer (Edge-to-edge checkout button) */}
+      {checkoutStage === "checkout" && (
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.payBtn, canPay ? styles.payBtnActive : styles.payBtnDisabled]}
+            disabled={!canPay || Boolean(checkoutResult) || isSubmittingCheckout}
+            onPress={handlePay}
+          >
+            {isSubmittingCheckout ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={[styles.payBtnText, canPay ? styles.payBtnTextActive : styles.payBtnTextDisabled]}>
+                {checkoutResult ? "TRANSAKSI SELESAI" : `BAYAR ${formatRupiah(checkoutTotal)}`}
+              </Text>
+            )}
+          </TouchableOpacity>
+          {!canPay ? (
+            <Text style={styles.footerHint}>Aktifkan atau hubungkan salah satu metode pembayaran.</Text>
+          ) : null}
+        </View>
+      )}
 
       {/* 6. Success Payment Modal */}
       <Modal visible={showPaymentSuccess} transparent animationType="fade">
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
     color: colors.teal
   },
   scrollContent: {
-    paddingBottom: 110
+    paddingBottom: 210
   },
   qrCard: {
     backgroundColor: colors.white,
@@ -469,6 +473,21 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "700",
     paddingHorizontal: 28
+  },
+  scanInlineBtn: {
+    marginTop: 20,
+    marginHorizontal: 28,
+    alignSelf: "stretch",
+    paddingVertical: 14,
+    borderRadius: radii.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.teal
+  },
+  scanInlineBtnText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.white
   },
   checkoutCard: {
     marginHorizontal: spacing.md,
@@ -768,7 +787,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 0,
+    bottom: 80,
     left: 0,
     right: 0,
     padding: spacing.md,

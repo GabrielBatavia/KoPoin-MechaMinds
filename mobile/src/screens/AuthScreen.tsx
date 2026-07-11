@@ -39,6 +39,7 @@ import {
 } from "lucide-react-native";
 import { colors, radii, shadows, spacing } from "../theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_ROOT_URL } from "../config/api";
 
 const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get("window");
 
@@ -139,11 +140,7 @@ type AuthScreenProps = {
   onSuccess: () => void;
 };
 
-const API_URL = Platform.select({
-  android: "http://10.0.2.2:8080/api/v1",
-  ios: "http://localhost:8080/api/v1",
-  default: "http://localhost:8080/api/v1"
-});
+const API_URL = API_ROOT_URL;
 
 export function AuthScreen({ onSuccess }: AuthScreenProps) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");

@@ -10,5 +10,5 @@
     "outDir": "./dist",
     "rootDir": "./"
   },
-  "include": ["app/**/*", "test/**/*"]
+  "include": ["app/**/*", "api/**/*", "test/**/*"]
 }

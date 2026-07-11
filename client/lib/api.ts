@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NSERVER_API || "http://localhost:8080";
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_SERVER_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NSERVER_API ||
+  "http://localhost:8080"
+).replace(/\/$/, "");
 
 const getLocal = (key: string) =>
   typeof window !== "undefined" ? localStorage.getItem(key) : null;
